@@ -1,81 +1,82 @@
 <% /* レイアウトは server.js の express-ejs-layouts に任せる。ここで layout() は呼ばない。 */ %>
 
-<!-- ===== ヒーロー写真（商用可） =====
-  Unsplash / Pexels は商用利用可（クレジット不要）。後で自前素材に差し替え可能。
--->
+<!-- ===== ヒーロー写真：自動ローテーション（商用可：Unsplash / Pexels） ===== -->
 <style>
-  /* コンテナ内から横幅を画面いっぱいに“にじませる”（フルブリード） */
-  .bleed{margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw}
+  /* コンテナ内から画面端まで“にじませる”（ほぼフルブリード：左右2pxだけ残す） */
+  .bleed-tight{margin-left:calc(50% - 50vw + 2px); margin-right:calc(50% - 50vw + 2px); width:calc(100vw - 4px)}
 
-  /* 横スワイプのギャラリー（スマホは1枚ずつ全画面に近い高さで） */
-  .hero-photos{
-    display:flex; gap:10px; overflow-x:auto; padding:0; scroll-snap-type:x mandatory
+  .hero-rotator{
+    position:relative;
+    width:100%;
+    height:clamp(420px, 85vh, 900px);
+    background:#000; overflow:hidden;
   }
-  .hero-photos::-webkit-scrollbar{height:8px}
-  .hero-photos::-webkit-scrollbar-thumb{background:#cbd5e1; border-radius:999px}
-
-  .hero-photos .hp{
-    min-width:100%;                /* 1枚ずつ全幅 */
-    height:clamp(420px, 85vh, 900px); /* まずはvhで拡大 */
-    scroll-snap-align:center; overflow:hidden; background:#000; position:relative;
-    border:none; border-radius:0;         /* モバイルは角丸・枠線なしで没入感 */
-  }
-  /* iOS 16.4+ などでは dvh でアドレスバー高さを除いた動的vhを優先 */
   @supports (height: 85dvh){
-    .hero-photos .hp{ height:clamp(420px, 85dvh, 900px); }
+    .hero-rotator{ height:clamp(420px, 85dvh, 900px); }
   }
 
-  .hero-photos .hp img{
-    width:100%; height:100%; object-fit:cover; display:block;
+  .hero-rotator .slide{
+    position:absolute; inset:0; opacity:0; transition:opacity .8s ease;
   }
-  .hero-photos .cap{
-    position:absolute; left:0; right:0; bottom:0; padding:12px 14px; color:#fff;
+  .hero-rotator .slide.on{ opacity:1; }
+  .hero-rotator img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .hero-rotator .cap{
+    position:absolute; left:0; right:0; bottom:0;
+    padding:14px 16px; color:#fff;
     background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));
     font-weight:700; letter-spacing:.02em
   }
 
-  /* デスクトップでは少し余白と角丸を戻す */
+  .dots{
+    position:absolute; left:0; right:0; bottom:12px;
+    display:flex; justify-content:center; gap:6px; pointer-events:none;
+  }
+  .dot{width:6px; height:6px; border-radius:999px; background:#cbd5e1; opacity:.9}
+  .dot.on{ background:#ffffff; }
+
+  /* デスクトップは少しだけ角丸を戻す */
   @media (min-width:920px){
-    .hero-photos{padding:6px 2px 10px}
-    .hero-photos .hp{
-      min-width:70%; height:clamp(420px, 60vh, 920px);
-      border:1px solid var(--bd); border-radius:16px;
-    }
+    .hero-rotator{ border-radius:16px; }
   }
 </style>
 
-<div class="bleed">
-  <div class="hero-photos" aria-label="インスピレーション写真" tabindex="0">
+<div class="bleed-tight">
+  <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
     <!-- 1. 紙吹雪のライブ（華やか） -->
-    <figure class="hp">
+    <figure class="slide on">
       <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80"
            alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900" />
       <figcaption class="cap">舞台は、あなたを待っている。</figcaption>
     </figure>
     <!-- 2. 強い照明のシンガー -->
-    <figure class="hp">
+    <figure class="slide">
       <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80"
            alt="強い照明の中で歌うシンガー" width="1600" height="900" />
       <figcaption class="cap">光の中へ、堂々と。</figcaption>
     </figure>
     <!-- 3. 機内窓の夕焼け（世界へ） -->
-    <figure class="hp">
+    <figure class="slide">
       <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80"
            alt="飛行機の窓から見る夕焼け" width="1600" height="900" />
       <figcaption class="cap">次の目的地は、世界。</figcaption>
     </figure>
     <!-- 4. 花火の夜景（達成の祝福） -->
-    <figure class="hp">
+    <figure class="slide">
       <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80"
            alt="花火が上がる都市の夜景" width="1600" height="900" />
       <figcaption class="cap">成果は、必ず祝われる。</figcaption>
     </figure>
     <!-- 5. ラグジュアリーな家族の時間 -->
-    <figure class="hp">
+    <figure class="slide">
       <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600"
            alt="明るいリビングでの家族の団欒" width="1600" height="1067" />
       <figcaption class="cap">大切な人と、豊かな時間を。</figcaption>
     </figure>
+
+    <div class="dots" id="heroDots" aria-hidden="true">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
   </div>
 </div>
 
@@ -85,7 +86,6 @@
     AIとの対話で、最終目標と道筋を明確化。今日から動ける「最初の一歩」へ。
   </p>
   <form method="post" action="/start">
-    <!-- 大きいCTA（日本語のみ） -->
     <button class="btn cta" type="submit"
       style="padding:20px 26px; font-size:18px; border-radius:18px;
              box-shadow:0 18px 40px rgba(31,111,235,.26), 0 10px 22px rgba(16,185,129,.18);">
@@ -113,3 +113,24 @@
     <p>今週やることまで分解。今日から動ける。</p>
   </div>
 </section>
+
+<script>
+  // 自動ローテーション（3.5秒ごとにフェード）
+  const rotator = document.getElementById('heroRotator');
+  const slides = rotator ? rotator.querySelectorAll('.slide') : [];
+  const dots = document.getElementById('heroDots')?.children || [];
+  let i = 0, timer = null, interval = 3500;
+
+  function show(n){
+    slides[i]?.classList.remove('on'); dots[i]?.classList.remove('on');
+    i = (n + slides.length) % slides.length;
+    slides[i]?.classList.add('on'); dots[i]?.classList.add('on');
+  }
+  function start(){ stop(); timer = setInterval(()=>show(i+1), interval); }
+  function stop(){ if(timer){ clearInterval(timer); timer = null; } }
+
+  // ページ表示後に開始、ユーザーがタップしたら一時停止→数秒後に再開でもOK
+  window.addEventListener('load', start);
+  rotator?.addEventListener('pointerdown', stop);
+  rotator?.addEventListener('pointerup', ()=>setTimeout(start, 2500));
+</script>
