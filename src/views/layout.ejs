@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">Mission Compass</div>
+      <nav>
+        <% if (currentUser) { %>
+          <span class="nav-email"><%= currentUser.email %></span>
+          <form method="post" action="/logout" style="display:inline;">
+            <button class="btn ghost" type="submit">ログアウト</button>
+          </form>
+        <% } else { %>
+          <a class="btn ghost" href="/login">ログイン</a>
+          <a class="btn" href="/signup">新規登録</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <%- body %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">© <script>document.write(new Date().getFullYear())</script> Mission Compass</div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<% layout('layout') -%>
+<section class="auth">
+  <h2>ログイン</h2>
+  <% if (error) { %><div class="alert"><%= error %></div><% } %>
+  <form method="post" action="/login" class="auth-form">
+    <label>メールアドレス</label>
+    <input type="email" name="email" required />
+    <label>パスワード</label>
+    <input type="password" name="password" required />
+    <button class="btn" type="submit">ログイン</button>
+  </form>
+  <p class="muted">まだアカウントがありませんか？ <a href="/signup">新規登録</a></p>
+</section>

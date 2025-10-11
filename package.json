@@ -1,0 +1,28 @@
+{
+  "name": "mission-compass",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mission Compass MVP (LP + Auth + Stripe ¥100 + Paywall Gate)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node -e \"console.log('build ok')\""
+  },
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "dependencies": {
+    "bcryptjs": "2.4.3",
+    "dotenv": "16.4.5",
+    "ejs": "3.1.10",
+    "express": "4.19.2",
+    "express-ejs-layouts": "2.5.1",
+    "express-session": "1.17.3",
+    "lowdb": "6.0.1",
+    "pg": "8.12.0",
+    "stripe": "16.6.0",
+    "uuid": "9.0.1"
+  }
+}
