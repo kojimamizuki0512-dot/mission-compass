@@ -8,22 +8,54 @@
   <link rel="stylesheet" href="/styles.css" />
   <meta name="description" content="AIとの対話で最終目標と道筋を明確化。今日から動ける『最初の一歩』まで伴走します。" />
 
-  <!-- ▼ 追加：タブに出るファビコン（ネイビー） -->
+  <!-- ▼ タブに出るファビコン（ネイビー） -->
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><circle cx="48" cy="48" r="41" fill="none" stroke="%230B2A6B" stroke-width="6"/><path d="M48 12v72M12 48h72" stroke="%230B2A6B" stroke-width="6"/><path d="M48 18l-10 28-28 10 28 10 10 28 10-28 28-10-28-10-10-28z" fill="%230B2A6B"/></svg>' />
 
   <style>
-    /* Header brand (logo + text) */
-    .brand-wrap{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
-    .brand-logo{
-      display:inline-flex;align-items:center;justify-content:center;
-      width:28px;height:28px;
-      color:#0B2A6B;  /* ロゴ色（本文と差別化した青みネイビー） */
+    /* ====== Brand & Header (映える演出) ====== */
+    .brand-wrap{
+      display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit;
+      position:relative;
     }
-    .brand-logo svg{display:block;width:28px;height:28px}
-    .brand-name{font-weight:800;letter-spacing:.2px}
+    .brand-logo{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:28px; height:28px; color:#0B2A6B; /* 青みネイビー */
+      transition:transform .25s ease, filter .25s ease;
+    }
+    .brand-logo svg{display:block; width:28px; height:28px}
+    .brand-wrap:hover .brand-logo{
+      transform:rotate(8deg); filter:drop-shadow(0 6px 10px rgba(11,42,107,.26));
+    }
+
+    .brand-name{
+      font-weight:800; letter-spacing:.2px; position:relative; padding-bottom:2px;
+    }
+    /* 下に細いグラデ線が“スッ”と伸びる */
+    .brand-name::after{
+      content:""; position:absolute; left:0; bottom:0; height:2px; width:0%;
+      background:linear-gradient(90deg, #0B2A6B, #1F6FEB 55%, #0EA5A5);
+      border-radius:2px; transition:width .35s ease;
+    }
+    .brand-wrap:hover .brand-name::after{ width:100%; }
+
+    /* スクロールでヘッダーを浮かせる */
+    body[data-scrolled="1"] .site-header{
+      box-shadow:0 10px 28px rgba(2,8,20,.08), 0 2px 6px rgba(2,8,20,.05);
+    }
+
+    /* CTA をほんのり鼓動（全ページ共通） */
+    .btn.cta{
+      animation:ctaPulse 2.8s ease-in-out infinite alternate;
+    }
+    @keyframes ctaPulse{
+      from { box-shadow:0 12px 28px rgba(31,111,235,.18), 0 4px 8px rgba(16,185,129,.12); transform:translateY(0) }
+      to   { box-shadow:0 16px 36px rgba(31,111,235,.26), 0 8px 16px rgba(16,185,129,.16); transform:translateY(-1px) }
+    }
+
+    /* PC時はロゴ少し大きく */
     @media (min-width:920px){
-      .brand-logo{width:34px;height:34px}
-      .brand-logo svg{width:34px;height:34px}
+      .brand-logo{ width:34px; height:34px }
+      .brand-logo svg{ width:34px; height:34px }
     }
   </style>
 </head>
@@ -66,5 +98,16 @@
   <footer class="site-footer">
     <div class="container">© <script>document.write(new Date().getFullYear())</script> Mission Compass</div>
   </footer>
+
+  <!-- スクロール検知（ヘッダー影のON/OFF用） -->
+  <script>
+    (function(){
+      function onScroll(){
+        document.body.setAttribute('data-scrolled', (window.pageYOffset>6 ? '1':'0'));
+      }
+      window.addEventListener('scroll', onScroll, {passive:true});
+      onScroll();
+    })();
+  </script>
 </body>
 </html>
