@@ -1,4 +1,5 @@
-<% layout('layout') -%>
+<% /* レイアウトは server.js の express-ejs-layouts に任せる。ここで layout() は呼ばない。 */ %>
+
 <section class="auth">
   <h2>新規登録</h2>
   <% if (error) { %><div class="alert"><%= error %></div><% } %>
