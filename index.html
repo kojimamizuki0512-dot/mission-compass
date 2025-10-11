@@ -7,7 +7,7 @@
   <title>Mission Compass</title>
   <style>
     :root{
-      /* Calm Navyを基調に少しカラフル */
+      /* Calm Navyを基調に彩度を少し上げた差し色（プロっぽい落ち着き＋彩り） */
       --bg:#F7F9FC; --panel:#FFFFFF; --ink:#0F172A; --muted:#667085; --bd:#E5EAF2;
       --navy:#0F172A; --blue:#1F6FEB; --teal:#10B981; --orange:#F97316; --violet:#7C3AED;
       --cta-grad: linear-gradient(135deg, var(--blue), var(--teal) 55%, var(--orange));
@@ -16,32 +16,46 @@
     html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;}
     img{max-width:100%;display:block;height:auto}
-    .wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(72px + env(safe-area-inset-bottom));}
+    a{color:inherit}
+    .wrap{max-width:820px;margin:0 auto;padding:16px 16px calc(80px + env(safe-area-inset-bottom));}
 
-    /* ヒーロー */
-    .hero{display:grid;gap:14px;margin:8px 0 16px}
-    .h1{font-size:28px;line-height:1.2;margin:0}
-    .lead{font-size:15px;color:var(--muted);margin:4px 0 10px}
+    /* ヘッダー */
+    header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd);z-index:20}
+    .nav{max-width:920px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:700;letter-spacing:.2px}
+    .logo{width:22px;height:22px;border-radius:7px;background:conic-gradient(from 210deg, var(--blue), var(--teal), var(--violet), var(--orange));}
+    .ghost{padding:8px 12px;border-radius:12px;border:1px solid var(--bd);background:#fff;text-decoration:none;font-weight:600}
+
+    /* タイポ & ボタン */
+    .h1{font-size:30px;line-height:1.2;margin:0}
+    .lead{font-size:15px;color:var(--muted);margin:6px 0 12px}
+    .title{font-size:20px;margin:0 0 10px}
     .cta{display:inline-block;padding:12px 16px;border-radius:12px;color:#fff;text-decoration:none;
       background:var(--cta-grad);font-weight:700;box-shadow:0 10px 24px rgba(31,111,235,.18)}
+    .cta:active{transform:translateY(1px)}
+
+    /* バッジ */
     .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--bd);background:#fff;color:#0b1430}
 
-    /* 写真カード（プレースホルダ） */
-    .photo{border-radius:16px;overflow:hidden;border:1px solid var(--bd);background:#fff}
-    .ph{aspect-ratio:16/9;background:
-      linear-gradient(135deg,#e6f0ff 0%,#e6fff7 55%,#fff0e6 100%);
-      display:flex;align-items:end;justify-content:start;padding:10px}
-    .ph small{color:#2a3445;opacity:.85}
-    .caption{font-size:12px;color:var(--muted);margin-top:6px}
-
-    /* セクション共通 */
-    .section{margin:26px 0}
-    .title{font-size:20px;margin:0 0 10px}
+    /* セクション */
+    .section{margin:28px 0}
     .card{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:14px}
-    .row{display:grid;gap:10px}
 
-    /* なぜ効く？ */
+    /* ヒーロー：横スクロールギャラリー（プロ感＝写真が主役） */
+    .hero{display:grid;gap:14px;margin:8px 0 16px}
+    .carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}
+    .carousel::-webkit-scrollbar{height:8px}
+    .carousel::-webkit-scrollbar-thumb{background:#c7d2fe;border-radius:999px}
+    .slide{position:relative;min-width:85%;scroll-snap-align:center;border-radius:16px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+    .slide img{width:100%;height:100%;object-fit:cover;aspect-ratio:16/9}
+    .slide .cap{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;color:#fff;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55))}
+    .dots{display:flex;gap:6px;justify-content:center;margin-top:8px}
+    .dot{width:6px;height:6px;border-radius:999px;background:#cbd5e1}
+    .dot.active{background:#0f172a}
+
+    /* 「なぜ効く？」 */
+    .row{display:grid;gap:10px}
     .steps{display:grid;gap:10px}
     .step{border:1px dashed #d7deea;border-radius:12px;padding:12px;background:#fff}
     .step h4{margin:0 0 4px;font-size:15px}
@@ -54,34 +68,71 @@
     .bullets{display:grid;gap:6px;color:var(--muted);font-size:14px}
     .note{font-size:12px;color:var(--muted)}
 
-    /* ボトムナビ（スマホ） */
+    /* 写真ギャラリー（成功の未来を想起） */
+    .gallery{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .gallery .gitem{border-radius:12px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+    .gallery .gitem img{width:100%;aspect-ratio:4/3;object-fit:cover}
+
+    /* ボトムナビ（未ログイン：ホーム/なぜ効く/プラン） */
     .tabbar{
-      position:fixed;left:0;right:0;bottom:0;
-      background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
-      border-top:1px solid var(--bd);
+      position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);
+      backdrop-filter:blur(8px);border-top:1px solid var(--bd);
       padding:6px max(10px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
-      display:grid;grid-template-columns:repeat(3,1fr);gap:8px;z-index:10;
+      display:grid;grid-template-columns:repeat(3,1fr);gap:8px;z-index:30;
     }
     .tab{appearance:none;border:none;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 6px;
       font-size:12px;color:#0f172a}
     .tab[aria-current="page"]{border-color:#c9d7ff; box-shadow:0 4px 16px rgba(31,111,235,.12)}
     .tab .ico{display:block;font-size:18px;margin-bottom:2px}
 
-    /* 小さめのデバイスでの余白調整 */
+    /* スクロール時のフェードイン（控えめなプロ感） */
+    .reveal{opacity:0;transform:translateY(8px);transition:opacity .5s ease, transform .5s ease}
+    .reveal.on{opacity:1;transform:none}
+
     @media (min-width:480px){
-      .h1{font-size:32px}
+      .h1{font-size:34px}
+      .slide{min-width:70%}
+      .gallery{grid-template-columns:repeat(3,1fr)}
     }
   </style>
 </head>
 <body>
+  <header>
+    <div class="nav">
+      <div class="brand"><div class="logo"></div>Mission Compass</div>
+      <a class="ghost" href="#plan">はじめる（100円）</a>
+    </div>
+  </header>
+
   <div class="wrap">
 
-    <!-- ホーム -->
+    <!-- Home -->
     <section id="home" class="section">
-      <div class="photo">
-        <!-- ここに「憧れ未来」写真（アーティスト/海外で活躍/家族で幸せ）を差し替え -->
-        <div class="ph"><small>未来を想起させる写真（差し替え予定）</small></div>
+      <!-- ヒーロー：横スクロール写真（憧れ未来） -->
+      <div class="carousel" id="heroCarousel" aria-label="Inspiration photos" tabindex="0">
+        <!-- ステージで輝くアーティスト -->
+        <figure class="slide">
+          <img src="https://images.unsplash.com/photo-1518972559570-7cc1309f3229?auto=format&fit=crop&w=1400&q=80"
+               alt="大舞台で輝くアーティストのシルエット" width="1400" height="788" />
+          <figcaption class="cap">大舞台で輝く自分を、具体化しよう。</figcaption>
+        </figure>
+        <!-- 海外を飛び回るビジネスパーソン -->
+        <figure class="slide">
+          <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=1400&q=80"
+               alt="空港でフライトを待つ国際的に活躍するビジネスパーソン" width="1400" height="788" />
+          <figcaption class="cap">世界を舞台にする道筋を描く。</figcaption>
+        </figure>
+        <!-- 家族と広い家で穏やかな時間 -->
+        <figure class="slide">
+          <img src="https://images.unsplash.com/photo-1510535046743-b4ca6ccdf49b?auto=format&fit=crop&w=1400&q=80"
+               alt="明るい大きな家で家族と過ごす穏やかな時間" width="1400" height="788" />
+          <figcaption class="cap">「何のために働くか」が決まると、日々の選択が変わる。</figcaption>
+        </figure>
       </div>
+      <div class="dots" id="heroDots" aria-hidden="true">
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+
       <div class="hero">
         <h1 class="h1">迷いを、言語化する。</h1>
         <p class="lead">カスタムAIとの対話から、あなたの最終目標と道筋を明確化。今日から動ける「最初の一歩」まで伴走します。</p>
@@ -92,11 +143,22 @@
           <span class="chip">保存なし（MVP）</span>
         </div>
       </div>
-      <p class="caption">※ 写真はイメージです。後で商用可素材に差し替えます。</p>
+
+      <!-- 成功の未来を想起させるギャラリー（写真多め） -->
+      <div class="section reveal">
+        <div class="gallery">
+          <div class="gitem"><img loading="lazy" src="https://images.unsplash.com/photo-1529336953121-ad537f5f50f1?auto=format&fit=crop&w=1200&q=80" alt="夜景の高層ビル群を見下ろす視点" width="1200" height="900"></div>
+          <div class="gitem"><img loading="lazy" src="https://images.unsplash.com/photo-1544531587-9fa4eeeccad9?auto=format&fit=crop&w=1200&q=80" alt="大規模な会場でのプレゼンテーション" width="1200" height="900"></div>
+          <div class="gitem"><img loading="lazy" src="https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=80" alt="海外の都市での移動" width="1200" height="900"></div>
+          <div class="gitem"><img loading="lazy" src="https://images.unsplash.com/photo-1518081461904-9ac7f5f7ddff?auto=format&fit=crop&w=1200&q=80" alt="クリエイティブなスタジオでの制作" width="1200" height="900"></div>
+          <div class="gitem"><img loading="lazy" src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80" alt="広いダイニングでの家族の談笑" width="1200" height="900"></div>
+          <div class="gitem"><img loading="lazy" src="https://images.unsplash.com/photo-1520975922284-21e9b235c60a?auto=format&fit=crop&w=1200&q=80" alt="緑に囲まれた静かな邸宅" width="1200" height="900"></div>
+        </div>
+      </div>
     </section>
 
-    <!-- なぜ効く？ -->
-    <section id="why" class="section">
+    <!-- Why -->
+    <section id="why" class="section reveal">
       <h2 class="title">なぜ目標達成に効くのか</h2>
       <div class="row">
         <div class="card">
@@ -113,7 +175,7 @@
             <div class="arrow">↓</div>
             <div class="step">
               <h4>③ Do（実行）</h4>
-              <p>事例とデータに基づく**個別最適の計画**をAIが提示。やるべきことが明確化。</p>
+              <p>多数ユーザーの事例学習に基づく<strong>個別最適の計画</strong>をAIが提示。</p>
             </div>
           </div>
         </div>
@@ -121,15 +183,15 @@
           <strong>ポイント</strong>
           <ul class="bullets" style="margin:8px 0 0;padding-left:18px">
             <li>日常対話で“本音”を抽出</li>
-            <li>多数ユーザーの事例学習で最適化</li>
+            <li>豊富な事例データから最適化</li>
             <li>今日から動くタスクに分解</li>
           </ul>
         </div>
       </div>
     </section>
 
-    <!-- プラン -->
-    <section id="plan" class="section">
+    <!-- Plan -->
+    <section id="plan" class="section reveal">
       <h2 class="title">プラン</h2>
       <div class="card plan">
         <div><span class="price">¥100</span> / セッション</div>
@@ -143,9 +205,10 @@
       </div>
     </section>
 
+    <p style="color:var(--muted);font-size:12px">※ 写真はイメージ（Unsplash）。後日、商用ライセンス素材へ差し替え予定。</p>
   </div>
 
-  <!-- ボトムナビ：未ログイン時は ホーム/なぜ効く/プラン -->
+  <!-- Bottom Nav -->
   <nav class="tabbar" role="navigation" aria-label="Bottom Navigation">
     <button class="tab" data-target="home" aria-current="page"><span class="ico">🏠</span>ホーム</button>
     <button class="tab" data-target="why"><span class="ico">🧠</span>なぜ効く？</button>
@@ -153,7 +216,7 @@
   </nav>
 
   <script>
-    // シンプルなタブ移動（スクロール）＆アクティブ表示
+    // タブ遷移（スムーズスクロール & アクティブ状態）
     const tabs = document.querySelectorAll('.tab');
     const to = id => document.getElementById(id)?.scrollIntoView({behavior:'smooth', block:'start'});
     tabs.forEach(b=>{
@@ -163,6 +226,7 @@
         to(b.dataset.target);
       });
     });
+
     // セクション監視でタブ状態更新
     const io = new IntersectionObserver((entries)=>{
       entries.forEach(e=>{
@@ -171,9 +235,30 @@
           const t = document.querySelector(`.tab[data-target="${e.target.id}"]`);
           t && t.setAttribute('aria-current','page');
         }
+        if(e.isIntersecting && e.target.classList.contains('reveal')){
+          e.target.classList.add('on');
+        }
       });
     }, {rootMargin:'-40% 0px -50% 0px', threshold:0.01});
     ['home','why','plan'].forEach(id=>{ const el=document.getElementById(id); el && io.observe(el); });
+
+    // ヒーロー・カルーセルのドット連動
+    const car = document.getElementById('heroCarousel');
+    const dots = document.getElementById('heroDots').children;
+    const syncDots = () => {
+      const slides = [...car.children];
+      const center = car.scrollLeft + car.clientWidth/2;
+      let idx = 0, min=1e9;
+      slides.forEach((s,i)=>{
+        const mid = s.offsetLeft + s.offsetWidth/2;
+        const d = Math.abs(center - mid);
+        if(d < min){ min=d; idx=i; }
+      });
+      [...dots].forEach(d=>d.classList.remove('active'));
+      dots[idx]?.classList.add('active');
+    };
+    car && car.addEventListener('scroll', syncDots, {passive:true});
+    window.addEventListener('load', syncDots);
   </script>
 </body>
 </html>
