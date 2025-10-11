@@ -7,16 +7,24 @@
   /* コンテナ内から横幅を画面いっぱいに“にじませる”（フルブリード） */
   .bleed{margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw}
 
-  /* 横スワイプのギャラリー。スマホは高さ70vhでドーン。 */
-  .hero-photos{display:flex; gap:10px; overflow-x:auto; padding:6px 2px 10px; scroll-snap-type:x mandatory}
+  /* 横スワイプのギャラリー（スマホは1枚ずつ全画面に近い高さで） */
+  .hero-photos{
+    display:flex; gap:10px; overflow-x:auto; padding:0; scroll-snap-type:x mandatory
+  }
   .hero-photos::-webkit-scrollbar{height:8px}
   .hero-photos::-webkit-scrollbar-thumb{background:#cbd5e1; border-radius:999px}
+
   .hero-photos .hp{
-    min-width:100%;  /* ← 1枚ずつ全幅で見せる */
-    height:clamp(360px, 70vh, 860px);
-    scroll-snap-align:center; border-radius:16px; overflow:hidden;
-    border:1px solid var(--bd); background:#000; position:relative;
+    min-width:100%;                /* 1枚ずつ全幅 */
+    height:clamp(420px, 85vh, 900px); /* まずはvhで拡大 */
+    scroll-snap-align:center; overflow:hidden; background:#000; position:relative;
+    border:none; border-radius:0;         /* モバイルは角丸・枠線なしで没入感 */
   }
+  /* iOS 16.4+ などでは dvh でアドレスバー高さを除いた動的vhを優先 */
+  @supports (height: 85dvh){
+    .hero-photos .hp{ height:clamp(420px, 85dvh, 900px); }
+  }
+
   .hero-photos .hp img{
     width:100%; height:100%; object-fit:cover; display:block;
   }
@@ -25,8 +33,14 @@
     background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));
     font-weight:700; letter-spacing:.02em
   }
+
+  /* デスクトップでは少し余白と角丸を戻す */
   @media (min-width:920px){
-    .hero-photos .hp{min-width:70%; height:clamp(420px, 60vh, 900px)}
+    .hero-photos{padding:6px 2px 10px}
+    .hero-photos .hp{
+      min-width:70%; height:clamp(420px, 60vh, 920px);
+      border:1px solid var(--bd); border-radius:16px;
+    }
   }
 </style>
 
@@ -71,7 +85,7 @@
     AIとの対話で、最終目標と道筋を明確化。今日から動ける「最初の一歩」へ。
   </p>
   <form method="post" action="/start">
-    <!-- デカCTA（日本語のみ） -->
+    <!-- 大きいCTA（日本語のみ） -->
     <button class="btn cta" type="submit"
       style="padding:20px 26px; font-size:18px; border-radius:18px;
              box-shadow:0 18px 40px rgba(31,111,235,.26), 0 10px 22px rgba(16,185,129,.18);">
