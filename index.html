@@ -2,139 +2,178 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mission Compass — 迷いを、言語化する。</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F172A" />
+  <title>Mission Compass</title>
   <style>
     :root{
-      /* Calm Navy 基調＋彩度を少し上げた差し色 */
-      --bg:#F7F9FC;
-      --panel:#FFFFFF;
-      --ink:#0F172A;
-      --muted:#5B6B7C;
-      --navy:#1E293B;
-      --blue:#2563EB;     /* 信頼のブルー */
-      --teal:#10B981;     /* 希望のティール */
-      --violet:#7C3AED;   /* 思索のバイオレット */
-      --orange:#F97316;   /* 行動のオレンジ */
-      --bd:#E5EAF2;
-
-      --cta-grad: linear-gradient(135deg, var(--blue) 0%, var(--teal) 55%, var(--orange) 100%);
-      --chip-grad: linear-gradient(135deg, #dbeafe 0%, #d1fae5 50%, #ffeedd 100%);
+      /* Calm Navyを基調に少しカラフル */
+      --bg:#F7F9FC; --panel:#FFFFFF; --ink:#0F172A; --muted:#667085; --bd:#E5EAF2;
+      --navy:#0F172A; --blue:#1F6FEB; --teal:#10B981; --orange:#F97316; --violet:#7C3AED;
+      --cta-grad: linear-gradient(135deg, var(--blue), var(--teal) 55%, var(--orange));
     }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans JP", Helvetica, Arial, sans-serif;}
-    .container{max-width:1000px;margin:0 auto;padding:20px;}
-    header{position:sticky;top:0;background:rgba(255,255,255,.8);backdrop-filter:saturate(180%) blur(10px);
-      border-bottom:1px solid var(--bd);}
-    .nav{display:flex;align-items:center;justify-content:space-between;}
-    .brand{display:flex;gap:10px;align-items:center;font-weight:700;}
-    .logo{width:22px;height:22px;border-radius:7px;background:conic-gradient(from 210deg, var(--blue), var(--teal), var(--violet), var(--orange));}
-    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;padding:32px 0;}
-    .h1{font-size:42px;line-height:1.15;margin:0 0 10px;}
-    .lead{font-size:17px;color:var(--muted);margin:0 0 22px;}
-    .cta{display:inline-block;padding:14px 20px;border-radius:12px;border:none;
-      color:#fff;font-weight:700;text-decoration:none;background:var(--cta-grad);box-shadow:0 8px 24px rgba(37,99,235,.25);}
-    .cta:active{transform:translateY(1px)}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-    .chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--bd);
-      background:var(--chip-grad);color:#0b1430}
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;}
+    img{max-width:100%;display:block;height:auto}
+    .wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(72px + env(safe-area-inset-bottom));}
 
-    .card{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:18px}
-    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
-    .feat h3{margin:10px 0 6px}
-    .feat p{margin:0;color:var(--muted);font-size:14px}
+    /* ヒーロー */
+    .hero{display:grid;gap:14px;margin:8px 0 16px}
+    .h1{font-size:28px;line-height:1.2;margin:0}
+    .lead{font-size:15px;color:var(--muted);margin:4px 0 10px}
+    .cta{display:inline-block;padding:12px 16px;border-radius:12px;color:#fff;text-decoration:none;
+      background:var(--cta-grad);font-weight:700;box-shadow:0 10px 24px rgba(31,111,235,.18)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .chip{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--bd);background:#fff;color:#0b1430}
 
-    .mini{display:flex;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:14px}
-    .check{color:var(--teal);font-weight:800}
+    /* 写真カード（プレースホルダ） */
+    .photo{border-radius:16px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+    .ph{aspect-ratio:16/9;background:
+      linear-gradient(135deg,#e6f0ff 0%,#e6fff7 55%,#fff0e6 100%);
+      display:flex;align-items:end;justify-content:start;padding:10px}
+    .ph small{color:#2a3445;opacity:.85}
+    .caption{font-size:12px;color:var(--muted);margin-top:6px}
 
-    .faq{margin-top:28px}
-    .faq h4{margin:0 0 10px}
-    .qa{border-top:1px solid var(--bd);padding:10px 0}
-    .footer{margin:28px 0 8px;color:var(--muted);font-size:13px;text-align:center}
+    /* セクション共通 */
+    .section{margin:26px 0}
+    .title{font-size:20px;margin:0 0 10px}
+    .card{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:14px}
+    .row{display:grid;gap:10px}
 
-    /* デコ背景（うっすら色味） */
-    .bg-deco{position:absolute;inset:-100px -60px auto auto;z-index:-1;
-      width:60vw;height:60vw;max-width:900px;background:radial-gradient(closest-side, rgba(37,99,235,.12), transparent 60%),
-      radial-gradient(closest-side, rgba(16,185,129,.12), transparent 60%),
-      radial-gradient(closest-side, rgba(124,58,237,.10), transparent 60%);
-      filter:saturate(110%) blur(8px);}
+    /* なぜ効く？ */
+    .steps{display:grid;gap:10px}
+    .step{border:1px dashed #d7deea;border-radius:12px;padding:12px;background:#fff}
+    .step h4{margin:0 0 4px;font-size:15px}
+    .step p{margin:0;color:var(--muted);font-size:13px}
+    .arrow{font-size:18px;text-align:center;color:#94a3b8}
 
-    /* モバイル */
-    @media (max-width:820px){
-      .hero{grid-template-columns:1fr}
-      .h1{font-size:32px}
-      .features{grid-template-columns:1fr}
+    /* プラン */
+    .plan{display:grid;gap:12px}
+    .price{font-size:28px;font-weight:800}
+    .bullets{display:grid;gap:6px;color:var(--muted);font-size:14px}
+    .note{font-size:12px;color:var(--muted)}
+
+    /* ボトムナビ（スマホ） */
+    .tabbar{
+      position:fixed;left:0;right:0;bottom:0;
+      background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
+      border-top:1px solid var(--bd);
+      padding:6px max(10px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
+      display:grid;grid-template-columns:repeat(3,1fr);gap:8px;z-index:10;
     }
+    .tab{appearance:none;border:none;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 6px;
+      font-size:12px;color:#0f172a}
+    .tab[aria-current="page"]{border-color:#c9d7ff; box-shadow:0 4px 16px rgba(31,111,235,.12)}
+    .tab .ico{display:block;font-size:18px;margin-bottom:2px}
 
-    /* 画面下の固定CTA（モバイルでCV向上） */
-    .sticky-cta{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
-      border-top:1px solid var(--bd);padding:10px 14px;display:none}
-    @media (max-width:820px){ .sticky-cta{display:block} }
-    .sticky-cta .cta{width:100%;text-align:center}
+    /* 小さめのデバイスでの余白調整 */
+    @media (min-width:480px){
+      .h1{font-size:32px}
+    }
   </style>
 </head>
 <body>
-  <div class="bg-deco"></div>
-  <header>
-    <div class="container nav">
-      <div class="brand"><div class="logo"></div>Mission Compass</div>
-      <nav style="display:flex;gap:10px">
-        <a class="cta" href="#start" style="padding:8px 14px;font-weight:600">はじめる（100円）</a>
-      </nav>
-    </div>
-  </header>
+  <div class="wrap">
 
-  <main class="container">
-    <section class="hero">
-      <div>
+    <!-- ホーム -->
+    <section id="home" class="section">
+      <div class="photo">
+        <!-- ここに「憧れ未来」写真（アーティスト/海外で活躍/家族で幸せ）を差し替え -->
+        <div class="ph"><small>未来を想起させる写真（差し替え予定）</small></div>
+      </div>
+      <div class="hero">
         <h1 class="h1">迷いを、言語化する。</h1>
-        <p class="lead">AIとの対話で、あなたのミッションを定義する。見失っていた“軸”を取り戻そう。</p>
-        <a id="start" class="cta" href="#">対話セッションを開始（100円）</a>
+        <p class="lead">カスタムAIとの対話から、あなたの最終目標と道筋を明確化。今日から動ける「最初の一歩」まで伴走します。</p>
+        <a class="cta" href="#plan">対話セッションを開始（100円）</a>
         <div class="chips">
           <span class="chip">安全なStripe決済</span>
           <span class="chip">所要10〜15分</span>
           <span class="chip">保存なし（MVP）</span>
         </div>
       </div>
-      <div class="card">
-        <strong>これで得られるもの</strong>
-        <div class="mini"><span class="check">✔</span> あなたのミッション・ステートメント（1文）</div>
-        <div class="mini"><span class="check">✔</span> 今すぐ動ける「最初の一歩」</div>
-        <div class="mini"><span class="check">✔</span> 迷いが減る“判断基準”</div>
+      <p class="caption">※ 写真はイメージです。後で商用可素材に差し替えます。</p>
+    </section>
+
+    <!-- なぜ効く？ -->
+    <section id="why" class="section">
+      <h2 class="title">なぜ目標達成に効くのか</h2>
+      <div class="row">
+        <div class="card">
+          <div class="steps">
+            <div class="step">
+              <h4>① Discover（発見）</h4>
+              <p>日ごろのAI対話で価値観・願望・制約を掘り出す。</p>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="step">
+              <h4>② Define（定義）</h4>
+              <p>最終目標を一文に凝縮。あなたの“軸”を固定する。</p>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="step">
+              <h4>③ Do（実行）</h4>
+              <p>事例とデータに基づく**個別最適の計画**をAIが提示。やるべきことが明確化。</p>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,#eef2ff,#e6fff7 60%,#fff0e6)">
+          <strong>ポイント</strong>
+          <ul class="bullets" style="margin:8px 0 0;padding-left:18px">
+            <li>日常対話で“本音”を抽出</li>
+            <li>多数ユーザーの事例学習で最適化</li>
+            <li>今日から動くタスクに分解</li>
+          </ul>
+        </div>
       </div>
     </section>
 
-    <section class="features">
-      <div class="card feat">
-        <div style="font-size:22px">🧭</div>
-        <h3>AI対話で自己発見</h3>
-        <p>ノイズを削ぎ落とし、核となる価値観を言語化。</p>
-      </div>
-      <div class="card feat">
-        <div style="font-size:22px">📌</div>
-        <h3>あなただけの羅針盤</h3>
-        <p>日々の選択にぶれない軸を持てる。</p>
-      </div>
-      <div class="card feat">
-        <div style="font-size:22px">🚀</div>
-        <h3>今日から一歩</h3>
-        <p>行動に落とす最初のクエストを明確化。</p>
+    <!-- プラン -->
+    <section id="plan" class="section">
+      <h2 class="title">プラン</h2>
+      <div class="card plan">
+        <div><span class="price">¥100</span> / セッション</div>
+        <div class="bullets">
+          <div>・最終目標の仮決定（1文）</div>
+          <div>・最初の一歩（今週やること）</div>
+          <div>・行動の判断基準の提示</div>
+        </div>
+        <a class="cta" href="#signup">対話セッションを開始（100円）</a>
+        <p class="note">※ MVP段階につき返金なし。特商法/規約/プライバシーは後日掲出。</p>
       </div>
     </section>
 
-    <section class="faq card">
-      <h4>よくある質問</h4>
-      <div class="qa"><strong>Q.</strong> 100円の理由は？<br> <strong>A.</strong> 体験の価値を確かめるためのテスト価格です。</div>
-      <div class="qa"><strong>Q.</strong> 返金は？<br> <strong>A.</strong> MVP段階では返金対応は行っていません。</div>
-      <div class="qa"><strong>Q.</strong> 所要時間は？<br> <strong>A.</strong> 10〜15分で完了します。</div>
-    </section>
-
-    <p class="footer">© <script>document.write(new Date().getFullYear())</script> Mission Compass</p>
-  </main>
-
-  <div class="sticky-cta">
-    <a class="cta" href="#start">対話セッションを開始（100円）</a>
   </div>
+
+  <!-- ボトムナビ：未ログイン時は ホーム/なぜ効く/プラン -->
+  <nav class="tabbar" role="navigation" aria-label="Bottom Navigation">
+    <button class="tab" data-target="home" aria-current="page"><span class="ico">🏠</span>ホーム</button>
+    <button class="tab" data-target="why"><span class="ico">🧠</span>なぜ効く？</button>
+    <button class="tab" data-target="plan"><span class="ico">💳</span>プラン</button>
+  </nav>
+
+  <script>
+    // シンプルなタブ移動（スクロール）＆アクティブ表示
+    const tabs = document.querySelectorAll('.tab');
+    const to = id => document.getElementById(id)?.scrollIntoView({behavior:'smooth', block:'start'});
+    tabs.forEach(b=>{
+      b.addEventListener('click',()=>{
+        tabs.forEach(x=>x.removeAttribute('aria-current'));
+        b.setAttribute('aria-current','page');
+        to(b.dataset.target);
+      });
+    });
+    // セクション監視でタブ状態更新
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          tabs.forEach(x=>x.removeAttribute('aria-current'));
+          const t = document.querySelector(`.tab[data-target="${e.target.id}"]`);
+          t && t.setAttribute('aria-current','page');
+        }
+      });
+    }, {rootMargin:'-40% 0px -50% 0px', threshold:0.01});
+    ['home','why','plan'].forEach(id=>{ const el=document.getElementById(id); el && io.observe(el); });
+  </script>
 </body>
 </html>
