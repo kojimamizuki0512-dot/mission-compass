@@ -26,6 +26,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // === Body parser ===
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // === Session (MVP: MemoryStore) ===
 app.set('trust proxy', 1);
@@ -43,17 +44,16 @@ app.use(
   })
 );
 
-// ★ locals（layout を「関数」で上書きしないこと！）
+// === locals（layoutを関数で上書きしない） ===
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.hasPaid = req.session.hasPaid || false;
   res.locals.OPENAI_CUSTOM_GPT_URL = process.env.OPENAI_CUSTOM_GPT_URL || '#';
   res.locals.STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
-  // res.locals.layout は絶対に設定しない（文字列パスである必要があるため）
   next();
 });
 
-// Initialize DB
+// === DB初期化 ===
 await initDb();
 
 // ===== Routes =====
@@ -64,11 +64,9 @@ app.get('/', (req, res) => {
 // CTA: 対話セッションを開始（100円）
 app.post('/start', (req, res) => {
   if (!req.session.user) {
-    // 未ログイン → サインアップへ。完了後に /pay へ進ませる
     req.session.afterLoginRedirect = '/pay';
     return res.redirect('/signup?next=pay');
   }
-  // ログイン済み → /pay（このルートで即Checkoutへ飛ばす）
   return res.redirect('/pay');
 });
 
@@ -91,11 +89,7 @@ app.post('/signup', async (req, res) => {
   await createUser({ id, email: email.trim().toLowerCase(), password_hash });
   req.session.user = { id, email: email.trim().toLowerCase() };
   req.session.hasPaid = false;
-  // ?next=pay 指定があれば /pay へ、それ以外は afterLoginRedirect or '/'
-  const next =
-    (req.query.next === 'pay' && '/pay') ||
-    req.session.afterLoginRedirect ||
-    '/';
+  const next = (req.query.next === 'pay' && '/pay') || req.session.afterLoginRedirect || '/';
   delete req.session.afterLoginRedirect;
   return res.redirect(next);
 });
@@ -125,22 +119,18 @@ app.post('/login', async (req, res) => {
   return res.redirect(next);
 });
 
+// Logout
 app.post('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/');
-  });
+  req.session.destroy(() => res.redirect('/'));
 });
 
-// ===== /pay: ここで即Checkoutへ（中間ページなしで最短導線） =====
-app.get('/pay', requireAuth, (req, res) => {
-  return res.redirect('/checkout');
-});
+// /pay: 中間ページなしでCheckoutへ
+app.get('/pay', requireAuth, (req, res) => res.redirect('/checkout'));
 
-// Checkout: Stripe Checkout セッション作成
+// Checkout（Stripe）
 app.get('/checkout', requireAuth, async (req, res) => {
-  // Stripe未設定時は開発確認のためスキップ（ダミー課金）
   if (!stripe || !process.env.STRIPE_SECRET_KEY) {
-    req.session.hasPaid = true;
+    req.session.hasPaid = true; // 開発用スキップ
     return res.redirect('/dialog');
   }
   const YOUR_DOMAIN = req.headers.origin || `http://localhost:${process.env.PORT || 3000}`;
@@ -181,6 +171,74 @@ app.get('/payment/cancel', requireAuth, (req, res) => {
 // ゲート付き対話ページ
 app.get('/dialog', requireAuth, requirePaidAccess, (req, res) => {
   res.render('dialog', { title: '作戦会議（AIメンター）' });
+});
+
+/* =========================
+   Gemini 連携 API（/api/chat）
+   ========================= */
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+
+async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
+  if (!GEMINI_API_KEY) {
+    return {
+      ok: false,
+      reply:
+        '（管理者向け）GEMINI_API_KEY が未設定です。Railway の Variables に GEMINI_API_KEY を追加してください。'
+    };
+  }
+
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+        GEMINI_MODEL
+      )}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`,
+      {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt.slice(0, 4000) }]}],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
+        })
+      }
+    );
+
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => '');
+      return { ok: false, reply: `Gemini API error: HTTP ${resp.status} ${txt}` };
+    }
+    const data = await resp.json();
+    const text =
+      data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') ||
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      '（応答が取得できませんでした）';
+
+    return { ok: true, reply: text };
+  } catch (err) {
+    const msg = err?.name === 'AbortError' ? 'タイムアウトしました。' : (err?.message || '通信エラー');
+    return { ok: false, reply: `Geminiとの通信に失敗しました：${msg}` };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// 課金ゲート内API：POST /api/chat {message}
+app.post('/api/chat', requireAuth, requirePaidAccess, async (req, res) => {
+  const message = (req.body?.message || '').toString().trim();
+  if (!message) return res.status(400).json({ reply: 'メッセージが空です。' });
+
+  const persona =
+    'あなたはMission CompassのAI相棒。口調は丁寧で前向き、回答は短く要点を箇条書きし、最後に「今日の一歩」を1文で提案してください。';
+
+  const userPrompt = `${persona}\n\nユーザー: ${message}`;
+  const result = await callGemini(userPrompt);
+
+  // 常に200で返す（フロントは reply をそのまま表示）
+  return res.json({ reply: result.reply });
 });
 
 // Start server
