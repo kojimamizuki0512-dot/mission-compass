@@ -168,8 +168,11 @@ app.get('/payment/cancel', requireAuth, (req, res) => {
   res.render('index', { title: 'Mission Compass — 決済がキャンセルされました。' });
 });
 
-// ゲート付き対話ページ
-app.get('/dialog', requireAuth, requirePaidAccess, (req, res) => {
+/* =========================
+   ゲート付き対話ページ（TEMP: 公開中）
+   ========================= */
+// ★一時対応：誰でも見られるようにミドルウェアを外す
+app.get('/dialog', (req, res) => {
   res.render('dialog', { title: '作戦会議（AIメンター）' });
 });
 
@@ -177,9 +180,8 @@ app.get('/dialog', requireAuth, requirePaidAccess, (req, res) => {
    Gemini 連携 API（/api/chat）
    ========================= */
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-// ★ 404回避の安定デフォルト
+// 404回避の安定デフォルト
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
-// API バージョンも v1 を使用
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1';
 
 async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
@@ -226,8 +228,11 @@ async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
   }
 }
 
-// 課金ゲート内API：POST /api/chat {message}
-app.post('/api/chat', requireAuth, requirePaidAccess, async (req, res) => {
+/* =========================
+   課金ゲート内API（TEMP: 公開中）
+   ========================= */
+// ★一時対応：誰でも叩けるようにミドルウェアを外す
+app.post('/api/chat', async (req, res) => {
   const message = (req.body?.message || '').toString().trim();
   if (!message) return res.status(400).json({ reply: 'メッセージが空です。' });
 
