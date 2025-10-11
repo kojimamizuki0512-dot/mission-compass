@@ -1,80 +1,101 @@
 <% /* レイアウトは server.js の express-ejs-layouts に任せる。ここで layout() は呼ばない。 */ %>
 
-<!-- ヒーロー写真（商用可：Unsplash / Pexels） -->
+<!-- ===== ヒーロー写真（商用可） =====
+  Unsplash / Pexels は商用利用可（クレジット不要）。後で自前素材に差し替え可能。
+-->
 <style>
-  .hero-photos{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;scroll-snap-type:x mandatory}
+  /* コンテナ内から横幅を画面いっぱいに“にじませる”（フルブリード） */
+  .bleed{margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw}
+
+  /* 横スワイプのギャラリー。スマホは高さ70vhでドーン。 */
+  .hero-photos{display:flex; gap:10px; overflow-x:auto; padding:6px 2px 10px; scroll-snap-type:x mandatory}
   .hero-photos::-webkit-scrollbar{height:8px}
-  .hero-photos::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
-  .hero-photos .hp{min-width:85%;scroll-snap-align:center;border-radius:16px;overflow:hidden;border:1px solid var(--bd);background:#fff;position:relative}
-  .hero-photos .hp img{width:100%;height:100%;object-fit:cover;aspect-ratio:16/9}
-  .hero-photos .cap{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;color:#fff;
-    background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));font-weight:600}
-  @media (min-width:920px){ .hero-photos .hp{min-width:60%} }
+  .hero-photos::-webkit-scrollbar-thumb{background:#cbd5e1; border-radius:999px}
+  .hero-photos .hp{
+    min-width:100%;  /* ← 1枚ずつ全幅で見せる */
+    height:clamp(360px, 70vh, 860px);
+    scroll-snap-align:center; border-radius:16px; overflow:hidden;
+    border:1px solid var(--bd); background:#000; position:relative;
+  }
+  .hero-photos .hp img{
+    width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .hero-photos .cap{
+    position:absolute; left:0; right:0; bottom:0; padding:12px 14px; color:#fff;
+    background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));
+    font-weight:700; letter-spacing:.02em
+  }
+  @media (min-width:920px){
+    .hero-photos .hp{min-width:70%; height:clamp(420px, 60vh, 900px)}
+  }
 </style>
-<div class="hero-photos" aria-label="Inspiration photos" tabindex="0">
-  <!-- 1. 紙吹雪のライブ（華やか） -->
-  <figure class="hp">
-    <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80"
-         alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900" />
-    <figcaption class="cap">舞台は、あなたを待っている。</figcaption>
-  </figure>
-  <!-- 2. 強い照明のシンガー -->
-  <figure class="hp">
-    <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80"
-         alt="強い照明の中で歌うシンガー" width="1600" height="900" />
-    <figcaption class="cap">光の中へ、堂々と。</figcaption>
-  </figure>
-  <!-- 3. 機内窓の夕焼け（世界へ） -->
-  <figure class="hp">
-    <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80"
-         alt="飛行機の窓から見る夕焼け" width="1600" height="900" />
-    <figcaption class="cap">次の目的地は、世界。</figcaption>
-  </figure>
-  <!-- 4. 花火の夜景（達成の祝福） -->
-  <figure class="hp">
-    <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80"
-         alt="花火が上がる都市の夜景" width="1600" height="900" />
-    <figcaption class="cap">成果は、必ず祝われる。</figcaption>
-  </figure>
-  <!-- 5. ラグジュアリーな家族の時間 -->
-  <figure class="hp">
-    <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600"
-         alt="明るいリビングでの家族の団欒" width="1600" height="1067" />
-    <figcaption class="cap">大切な人と、豊かな時間を。</figcaption>
-  </figure>
+
+<div class="bleed">
+  <div class="hero-photos" aria-label="インスピレーション写真" tabindex="0">
+    <!-- 1. 紙吹雪のライブ（華やか） -->
+    <figure class="hp">
+      <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80"
+           alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900" />
+      <figcaption class="cap">舞台は、あなたを待っている。</figcaption>
+    </figure>
+    <!-- 2. 強い照明のシンガー -->
+    <figure class="hp">
+      <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80"
+           alt="強い照明の中で歌うシンガー" width="1600" height="900" />
+      <figcaption class="cap">光の中へ、堂々と。</figcaption>
+    </figure>
+    <!-- 3. 機内窓の夕焼け（世界へ） -->
+    <figure class="hp">
+      <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80"
+           alt="飛行機の窓から見る夕焼け" width="1600" height="900" />
+      <figcaption class="cap">次の目的地は、世界。</figcaption>
+    </figure>
+    <!-- 4. 花火の夜景（達成の祝福） -->
+    <figure class="hp">
+      <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80"
+           alt="花火が上がる都市の夜景" width="1600" height="900" />
+      <figcaption class="cap">成果は、必ず祝われる。</figcaption>
+    </figure>
+    <!-- 5. ラグジュアリーな家族の時間 -->
+    <figure class="hp">
+      <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600"
+           alt="明るいリビングでの家族の団欒" width="1600" height="1067" />
+      <figcaption class="cap">大切な人と、豊かな時間を。</figcaption>
+    </figure>
+  </div>
 </div>
 
 <section class="hero">
   <h1>なぜ学ぶのか、を決めよう。</h1>
   <p class="lead">
-    AIとの対話で、最終目標と道筋を明確化。<strong>Find your WHY.</strong>
+    AIとの対話で、最終目標と道筋を明確化。今日から動ける「最初の一歩」へ。
   </p>
   <form method="post" action="/start">
-    <!-- さらに大きいCTA（親指サイズを意識） -->
+    <!-- デカCTA（日本語のみ） -->
     <button class="btn cta" type="submit"
-      style="padding:18px 24px; font-size:18px; border-radius:16px; box-shadow:0 16px 36px rgba(31,111,235,.24), 0 8px 18px rgba(16,185,129,.16);">
+      style="padding:20px 26px; font-size:18px; border-radius:18px;
+             box-shadow:0 18px 40px rgba(31,111,235,.26), 0 10px 22px rgba(16,185,129,.18);">
       はじめる（¥100）
-      <span style="display:block;font-weight:600;font-size:12px;opacity:.9;line-height:1;margin-top:4px;">Start Session</span>
     </button>
   </form>
   <div class="chips" style="margin-top:12px">
-    <span class="chip">安全なStripe決済 / Secure</span>
-    <span class="chip">所要10–15分 / 10–15 min</span>
-    <span class="chip">保存なし（MVP） / No Save</span>
+    <span class="chip">安全なStripe決済</span>
+    <span class="chip">所要10〜15分</span>
+    <span class="chip">保存なし（MVP）</span>
   </div>
 </section>
 
 <section class="features">
   <div class="feature">
-    <h3>AI対話で自己発見（Discover）</h3>
-    <p>雑念を削ぎ落とし、コアとなる価値観を言語化する。</p>
+    <h3>AI対話で自己発見</h3>
+    <p>雑念を削ぎ落とし、価値観と願望を言語化。</p>
   </div>
   <div class="feature">
-    <h3>あなただけの羅針盤（Your Compass）</h3>
-    <p>日々の選択にぶれない“軸”を1文で定義。</p>
+    <h3>あなただけの羅針盤</h3>
+    <p>ぶれない“軸”を一文で定義。選択が速くなる。</p>
   </div>
   <div class="feature">
-    <h3>最初の一歩（First Step）</h3>
-    <p>今週やることまで落とし込み、すぐ動ける状態へ。</p>
+    <h3>最初の一歩</h3>
+    <p>今週やることまで分解。今日から動ける。</p>
   </div>
 </section>
