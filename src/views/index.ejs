@@ -1,8 +1,8 @@
-<% /* レイアウトは server.js の express-ejs-layouts に任せる。ここで layout() は呼ばない。 */ %>
+<% /* レイアウトは server.js の express-ejs-layouts に任せる。ここで layout() は呼びません。 */ %>
 
 <!-- ===== ヒーロー写真：自動ローテーション（商用可：Unsplash / Pexels） ===== -->
 <style>
-  /* 完全フルブリード（左右の余白をゼロに） */
+  /* 完全フルブリード（左右の余白ゼロ） */
   .bleed-tight{
     margin-left:calc(50% - 50vw);
     margin-right:calc(50% - 50vw);
@@ -25,20 +25,29 @@
   .hero-rotator .slide.on{ opacity:1; }
   .hero-rotator img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-  /* ⬇ キャプション：主張しすぎない半透明バー＋読みやすいタイポ */
+  /* ===== キャプション（枠・背景・ブラー一切なし） ===== */
   .hero-rotator .cap{
-    position:absolute; left:4%; right:4%; bottom:6%;
-    padding:12px 14px; color:#fff; font-weight:800;
-    font-size:clamp(18px, 3.8vw, 26px); letter-spacing:.04em; line-height:1.2;
-    background:linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.36));
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,.12);
-    backdrop-filter: blur(3px);
-    box-shadow:0 8px 28px rgba(0,0,0,.25);
+    position:absolute; color:#fff; font-weight:800;
+    font-size:clamp(18px, 3.8vw, 28px); letter-spacing:.04em; line-height:1.2;
+    text-shadow:
+      0 2px 12px rgba(0,0,0,.55),
+      0 6px 28px rgba(0,0,0,.35);
+    /* 余白は最小限に。行替えの読みやすさ優先 */
+    padding:0; margin:0;
   }
-  /* デスクトップは少し控えめに */
+  /* 位置バリエーション */
+  .cap.tl{ top:7%;  left:5%; }
+  .cap.tr{ top:7%;  right:5%; text-align:right; }
+  .cap.bl{ bottom:7%; left:5%; }
+  .cap.br{ bottom:7%; right:5%; text-align:right; }
+  .cap.c{
+    top:50%; left:50%; transform:translate(-50%,-50%);
+    text-align:center;
+  }
+
+  /* デスクトップは少しフォントを抑えめに */
   @media (min-width:920px){
-    .hero-rotator .cap{ font-size:clamp(18px, 2.2vw, 24px); bottom:5%; }
+    .hero-rotator .cap{ font-size:clamp(18px, 2.2vw, 26px); }
     .hero-rotator{ border-radius:16px; }
   }
 
@@ -52,35 +61,35 @@
 
 <div class="bleed-tight">
   <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
-    <!-- 1. 紙吹雪のライブ（華やか） -->
+    <!-- 1. 紙吹雪のライブ（華やか） → 左上 -->
     <figure class="slide on">
       <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80"
            alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900" />
-      <figcaption class="cap">スポットライトは、あなたへ。</figcaption>
+      <figcaption class="cap tl">スポットライトは、あなたへ。</figcaption>
     </figure>
-    <!-- 2. 強い照明のシンガー -->
+    <!-- 2. 強い照明のシンガー → 右下 -->
     <figure class="slide">
       <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80"
            alt="強い照明の中で歌うシンガー" width="1600" height="900" />
-      <figcaption class="cap">一歩、光の中へ。</figcaption>
+      <figcaption class="cap br">一歩、光の中へ。</figcaption>
     </figure>
-    <!-- 3. 機内窓の夕焼け（世界へ） -->
+    <!-- 3. 機内窓の夕焼け → 中央 -->
     <figure class="slide">
       <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80"
            alt="飛行機の窓から見る夕焼け" width="1600" height="900" />
-      <figcaption class="cap">次の目的地は、世界。</figcaption>
+      <figcaption class="cap c">次の目的地は、世界。</figcaption>
     </figure>
-    <!-- 4. 花火の夜景（達成の祝福） -->
+    <!-- 4. 花火の夜景 → 右上 -->
     <figure class="slide">
       <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80"
            alt="花火が上がる都市の夜景" width="1600" height="900" />
-      <figcaption class="cap">努力は、必ず祝われる。</figcaption>
+      <figcaption class="cap tr">努力は、必ず祝われる。</figcaption>
     </figure>
-    <!-- 5. ラグジュアリーな家族の時間 -->
+    <!-- 5. ラグジュアリーな家族の時間 → 左下 -->
     <figure class="slide">
       <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600"
            alt="明るいリビングでの家族の団欒" width="1600" height="1067" />
-      <figcaption class="cap">大切な人と、豊かな時間を。</figcaption>
+      <figcaption class="cap bl">大切な人と、豊かな時間を。</figcaption>
     </figure>
 
     <div class="dots" id="heroDots" aria-hidden="true">
@@ -124,7 +133,7 @@
 </section>
 
 <script>
-  // 自動ローテーション（互換重視）
+  // 自動ローテーション（4.5秒／互換重視）
   document.addEventListener('DOMContentLoaded', function(){
     var rotator = document.getElementById('heroRotator');
     if (!rotator) return;
