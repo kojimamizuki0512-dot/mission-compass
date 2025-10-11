@@ -2,17 +2,22 @@
 
 <!-- ===== ヒーロー写真：自動ローテーション（商用可：Unsplash / Pexels） ===== -->
 <style>
-  /* コンテナ内から画面端まで“にじませる”（ほぼフルブリード：左右2pxだけ残す） */
-  .bleed-tight{margin-left:calc(50% - 50vw + 2px); margin-right:calc(50% - 50vw + 2px); width:calc(100vw - 4px)}
+  /* 完全フルブリード（左右の余白をゼロに） */
+  .bleed-tight{
+    margin-left:calc(50% - 50vw);
+    margin-right:calc(50% - 50vw);
+    width:100vw;
+  }
 
   .hero-rotator{
     position:relative;
     width:100%;
-    height:clamp(420px, 85vh, 900px);
+    height:clamp(420px, 88vh, 1000px);  /* ← 少しだけ高さアップ */
     background:#000; overflow:hidden;
   }
-  @supports (height: 85dvh){
-    .hero-rotator{ height:clamp(420px, 85dvh, 900px); }
+  /* アドレスバーの高さを除いた動的vhが使える環境では優先 */
+  @supports (height: 88dvh){
+    .hero-rotator{ height:clamp(420px, 88dvh, 1000px); }
   }
 
   .hero-rotator .slide{
@@ -35,7 +40,7 @@
   .dot{width:6px; height:6px; border-radius:999px; background:#cbd5e1; opacity:.9}
   .dot.on{ background:#ffffff; }
 
-  /* デスクトップは少しだけ角丸を戻す */
+  /* デスクトップは少しだけ角丸を戻す（モバイルは完全フラット） */
   @media (min-width:920px){
     .hero-rotator{ border-radius:16px; }
   }
@@ -124,16 +129,14 @@
     var dotsWrap = document.getElementById('heroDots');
     var dots = dotsWrap ? dotsWrap.children : [];
     var i = 0;
-    var intervalMs = 4500; // ← 少しゆっくりに
+    var intervalMs = 4500; // ゆっくり
 
     function show(n){
       if (slides.length === 0) return;
-      slides[i] && slides[i].classList.remove('on');
+      if (slides[i]) slides[i].classList.remove('on');
       if (dots[i]) dots[i].classList.remove('on');
-
       i = (n + slides.length) % slides.length;
-
-      slides[i] && slides[i].classList.add('on');
+      if (slides[i]) slides[i].classList.add('on');
       if (dots[i]) dots[i].classList.add('on');
     }
 
