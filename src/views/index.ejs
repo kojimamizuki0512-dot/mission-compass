@@ -38,17 +38,31 @@
   .dot{ width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.6) }
   .dot.on{ background:#fff }
 
-  /* CTAセクション：色をダークブルー基調へ */
+  /* CTAセクション：ロイヤルブルー＆立体感 */
   .cta-wrap{ padding:18px 0 6px; }
   .cta-wrap h1{ color:var(--dark-blue); font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
   .cta-wrap .lead{ color:#48505A; margin:0 0 16px; font-size:clamp(15px, 3.8vw, 17px); }
+
   .cta-btn{
+    --royal:#4169E1; /* RoyalBlue */
     display:inline-flex; align-items:center; justify-content:center;
-    width:100%; max-width:520px; padding:18px 22px; font-size:18px; font-weight:900;
-    background:var(--dark-blue); color:#fff; border:none; border-radius:18px; cursor:pointer;
-    box-shadow:0 14px 32px rgba(11,42,107,.26); transition:transform .12s ease, box-shadow .12s ease;
+    width:100%; max-width:520px;
+    padding:20px 24px; font-size:18px; font-weight:900;
+    background:linear-gradient(180deg, var(--royal), #3a5fd0);
+    color:#fff; border:1px solid rgba(65,105,225,.55);
+    border-radius:18px; cursor:pointer;
+    box-shadow:
+      0 18px 36px rgba(65,105,225,.35),
+      0 10px 22px rgba(11,42,107,.14);
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
   }
-  .cta-btn:active{ transform:translateY(1px) scale(.995) }
+  .cta-btn:hover{ transform:translateY(-1px); box-shadow:0 22px 44px rgba(65,105,225,.38), 0 12px 26px rgba(11,42,107,.16); }
+  .cta-btn:active{
+    transform:translateY(0);
+    box-shadow:inset 0 4px 10px rgba(0,0,0,.18), 0 8px 18px rgba(11,42,107,.12);
+    filter:saturate(96%);
+  }
+  .cta-btn:focus-visible{ outline:3px solid rgba(65,105,225,.45); outline-offset:3px; border-color:transparent; }
 
   .cta-meta{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
   .badge{
@@ -61,7 +75,7 @@
   .proof{ margin-top:12px; color:#4B5563; font-size:13px; line-height:1.6; }
   .proof b{ color:var(--dark-blue); }
 
-  /* Whyカードも境界線をチャコール寄りに */
+  /* Whyカード：境界線はチャコール寄り */
   .why{ padding:28px 0 8px; }
   .why h2{ color:var(--dark-blue); font-size:clamp(20px, 5.4vw, 28px); font-weight:800; letter-spacing:.02em; margin:0 0 10px; }
   .why .sub{ color:#60656B; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px); }
@@ -82,7 +96,7 @@
               background:rgba(11,42,107,.08); border:1px solid rgba(11,42,107,.22); padding:4px 8px; border-radius:999px; }
 </style>
 
-<!-- ヒーロー：画像は省略（既存のまま） -->
+<!-- ヒーロー：既存のフルブリード＆自動ローテーション -->
 <div class="bleed-tight">
   <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
     <figure class="slide kb-tl on">
@@ -136,7 +150,7 @@
   <h1>なぜ学ぶのか、を決めよう。</h1>
   <p class="lead">AIとの対話で、最終目標と道筋を明確化。今日から動ける「最初の一歩」へ。</p>
   <form method="post" action="/start">
-    <button class="cta-btn btn cta" type="submit">はじめる（¥100）</button>
+    <button class="cta-btn" type="submit">はじめる（¥100）</button>
   </form>
 
   <div class="cta-meta" aria-label="安心のポイント">
