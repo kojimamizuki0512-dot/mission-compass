@@ -21,7 +21,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '20
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.use(expressLayouts);
-app.set('layout', 'layout');
+app.set('layout', 'layout'); // src/views/layout.ejs を共通レイアウトにする
 app.use(express.static(path.join(__dirname, 'public')));
 
 // === Body parser ===
@@ -37,46 +37,42 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: false, // https本番ならtrue
+      secure: false, // https 本番なら true
       maxAge: 7 * 24 * 60 * 60 * 1000
     }
   })
 );
 
-// === locals（layoutを関数で上書きしない） ===
+// ★ locals（layout を「関数」で上書きしないこと！）
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.hasPaid = req.session.hasPaid || false;
   res.locals.OPENAI_CUSTOM_GPT_URL = process.env.OPENAI_CUSTOM_GPT_URL || '#';
   res.locals.STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
+  // res.locals.layout は絶対に設定しない（文字列パスである必要があるため）
   next();
 });
 
-// === DB初期化 ===
+// Initialize DB
 await initDb();
 
-// === Routes ===
+// ===== Routes =====
 app.get('/', (req, res) => {
   res.render('index', { title: 'Mission Compass — 何を学ぶかの前に、なぜ学ぶのかを。' });
 });
 
-// === /start: CTAエントリーポイント ===
+// CTA: 対話セッションを開始（100円）
 app.post('/start', (req, res) => {
-  if (!req.session) req.session = {};
-  req.session.intent = 'start';
-
-  const isLoggedIn = !!req.session.user;
-
-  if (isLoggedIn) {
-    // ログイン済み → 決済画面へ
-    return res.redirect('/pay');
-  } else {
-    // 未ログイン → サインアップへ
+  if (!req.session.user) {
+    // 未ログイン → サインアップへ。完了後に /pay へ進ませる
+    req.session.afterLoginRedirect = '/pay';
     return res.redirect('/signup?next=pay');
   }
+  // ログイン済み → /pay（このルートで即Checkoutへ飛ばす）
+  return res.redirect('/pay');
 });
 
-// === Signup ===
+// Signup
 app.get('/signup', (req, res) => {
   res.render('signup', { title: '新規登録', error: null });
 });
@@ -94,12 +90,17 @@ app.post('/signup', async (req, res) => {
   const password_hash = await bcrypt.hash(password, 10);
   await createUser({ id, email: email.trim().toLowerCase(), password_hash });
   req.session.user = { id, email: email.trim().toLowerCase() };
-  const next = req.query.next === 'pay' ? '/pay' : (req.session.afterLoginRedirect || '/');
+  req.session.hasPaid = false;
+  // ?next=pay 指定があれば /pay へ、それ以外は afterLoginRedirect or '/'
+  const next =
+    (req.query.next === 'pay' && '/pay') ||
+    req.session.afterLoginRedirect ||
+    '/';
   delete req.session.afterLoginRedirect;
   return res.redirect(next);
 });
 
-// === Login ===
+// Login
 app.get('/login', (req, res) => {
   res.render('login', { title: 'ログイン', error: null });
 });
@@ -124,18 +125,20 @@ app.post('/login', async (req, res) => {
   return res.redirect(next);
 });
 
-// === Logout ===
 app.post('/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/'));
+  req.session.destroy(() => {
+    res.redirect('/');
+  });
 });
 
-// === 決済ページ（次ステップで中身追加予定） ===
+// ===== /pay: ここで即Checkoutへ（中間ページなしで最短導線） =====
 app.get('/pay', requireAuth, (req, res) => {
-  res.send('<h2>決済ページ準備中（次の手でStripe接続）</h2>');
+  return res.redirect('/checkout');
 });
 
-// === Checkout (Stripe) ===
+// Checkout: Stripe Checkout セッション作成
 app.get('/checkout', requireAuth, async (req, res) => {
+  // Stripe未設定時は開発確認のためスキップ（ダミー課金）
   if (!stripe || !process.env.STRIPE_SECRET_KEY) {
     req.session.hasPaid = true;
     return res.redirect('/dialog');
@@ -175,12 +178,12 @@ app.get('/payment/cancel', requireAuth, (req, res) => {
   res.render('index', { title: 'Mission Compass — 決済がキャンセルされました。' });
 });
 
-// === 有料ゲート付きページ ===
+// ゲート付き対話ページ
 app.get('/dialog', requireAuth, requirePaidAccess, (req, res) => {
   res.render('dialog', { title: '作戦会議（AIメンター）' });
 });
 
-// === Start server ===
+// Start server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Mission Compass running on http://localhost:${port}`);
