@@ -17,17 +17,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-06-20' });
 
-// View & static
+// === View & static ===
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src', 'views'));
 app.use(expressLayouts);
-app.set('layout', 'layout'); // src/views/layout.ejs を共通レイアウトにする
+app.set('layout', 'layout');
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Body parser
+// === Body parser ===
 app.use(express.urlencoded({ extended: true }));
 
-// Session (MVP: MemoryStore)
+// === Session (MVP: MemoryStore) ===
 app.set('trust proxy', 1);
 app.use(
   session({
@@ -37,40 +37,46 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      secure: false, // https 本番なら true
+      secure: false, // https本番ならtrue
       maxAge: 7 * 24 * 60 * 60 * 1000
     }
   })
 );
 
-// ★ locals（layout を「関数」で上書きしないこと！）
+// === locals（layoutを関数で上書きしない） ===
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.hasPaid = req.session.hasPaid || false;
   res.locals.OPENAI_CUSTOM_GPT_URL = process.env.OPENAI_CUSTOM_GPT_URL || '#';
   res.locals.STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
-  // res.locals.layout は絶対に設定しない（文字列パスである必要があるため）
   next();
 });
 
-// Initialize DB (lowdb JSON; 本番は /tmp を使うように src/db.js 側で制御)
+// === DB初期化 ===
 await initDb();
 
-// Routes
+// === Routes ===
 app.get('/', (req, res) => {
   res.render('index', { title: 'Mission Compass — 何を学ぶかの前に、なぜ学ぶのかを。' });
 });
 
-// CTA: 対話セッションを開始（100円）
+// === /start: CTAエントリーポイント ===
 app.post('/start', (req, res) => {
-  if (!req.session.user) {
-    req.session.afterLoginRedirect = '/checkout';
-    return res.redirect('/signup');
+  if (!req.session) req.session = {};
+  req.session.intent = 'start';
+
+  const isLoggedIn = !!req.session.user;
+
+  if (isLoggedIn) {
+    // ログイン済み → 決済画面へ
+    return res.redirect('/pay');
+  } else {
+    // 未ログイン → サインアップへ
+    return res.redirect('/signup?next=pay');
   }
-  return res.redirect('/checkout');
 });
 
-// Signup
+// === Signup ===
 app.get('/signup', (req, res) => {
   res.render('signup', { title: '新規登録', error: null });
 });
@@ -88,12 +94,12 @@ app.post('/signup', async (req, res) => {
   const password_hash = await bcrypt.hash(password, 10);
   await createUser({ id, email: email.trim().toLowerCase(), password_hash });
   req.session.user = { id, email: email.trim().toLowerCase() };
-  const next = req.session.afterLoginRedirect || '/';
+  const next = req.query.next === 'pay' ? '/pay' : (req.session.afterLoginRedirect || '/');
   delete req.session.afterLoginRedirect;
   return res.redirect(next);
 });
 
-// Login
+// === Login ===
 app.get('/login', (req, res) => {
   res.render('login', { title: 'ログイン', error: null });
 });
@@ -118,16 +124,19 @@ app.post('/login', async (req, res) => {
   return res.redirect(next);
 });
 
+// === Logout ===
 app.post('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/');
-  });
+  req.session.destroy(() => res.redirect('/'));
 });
 
-// Checkout: Stripe Checkout セッション作成
+// === 決済ページ（次ステップで中身追加予定） ===
+app.get('/pay', requireAuth, (req, res) => {
+  res.send('<h2>決済ページ準備中（次の手でStripe接続）</h2>');
+});
+
+// === Checkout (Stripe) ===
 app.get('/checkout', requireAuth, async (req, res) => {
   if (!stripe || !process.env.STRIPE_SECRET_KEY) {
-    // Stripe未設定時は開発確認のためスキップ（ダミー課金）
     req.session.hasPaid = true;
     return res.redirect('/dialog');
   }
@@ -135,14 +144,16 @@ app.get('/checkout', requireAuth, async (req, res) => {
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     payment_method_types: ['card'],
-    line_items: [{
-      price_data: {
-        currency: 'jpy',
-        product_data: { name: 'Mission Compass 対話セッション利用料' },
-        unit_amount: 100
-      },
-      quantity: 1
-    }],
+    line_items: [
+      {
+        price_data: {
+          currency: 'jpy',
+          product_data: { name: 'Mission Compass 対話セッション利用料' },
+          unit_amount: 100
+        },
+        quantity: 1
+      }
+    ],
     success_url: `${YOUR_DOMAIN}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${YOUR_DOMAIN}/payment/cancel`
   });
@@ -164,12 +175,12 @@ app.get('/payment/cancel', requireAuth, (req, res) => {
   res.render('index', { title: 'Mission Compass — 決済がキャンセルされました。' });
 });
 
-// ゲート付き対話ページ
+// === 有料ゲート付きページ ===
 app.get('/dialog', requireAuth, requirePaidAccess, (req, res) => {
   res.render('dialog', { title: '作戦会議（AIメンター）' });
 });
 
-// Start server
+// === Start server ===
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Mission Compass running on http://localhost:${port}`);
