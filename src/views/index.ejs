@@ -115,22 +115,28 @@
 </section>
 
 <script>
-  // 自動ローテーション（3.5秒ごとにフェード）
-  const rotator = document.getElementById('heroRotator');
-  const slides = rotator ? rotator.querySelectorAll('.slide') : [];
-  const dots = document.getElementById('heroDots')?.children || [];
-  let i = 0, timer = null, interval = 3500;
+  // 依存なし・古い構文で互換性重視（iOSでも確実に動く）
+  document.addEventListener('DOMContentLoaded', function(){
+    var rotator = document.getElementById('heroRotator');
+    if (!rotator) return;
 
-  function show(n){
-    slides[i]?.classList.remove('on'); dots[i]?.classList.remove('on');
-    i = (n + slides.length) % slides.length;
-    slides[i]?.classList.add('on'); dots[i]?.classList.add('on');
-  }
-  function start(){ stop(); timer = setInterval(()=>show(i+1), interval); }
-  function stop(){ if(timer){ clearInterval(timer); timer = null; } }
+    var slides = rotator.querySelectorAll('.slide');
+    var dotsWrap = document.getElementById('heroDots');
+    var dots = dotsWrap ? dotsWrap.children : [];
+    var i = 0;
+    var intervalMs = 4500; // ← 少しゆっくりに
 
-  // ページ表示後に開始、ユーザーがタップしたら一時停止→数秒後に再開でもOK
-  window.addEventListener('load', start);
-  rotator?.addEventListener('pointerdown', stop);
-  rotator?.addEventListener('pointerup', ()=>setTimeout(start, 2500));
+    function show(n){
+      if (slides.length === 0) return;
+      slides[i] && slides[i].classList.remove('on');
+      if (dots[i]) dots[i].classList.remove('on');
+
+      i = (n + slides.length) % slides.length;
+
+      slides[i] && slides[i].classList.add('on');
+      if (dots[i]) dots[i].classList.add('on');
+    }
+
+    setInterval(function(){ show(i + 1); }, intervalMs);
+  });
 </script>
