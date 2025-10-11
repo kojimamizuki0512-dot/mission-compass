@@ -1,205 +1,126 @@
-<% /* レイアウトは server.js の express-ejs-layouts に任せる。ここで layout() は呼びません。 */ %>
+<% /* ページ内CSSはカラートークン（:root）を使用 */ %>
 
-<!-- ===== ヒーロー写真：自動ローテーション（商用可：Unsplash / Pexels） ===== -->
 <style>
-  /* 完全フルブリード（左右の余白ゼロ） */
-  .bleed-tight{
-    margin-left:calc(50% - 50vw);
-    margin-right:calc(50% - 50vw);
-    width:100vw;
-  }
+  .bleed-tight{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw; }
+  .hero-rotator{ position:relative; width:100%; height:clamp(420px, 88vh, 1000px); background:#000; overflow:hidden; }
+  @supports (height: 88dvh){ .hero-rotator{ height:clamp(420px, 88dvh, 1000px); } }
 
-  .hero-rotator{
-    position:relative;
-    width:100%;
-    height:clamp(420px, 88vh, 1000px);
-    background:#000; overflow:hidden;
-  }
-  @supports (height: 88dvh){
-    .hero-rotator{ height:clamp(420px, 88dvh, 1000px); }
-  }
-
-  .hero-rotator .slide{
-    position:absolute; inset:0;
-    opacity:0; transition:opacity .6s ease;   /* 弱めフェード */
-  }
+  .hero-rotator .slide{ position:absolute; inset:0; opacity:0; transition:opacity .6s ease; }
   .hero-rotator .slide.on{ opacity:1; }
+  .hero-rotator .slide img{ width:100%; height:100%; object-fit:cover; display:block; transform:scale(1) translate3d(0,0,0); will-change:transform; }
 
-  /* 画像（<picture>内の<img>） */
-  .hero-rotator .slide img{
-    width:100%; height:100%; object-fit:cover; display:block;
-    transform:scale(1) translate3d(0,0,0);
-    will-change: transform;
-  }
-
-  /* ===== Ken Burns（弱め：ズーム1.05 + パン0.8%） ===== */
+  /* 弱めKen Burns */
   .slide.on img{ animation:kb-center 4.5s ease-in-out both; }
-  .slide.kb-tl.on img{ animation-name: kb-tl; }
-  .slide.kb-tr.on img{ animation-name: kb-tr; }
-  .slide.kb-bl.on img{ animation-name: kb-bl; }
-  .slide.kb-br.on img{ animation-name: kb-br; }
+  .slide.kb-tl.on img{ animation-name:kb-tl } .slide.kb-tr.on img{ animation-name:kb-tr }
+  .slide.kb-bl.on img{ animation-name:kb-bl } .slide.kb-br.on img{ animation-name:kb-br }
+  @keyframes kb-center{ from{transform:scale(1.05)} to{transform:scale(1)} }
+  @keyframes kb-tl{ from{transform:scale(1.05) translate3d(.8%, .8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
+  @keyframes kb-tr{ from{transform:scale(1.05) translate3d(-.8%, .8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
+  @keyframes kb-bl{ from{transform:scale(1.05) translate3d(.8%,-.8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
+  @keyframes kb-br{ from{transform:scale(1.05) translate3d(-.8%,-.8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
 
-  @keyframes kb-center{
-    from{ transform:scale(1.05) translate3d(0,0,0) }
-    to  { transform:scale(1.0)  translate3d(0,0,0) }
-  }
-  @keyframes kb-tl{
-    from{ transform:scale(1.05) translate3d(0.8%, 0.8%, 0) }
-    to  { transform:scale(1.0)  translate3d(0,0,0) }
-  }
-  @keyframes kb-tr{
-    from{ transform:scale(1.05) translate3d(-0.8%, 0.8%, 0) }
-    to  { transform:scale(1.0)  translate3d(0,0,0) }
-  }
-  @keyframes kb-bl{
-    from{ transform:scale(1.05) translate3d(0.8%, -0.8%, 0) }
-    to  { transform:scale(1.0)  translate3d(0,0,0) }
-  }
-  @keyframes kb-br{
-    from{ transform:scale(1.05) translate3d(-0.8%, -0.8%, 0) }
-    to  { transform:scale(1.0)  translate3d(0,0,0) }
-  }
-
-  /* ===== キャプション（枠なし・個別配置／弱めの出現） ===== */
+  /* キャプション */
   .hero-rotator .cap{
     position:absolute; color:#fff; font-weight:800;
     font-size:clamp(18px, 3.6vw, 26px); letter-spacing:.04em; line-height:1.2;
     text-shadow:0 2px 10px rgba(0,0,0,.45), 0 6px 22px rgba(0,0,0,.28);
-    padding:0; margin:0;
     opacity:0; transform:translateY(6px);
   }
   .slide.on .cap{ animation:capIn .5s cubic-bezier(.25,.7,.25,1) .08s both; }
-  @keyframes capIn{
-    from{ opacity:0; transform:translateY(8px) }
-    to  { opacity:1; transform:none }
+  @keyframes capIn{ from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+  .cap.tl{ top:7%; left:5% } .cap.tr{ top:7%; right:5%; text-align:right }
+  .cap.bl{ bottom:7%; left:5% } .cap.br{ bottom:7%; right:5%; text-align:right }
+  .cap.c{ top:50%; left:50%; transform:translate(-50%,-50%); text-align:center }
+  .slide.on .cap.c{ animation-delay:.14s }
+
+  /* ドット */
+  .dots{ position:absolute; left:0; right:0; bottom:12px; display:flex; justify-content:center; gap:6px; pointer-events:none; }
+  .dot{ width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.6) }
+  .dot.on{ background:#fff }
+
+  /* CTAセクション：色をダークブルー基調へ */
+  .cta-wrap{ padding:18px 0 6px; }
+  .cta-wrap h1{ color:var(--dark-blue); font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
+  .cta-wrap .lead{ color:#48505A; margin:0 0 16px; font-size:clamp(15px, 3.8vw, 17px); }
+  .cta-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:100%; max-width:520px; padding:18px 22px; font-size:18px; font-weight:900;
+    background:var(--dark-blue); color:#fff; border:none; border-radius:18px; cursor:pointer;
+    box-shadow:0 14px 32px rgba(11,42,107,.26); transition:transform .12s ease, box-shadow .12s ease;
   }
+  .cta-btn:active{ transform:translateY(1px) scale(.995) }
 
-  /* 位置バリエーション */
-  .cap.tl{ top:7%;  left:5%; }
-  .cap.tr{ top:7%;  right:5%; text-align:right; }
-  .cap.bl{ bottom:7%; left:5%; }
-  .cap.br{ bottom:7%; right:5%; text-align:right; }
-  .cap.c{ top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
-  .slide.on .cap.c{ animation-delay:.14s; }
-
-  /* デスクトップ微調整 */
-  @media (min-width:920px){
-    .hero-rotator .cap{ font-size:clamp(18px, 2.1vw, 24px); }
-    .hero-rotator{ border-radius:16px; }
+  .cta-meta{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; padding:8px 10px;
+    background:var(--white); border:1px solid rgba(59,64,68,.22); border-radius:999px;
+    font-size:12px; color:var(--ink);
   }
+  .badge svg{ width:14px; height:14px; color:var(--dark-blue); }
 
-  .dots{
-    position:absolute; left:0; right:0; bottom:12px;
-    display:flex; justify-content:center; gap:6px; pointer-events:none;
-  }
-  .dot{width:6px; height:6px; border-radius:999px; background:#cbd5e1; opacity:.9}
-  .dot.on{ background:#ffffff; }
+  .proof{ margin-top:12px; color:#4B5563; font-size:13px; line-height:1.6; }
+  .proof b{ color:var(--dark-blue); }
 
-  /* ===== 「なぜ効く？」図解カード ===== */
+  /* Whyカードも境界線をチャコール寄りに */
   .why{ padding:28px 0 8px; }
-  .why h2{ font-size:clamp(20px, 5.4vw, 28px); font-weight:800; letter-spacing:.02em; margin:0 0 10px; }
-  .why .sub{ color:#4b5563; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px); }
+  .why h2{ color:var(--dark-blue); font-size:clamp(20px, 5.4vw, 28px); font-weight:800; letter-spacing:.02em; margin:0 0 10px; }
+  .why .sub{ color:#60656B; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px); }
   .why-grid{ display:grid; gap:12px; grid-template-columns:1fr; }
   @media (min-width:720px){ .why-grid{ grid-template-columns:repeat(3,1fr); gap:14px } }
   .why-card{
-    padding:16px; border-radius:16px; background:linear-gradient(180deg, #ffffff, #f6f7fb);
-    border:1px solid #e5e7eb; box-shadow:0 8px 24px rgba(2,8,20,.04);
+    padding:16px; border-radius:16px; background:linear-gradient(180deg, var(--white), var(--cream-2));
+    border:1px solid rgba(59,64,68,.16); box-shadow:0 8px 24px rgba(2,8,20,.04);
     transform:translateY(4px); opacity:.0; animation:whyIn .6s cubic-bezier(.25,.7,.25,1) .05s forwards;
   }
   .why-card:nth-child(2){ animation-delay:.15s } .why-card:nth-child(3){ animation-delay:.25s }
   @keyframes whyIn{ to{ opacity:1; transform:none } }
   .why-ic{ width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center;
-           background:linear-gradient(135deg, rgba(31,111,235,.10), rgba(14,165,233,.10)); color:#0B2A6B; margin-bottom:10px; }
-  .why-ttl{ font-weight:800; margin:0 0 6px; font-size:16px; }
+           background:linear-gradient(135deg, rgba(11,42,107,.10), rgba(91,62,150,.10)); color:var(--dark-blue); margin-bottom:10px; }
+  .why-ttl{ font-weight:800; margin:0 0 6px; font-size:16px; color:var(--ink); }
   .why-txt{ margin:0; color:#374151; font-size:14px; line-height:1.6; }
-  .why-badge{ display:inline-block; margin-top:10px; font-size:12px; font-weight:700; color:#0B2A6B;
-              background:rgba(31,111,235,.10); border:1px solid rgba(31,111,235,.28); padding:4px 8px; border-radius:999px; }
-
-  /* ===== CTAセクション（強化） ===== */
-  .cta-wrap{ padding:18px 0 6px; }
-  .cta-wrap h1{ font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
-  .cta-wrap .lead{ color:#4b5563; margin:0 0 16px; font-size:clamp(15px, 3.8vw, 17px); }
-
-  .cta-btn{
-    display:inline-flex; align-items:center; justify-content:center;
-    width:100%; max-width:520px;
-    padding:18px 22px; font-size:18px; font-weight:900;
-    background:linear-gradient(135deg, #1F6FEB, #10B981);
-    color:#fff; border:none; border-radius:18px; cursor:pointer;
-    box-shadow:0 18px 40px rgba(31,111,235,.26), 0 10px 22px rgba(16,185,129,.18);
-    transition:transform .12s ease, box-shadow .12s ease;
-  }
-  .cta-btn:active{ transform:translateY(1px) scale(.995) }
-  .cta-meta{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
-
-  .badge{
-    display:inline-flex; align-items:center; gap:6px; padding:8px 10px;
-    background:#fff; border:1px solid #e5e7eb; border-radius:999px;
-    font-size:12px; color:#111827;
-  }
-  .badge svg{ width:14px; height:14px; color:#0B2A6B; }
-
-  .proof{ margin-top:12px; color:#374151; font-size:13px; line-height:1.6; }
-  .proof b{ color:#0B2A6B; }
+  .why-badge{ display:inline-block; margin-top:10px; font-size:12px; font-weight:700; color:var(--dark-blue);
+              background:rgba(11,42,107,.08); border:1px solid rgba(11,42,107,.22); padding:4px 8px; border-radius:999px; }
 </style>
 
+<!-- ヒーロー：画像は省略（既存のまま） -->
 <div class="bleed-tight">
   <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
-    <!-- 1. 紙吹雪のライブ（華やか） → 左上パン（弱） -->
     <figure class="slide kb-tl on">
       <picture>
         <source type="image/avif" srcset="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?fm=avif&fit=crop&w=1600&q=70" />
         <source type="image/webp" srcset="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?fm=webp&fit=crop&w=1600&q=80" />
-        <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80"
-             alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900"
-             loading="eager" fetchpriority="high" />
+        <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80" alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900" loading="eager" fetchpriority="high" />
       </picture>
       <figcaption class="cap tl">スポットライトは、あなたへ。</figcaption>
     </figure>
-
-    <!-- 2. 強い照明のシンガー → 右下パン（弱） -->
     <figure class="slide kb-br">
       <picture>
         <source type="image/avif" srcset="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?fm=avif&fit=crop&w=1600&q=70" />
         <source type="image/webp" srcset="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?fm=webp&fit=crop&w=1600&q=80" />
-        <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80"
-             alt="強い照明の中で歌うシンガー" width="1600" height="900"
-             loading="lazy" decoding="async" />
+        <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80" alt="強い照明の中で歌うシンガー" width="1600" height="900" loading="lazy" decoding="async" />
       </picture>
       <figcaption class="cap br">一歩、光の中へ。</figcaption>
     </figure>
-
-    <!-- 3. 機内窓の夕焼け → 中央ズーム（弱） -->
     <figure class="slide">
       <picture>
         <source type="image/avif" srcset="https://images.unsplash.com/photo-1529070538774-1843cb3265df?fm=avif&fit=crop&w=1600&q=70" />
         <source type="image/webp" srcset="https://images.unsplash.com/photo-1529070538774-1843cb3265df?fm=webp&fit=crop&w=1600&q=80" />
-        <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80"
-             alt="飛行機の窓から見る夕焼け" width="1600" height="900"
-             loading="lazy" decoding="async" />
+        <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80" alt="飛行機の窓から見る夕焼け" width="1600" height="900" loading="lazy" decoding="async" />
       </picture>
       <figcaption class="cap c">次の目的地は、世界。</figcaption>
     </figure>
-
-    <!-- 4. 花火の夜景 → 右上パン（弱） -->
     <figure class="slide kb-tr">
       <picture>
         <source type="image/avif" srcset="https://images.unsplash.com/photo-1469474968028-56623f02e42e?fm=avif&fit=crop&w=1600&q=70" />
         <source type="image/webp" srcset="https://images.unsplash.com/photo-1469474968028-56623f02e42e?fm=webp&fit=crop&w=1600&q=80" />
-        <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80"
-             alt="花火が上がる都市の夜景" width="1600" height="900"
-             loading="lazy" decoding="async" />
+        <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80" alt="花火が上がる都市の夜景" width="1600" height="900" loading="lazy" decoding="async" />
       </picture>
       <figcaption class="cap tr">努力は、必ず祝われる。</figcaption>
     </figure>
-
-    <!-- 5. ラグジュアリーな家族の時間 → 左下パン（弱） -->
     <figure class="slide kb-bl">
       <picture>
         <source type="image/webp" srcset="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600&format=webp" />
-        <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600"
-             alt="明るいリビングでの家族の団欒" width="1600" height="1067"
-             loading="lazy" decoding="async" />
+        <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="明るいリビングでの家族の団欒" width="1600" height="1067" loading="lazy" decoding="async" />
       </picture>
       <figcaption class="cap bl">大切な人と、豊かな時間を。</figcaption>
     </figure>
@@ -210,31 +131,18 @@
   </div>
 </div>
 
-<!-- ===== CTA（強化版） ===== -->
+<!-- CTA -->
 <section class="cta-wrap">
   <h1>なぜ学ぶのか、を決めよう。</h1>
   <p class="lead">AIとの対話で、最終目標と道筋を明確化。今日から動ける「最初の一歩」へ。</p>
-
   <form method="post" action="/start">
     <button class="cta-btn btn cta" type="submit">はじめる（¥100）</button>
   </form>
 
   <div class="cta-meta" aria-label="安心のポイント">
-    <span class="badge">
-      <!-- シールド -->
-      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="2"/></svg>
-      安全なStripe決済
-    </span>
-    <span class="badge">
-      <!-- 時計 -->
-      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2"/></svg>
-      所要10〜15分
-    </span>
-    <span class="badge">
-      <!-- リフレッシュ -->
-      <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8" stroke="currentColor" stroke-width="2"/><path d="M4 4v4h4" stroke="currentColor" stroke-width="2"/></svg>
-      7日間返金保証
-    </span>
+    <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="2"/></svg>安全なStripe決済</span>
+    <span class="badge"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2"/></svg>所要10〜15分</span>
+    <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8" stroke="currentColor" stroke-width="2"/><path d="M4 4v4h4" stroke="currentColor" stroke-width="2"/></svg>7日間返金保証</span>
   </div>
 
   <div class="proof" aria-label="利用者の声と実績">
@@ -244,47 +152,30 @@
   </div>
 </section>
 
-<!-- ===== 「なぜ効く？」図解カード（既存） ===== -->
+<!-- Why it works -->
 <section class="why">
   <h2>なぜ『Mission Compass』は効く？</h2>
   <p class="sub">仕組みが背中を押す3つの理由</p>
-
   <div class="why-grid">
-    <!-- 1 -->
     <article class="why-card">
       <div class="why-ic" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-          <path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2"/>
-          <path d="M12 6l-2 6-6 2 6 2 2 6 2-6 6-2-6-2-2-6z" fill="currentColor"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2"/><path d="M12 6l-2 6-6 2 6 2 2 6 2-6 6-2-6-2-2-6z" fill="currentColor"/></svg>
       </div>
       <h3 class="why-ttl">最初に“WHY”を固める</h3>
       <p class="why-txt">目的が明確になると、迷いが減り、行動が続く。学びは“やる気”ではなく“意味”で回る。</p>
       <span class="why-badge">ブレない軸</span>
     </article>
-
-    <!-- 2 -->
     <article class="why-card">
       <div class="why-ic" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M3 4h18v10H8l-5 5V4z" stroke="currentColor" stroke-width="2" fill="none"/>
-          <path d="M9 9l2 2 4-4" stroke="currentColor" stroke-width="2" fill="none"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 4h18v10H8l-5 5V4z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 9l2 2 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
       </div>
       <h3 class="why-ttl">AIメンターが毎日伴走</h3>
       <p class="why-txt">小さな詰まりをその場で解消。独学の孤独を軽くして、次の一手がすぐ決まる。</p>
       <span class="why-badge">つまずき即解決</span>
     </article>
-
-    <!-- 3 -->
     <article class="why-card">
       <div class="why-ic" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M5 19c2-6 6-6 10-6" stroke="currentColor" stroke-width="2" fill="none"/>
-          <path d="M15 5h4l-2 2 2 2h-4V5z" fill="currentColor"/>
-          <circle cx="5" cy="19" r="2" fill="currentColor"/>
-        </svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 19c2-6 6-6 10-6" stroke="currentColor" stroke-width="2"/><path d="M15 5h4l-2 2 2 2h-4V5z" fill="currentColor"/><circle cx="5" cy="19" r="2" fill="currentColor"/></svg>
       </div>
       <h3 class="why-ttl">今日の最初の一歩が決まる</h3>
       <p class="why-txt">目標を“最小行動”へ分解。実行障壁が下がり、1日1歩が確実に進む。</p>
@@ -294,23 +185,18 @@
 </section>
 
 <script>
-  // 自動ローテーション（4.5秒／互換重視）
   document.addEventListener('DOMContentLoaded', function(){
-    var rotator = document.getElementById('heroRotator');
-    if (!rotator) return;
+    var rotator = document.getElementById('heroRotator'); if(!rotator) return;
     var slides = rotator.querySelectorAll('.slide');
-    var dotsWrap = document.getElementById('heroDots');
-    var dots = dotsWrap ? dotsWrap.children : [];
-    var i = 0, intervalMs = 4500;
-
+    var dots = (document.getElementById('heroDots')||{}).children || [];
+    var i=0, ms=4500;
     function show(n){
-      if (!slides.length) return;
-      if (slides[i]) slides[i].classList.remove('on');
-      if (dots[i]) dots[i].classList.remove('on');
-      i = (n + slides.length) % slides.length;
-      if (slides[i]) slides[i].classList.add('on');
-      if (dots[i]) dots[i].classList.add('on');
+      if(slides[i]) slides[i].classList.remove('on');
+      if(dots[i]) dots[i].classList.remove('on');
+      i=(n+slides.length)%slides.length;
+      if(slides[i]) slides[i].classList.add('on');
+      if(dots[i]) dots[i].classList.add('on');
     }
-    setInterval(function(){ show(i + 1); }, intervalMs);
+    setInterval(function(){ show(i+1); }, ms);
   });
 </script>
