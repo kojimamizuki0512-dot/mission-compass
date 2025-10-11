@@ -97,6 +97,53 @@
   }
   .dot{width:6px; height:6px; border-radius:999px; background:#cbd5e1; opacity:.9}
   .dot.on{ background:#ffffff; }
+
+  /* ===== 「なぜ効く？」図解カード ===== */
+  .why{
+    padding:28px 0 8px;
+  }
+  .why h2{
+    font-size:clamp(20px, 5.4vw, 28px);
+    font-weight:800; letter-spacing:.02em; margin:0 0 10px;
+  }
+  .why .sub{
+    color:#4b5563; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px);
+  }
+  .why-grid{
+    display:grid; gap:12px;
+    grid-template-columns:1fr;
+  }
+  @media (min-width:720px){
+    .why-grid{ grid-template-columns:repeat(3,1fr); gap:14px }
+  }
+  .why-card{
+    padding:16px; border-radius:16px;
+    background:linear-gradient(180deg, #ffffff, #f6f7fb);
+    border:1px solid #e5e7eb;
+    box-shadow:0 8px 24px rgba(2,8,20,.04);
+    transform:translateY(4px); opacity:.0;
+    animation:whyIn .6s cubic-bezier(.25,.7,.25,1) .05s forwards;
+  }
+  .why-card:nth-child(2){ animation-delay:.15s }
+  .why-card:nth-child(3){ animation-delay:.25s }
+  @keyframes whyIn{ to{ opacity:1; transform:none } }
+
+  .why-ic{
+    width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, rgba(31,111,235,.10), rgba(14,165,233,.10));
+    color:#0B2A6B; margin-bottom:10px;
+  }
+  .why-ttl{
+    font-weight:800; margin:0 0 6px; font-size:16px;
+  }
+  .why-txt{
+    margin:0; color:#374151; font-size:14px; line-height:1.6;
+  }
+  .why-badge{
+    display:inline-block; margin-top:10px; font-size:12px; font-weight:700; color:#0B2A6B;
+    background:rgba(31,111,235,.10); border:1px solid rgba(31,111,235,.28);
+    padding:4px 8px; border-radius:999px;
+  }
 </style>
 
 <div class="bleed-tight">
@@ -104,7 +151,6 @@
     <!-- 1. 紙吹雪のライブ（華やか） → 左上パン（弱） -->
     <figure class="slide kb-tl on">
       <picture>
-        <!-- AVIF / WebP を優先（Unsplashは fm= で明示） -->
         <source type="image/avif" srcset="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?fm=avif&fit=crop&w=1600&q=70" />
         <source type="image/webp" srcset="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?fm=webp&fit=crop&w=1600&q=80" />
         <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80"
@@ -153,7 +199,6 @@
     <!-- 5. ラグジュアリーな家族の時間 → 左下パン（弱） -->
     <figure class="slide kb-bl">
       <picture>
-        <!-- Pexels は WebP/AVIFが効かない場合もあるのでフォールバック付き -->
         <source type="image/webp" srcset="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600&format=webp" />
         <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600"
              alt="明るいリビングでの家族の団欒" width="1600" height="1067"
@@ -187,18 +232,55 @@
   </div>
 </section>
 
-<section class="features">
-  <div class="feature">
-    <h3>AI対話で自己発見</h3>
-    <p>雑念を削ぎ落とし、価値観と願望を言語化。</p>
-  </div>
-  <div class="feature">
-    <h3>あなただけの羅針盤</h3>
-    <p>ぶれない“軸”を一文で定義。選択が速くなる。</p>
-  </div>
-  <div class="feature">
-    <h3>最初の一歩</h3>
-    <p>今週やることまで分解。今日から動ける。</p>
+<!-- ===== 「なぜ効く？」図解カード（NEW） ===== -->
+<section class="why">
+  <h2>なぜ『Mission Compass』は効く？</h2>
+  <p class="sub">仕組みが背中を押す3つの理由</p>
+
+  <div class="why-grid">
+    <!-- 1 -->
+    <article class="why-card">
+      <div class="why-ic" aria-hidden="true">
+        <!-- コンパス × ハート -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 6l-2 6-6 2 6 2 2 6 2-6 6-2-6-2-2-6z" fill="currentColor"/>
+        </svg>
+      </div>
+      <h3 class="why-ttl">最初に“WHY”を固める</h3>
+      <p class="why-txt">目的が明確になると、迷いが減り、行動が続く。学びは“やる気”ではなく“意味”で回る。</p>
+      <span class="why-badge">ブレない軸</span>
+    </article>
+
+    <!-- 2 -->
+    <article class="why-card">
+      <div class="why-ic" aria-hidden="true">
+        <!-- チャット×チェック -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M3 4h18v10H8l-5 5V4z" stroke="currentColor" stroke-width="2" fill="none"/>
+          <path d="M9 9l2 2 4-4" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+      <h3 class="why-ttl">AIメンターが毎日伴走</h3>
+      <p class="why-txt">小さな詰まりをその場で解消。独学の孤独を軽くして、次の一手がすぐ決まる。</p>
+      <span class="why-badge">つまずき即解決</span>
+    </article>
+
+    <!-- 3 -->
+    <article class="why-card">
+      <div class="why-ic" aria-hidden="true">
+        <!-- 旗までの道 -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M5 19c2-6 6-6 10-6" stroke="currentColor" stroke-width="2" fill="none"/>
+          <path d="M15 5h4l-2 2 2 2h-4V5z" fill="currentColor"/>
+          <circle cx="5" cy="19" r="2" fill="currentColor"/>
+        </svg>
+      </div>
+      <h3 class="why-ttl">今日の最初の一歩が決まる</h3>
+      <p class="why-txt">目標を“最小行動”へ分解。実行障壁が下がり、1日1歩が確実に進む。</p>
+      <span class="why-badge">行動まで分解</span>
+    </article>
   </div>
 </section>
 
