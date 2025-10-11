@@ -177,7 +177,10 @@ app.get('/dialog', requireAuth, requirePaidAccess, (req, res) => {
    Gemini 連携 API（/api/chat）
    ========================= */
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+// ★ 404回避の安定デフォルト
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
+// API バージョンも v1 を使用
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1';
 
 async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
   if (!GEMINI_API_KEY) {
@@ -192,20 +195,17 @@ async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
   try {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-        GEMINI_MODEL
-      )}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`,
-      {
-        method: 'POST',
-        signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt.slice(0, 4000) }]}],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
-        })
-      }
-    );
+    const url = `${GEMINI_API_BASE}/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+
+    const resp = await fetch(url, {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt.slice(0, 4000) }]}],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
+      })
+    });
 
     if (!resp.ok) {
       const txt = await resp.text().catch(() => '');
@@ -237,7 +237,6 @@ app.post('/api/chat', requireAuth, requirePaidAccess, async (req, res) => {
   const userPrompt = `${persona}\n\nユーザー: ${message}`;
   const result = await callGemini(userPrompt);
 
-  // 常に200で返す（フロントは reply をそのまま表示）
   return res.json({ reply: result.reply });
 });
 
