@@ -1,6 +1,6 @@
 :root{
   /* Base palette (Calm Navy + Accents) */
-  --bg:#F8FAFC;
+  --bg:#F2F4F7;       /* ← 背景を薄いグレーにして高級感を出す */
   --panel:#FFFFFF;
   --ink:#0F172A;
   --muted:#64748B;
@@ -57,13 +57,36 @@ a{color:inherit; text-decoration:none}
 
 /* Main / Sections */
 main.container{padding-top:24px; padding-bottom:32px}
-.hero{padding:28px 0; display:grid; grid-template-columns:1.05fr .95fr; gap:28px; align-items:center}
-.hero h1{font-size:32px; line-height:1.2; margin:0 0 8px}
-.lead{color:var(--muted); margin:0 0 16px; font-size:15.5px}
+.hero{
+  padding:28px 0;
+  display:grid; grid-template-columns:1.05fr .95fr; gap:28px; align-items:center
+}
+.hero h1{
+  font-size:32px; line-height:1.2; margin:0 0 8px;
+  /* ↓ きれいに2行へ。新しめブラウザは balance を使い、古めは幅で制御 */
+  max-width:22ch;
+  text-wrap:balance;
+  animation:riseIn .6s cubic-bezier(.2,.7,.2,1) both;
+}
+.lead{
+  color:var(--muted); margin:0 0 16px; font-size:15.5px;
+  animation:riseIn .6s .05s cubic-bezier(.2,.7,.2,1) both;
+}
+.btn.cta{animation:riseIn .6s .1s cubic-bezier(.2,.7,.2,1) both}
 
-.features{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0}
-.feature{background:var(--panel); padding:16px; border-radius:16px; border:1px solid var(--bd);
-  box-shadow:0 1px 2px rgba(2,8,20,.04), 0 8px 24px rgba(2,8,20,.06)}
+/* 軽い出現アニメ（主役をふわっと強調） */
+@keyframes riseIn{
+  from{opacity:0; transform:translateY(6px) scale(.98)}
+  to{opacity:1; transform:none}
+}
+
+.features{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0
+}
+.feature{
+  background:var(--panel); padding:16px; border-radius:16px; border:1px solid var(--bd);
+  box-shadow:0 1px 2px rgba(2,8,20,.04), 0 8px 24px rgba(2,8,20,.06)
+}
 .feature h3{margin:6px 0 6px; font-size:18px}
 .feature p{margin:0; color:var(--muted); font-size:14px}
 
@@ -104,7 +127,7 @@ main.container{padding-top:24px; padding-bottom:32px}
 @media (max-width:920px){
   .container{padding:14px}
   .hero{grid-template-columns:1fr}
-  .hero h1{font-size:28px}
+  .hero h1{font-size:28px; max-width:22ch} /* ← スマホでも2行で締める */
   .features{grid-template-columns:1fr}
 }
 
