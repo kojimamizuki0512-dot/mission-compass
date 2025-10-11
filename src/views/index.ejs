@@ -21,56 +21,54 @@
 
   .hero-rotator .slide{
     position:absolute; inset:0;
-    opacity:0; transition:opacity .8s ease;
+    opacity:0; transition:opacity .6s ease;   /* ← 少しだけ短く */
   }
   .hero-rotator .slide.on{ opacity:1; }
   .hero-rotator .slide img{
     width:100%; height:100%; object-fit:cover; display:block;
     transform:scale(1) translate3d(0,0,0);
+    will-change: transform;
   }
 
-  /* ===== 強め Ken Burns（ズーム＋パン） =====
-     - スライドが .on になった瞬間から 4.5s でズーム
-     - スライドごとにパン方向を変えて立体感を出す
-  */
+  /* ===== Ken Burns（弱め：ズーム1.05 + パン0.8%） ===== */
   .slide.on img{ animation:kb-center 4.5s ease-in-out both; }
-  .slide.kb-tl.on img{ animation-name: kb-tl; }   /* 左上へパン */
-  .slide.kb-tr.on img{ animation-name: kb-tr; }   /* 右上へパン */
-  .slide.kb-bl.on img{ animation-name: kb-bl; }   /* 左下へパン */
-  .slide.kb-br.on img{ animation-name: kb-br; }   /* 右下へパン */
+  .slide.kb-tl.on img{ animation-name: kb-tl; }
+  .slide.kb-tr.on img{ animation-name: kb-tr; }
+  .slide.kb-bl.on img{ animation-name: kb-bl; }
+  .slide.kb-br.on img{ animation-name: kb-br; }
 
   @keyframes kb-center{
-    from{ transform:scale(1.12) translate3d(0,0,0) }
-    to  { transform:scale(1.0) translate3d(0,0,0) }
+    from{ transform:scale(1.05) translate3d(0,0,0) }
+    to  { transform:scale(1.0)  translate3d(0,0,0) }
   }
   @keyframes kb-tl{
-    from{ transform:scale(1.12) translate3d(2.2%, 2.2%, 0) }
+    from{ transform:scale(1.05) translate3d(0.8%, 0.8%, 0) }
     to  { transform:scale(1.0)  translate3d(0,0,0) }
   }
   @keyframes kb-tr{
-    from{ transform:scale(1.12) translate3d(-2.2%, 2.2%, 0) }
+    from{ transform:scale(1.05) translate3d(-0.8%, 0.8%, 0) }
     to  { transform:scale(1.0)  translate3d(0,0,0) }
   }
   @keyframes kb-bl{
-    from{ transform:scale(1.12) translate3d(2.2%, -2.2%, 0) }
+    from{ transform:scale(1.05) translate3d(0.8%, -0.8%, 0) }
     to  { transform:scale(1.0)  translate3d(0,0,0) }
   }
   @keyframes kb-br{
-    from{ transform:scale(1.12) translate3d(-2.2%, -2.2%, 0) }
+    from{ transform:scale(1.05) translate3d(-0.8%, -0.8%, 0) }
     to  { transform:scale(1.0)  translate3d(0,0,0) }
   }
 
-  /* ===== キャプション（枠なし・個別配置＋出現アニメ） ===== */
+  /* ===== キャプション（枠なし・個別配置／弱めの出現） ===== */
   .hero-rotator .cap{
     position:absolute; color:#fff; font-weight:800;
-    font-size:clamp(18px, 3.8vw, 28px); letter-spacing:.04em; line-height:1.2;
-    text-shadow:0 2px 12px rgba(0,0,0,.55), 0 6px 28px rgba(0,0,0,.35);
+    font-size:clamp(18px, 3.6vw, 26px); letter-spacing:.04em; line-height:1.2;
+    text-shadow:0 2px 10px rgba(0,0,0,.45), 0 6px 22px rgba(0,0,0,.28);
     padding:0; margin:0;
-    opacity:0; transform:translateY(10px);
+    opacity:0; transform:translateY(6px);        /* ← 移動距離を短縮 */
   }
-  .slide.on .cap{ animation:capIn .7s cubic-bezier(.2,.7,.2,1) .12s both; }
+  .slide.on .cap{ animation:capIn .5s cubic-bezier(.25,.7,.25,1) .08s both; }
   @keyframes capIn{
-    from{ opacity:0; transform:translateY(12px) }
+    from{ opacity:0; transform:translateY(8px) }
     to  { opacity:1; transform:none }
   }
 
@@ -83,11 +81,11 @@
     top:50%; left:50%; transform:translate(-50%,-50%);
     text-align:center;
   }
-  .slide.on .cap.c{ animation-delay:.2s; } /* 中央は少し遅れて出す */
+  .slide.on .cap.c{ animation-delay:.14s; }
 
   /* デスクトップ微調整 */
   @media (min-width:920px){
-    .hero-rotator .cap{ font-size:clamp(18px, 2.2vw, 26px); }
+    .hero-rotator .cap{ font-size:clamp(18px, 2.1vw, 24px); }
     .hero-rotator{ border-radius:16px; }
   }
 
@@ -101,31 +99,31 @@
 
 <div class="bleed-tight">
   <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
-    <!-- 1. 紙吹雪のライブ（華やか） → 左上パン -->
+    <!-- 1. 紙吹雪のライブ（華やか） → 左上パン（弱） -->
     <figure class="slide kb-tl on">
       <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80"
            alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900" />
       <figcaption class="cap tl">スポットライトは、あなたへ。</figcaption>
     </figure>
-    <!-- 2. 強い照明のシンガー → 右下パン -->
+    <!-- 2. 強い照明のシンガー → 右下パン（弱） -->
     <figure class="slide kb-br">
       <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80"
            alt="強い照明の中で歌うシンガー" width="1600" height="900" />
       <figcaption class="cap br">一歩、光の中へ。</figcaption>
     </figure>
-    <!-- 3. 機内窓の夕焼け → 中央ズーム -->
+    <!-- 3. 機内窓の夕焼け → 中央ズーム（弱） -->
     <figure class="slide">
       <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80"
            alt="飛行機の窓から見る夕焼け" width="1600" height="900" />
       <figcaption class="cap c">次の目的地は、世界。</figcaption>
     </figure>
-    <!-- 4. 花火の夜景 → 右上パン -->
+    <!-- 4. 花火の夜景 → 右上パン（弱） -->
     <figure class="slide kb-tr">
       <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80"
            alt="花火が上がる都市の夜景" width="1600" height="900" />
       <figcaption class="cap tr">努力は、必ず祝われる。</figcaption>
     </figure>
-    <!-- 5. ラグジュアリーな家族の時間 → 左下パン -->
+    <!-- 5. ラグジュアリーな家族の時間 → 左下パン（弱） -->
     <figure class="slide kb-bl">
       <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600"
            alt="明るいリビングでの家族の団欒" width="1600" height="1067" />
