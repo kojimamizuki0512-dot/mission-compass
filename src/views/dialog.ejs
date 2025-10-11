@@ -1,12 +1,7 @@
-<% /* /dialog: 決済後のチャットUI（LINEライク）。サーバの /api/chat は次手で実装。 */ %>
+<% /* /dialog: 決済後のチャットUI（LINEライク）。サーバの /api/chat にPOSTする。 */ %>
 
 <style>
-  /* 画面全体に広げる（ヘッダー分をJSで差し引き） */
-  .chat-bleed{
-    margin-left:calc(50% - 50vw);
-    margin-right:calc(50% - 50vw);
-    width:100vw;
-  }
+  .chat-bleed{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw; }
   .chat-frame{
     height:calc(100dvh - var(--header-h, 64px));
     display:flex; flex-direction:column;
@@ -14,32 +9,23 @@
     border-top:1px solid rgba(59,64,68,.12);
   }
 
-  /* ヘッダー（アプリ内） */
   .chat-header{
-    display:flex; align-items:center; justify-content:center; gap:8px;
+    display:flex; align-items:center; justify-content:center;
     padding:12px 16px;
     background:rgba(246,241,231,.92);
     backdrop-filter:saturate(140%) blur(10px);
     -webkit-backdrop-filter:saturate(140%) blur(10px);
     border-bottom:1px solid rgba(59,64,68,.14);
   }
-  .chat-header h1{
-    margin:0; font-size:16px; font-weight:900; letter-spacing:.02em; color:var(--dark-blue);
-  }
+  .chat-header h1{ margin:0; font-size:16px; font-weight:900; color:var(--dark-blue); }
 
-  /* ログ */
   .chat-log{
-    position:relative;
-    flex:1 1 auto; overflow:auto;
-    padding:14px 12px 10px;
-    scroll-behavior:smooth;
-    -webkit-overflow-scrolling:touch;
+    position:relative; flex:1 1 auto; overflow:auto;
+    padding:14px 12px 10px; scroll-behavior:smooth; -webkit-overflow-scrolling:touch;
   }
   .daymark{
-    margin:6px auto 12px; width:max-content;
-    font-size:12px; color:#6b7280;
-    background:rgba(59,64,68,.08);
-    border:1px solid rgba(59,64,68,.14);
+    margin:6px auto 12px; width:max-content; font-size:12px; color:#6b7280;
+    background:rgba(59,64,68,.08); border:1px solid rgba(59,64,68,.14);
     border-radius:999px; padding:4px 10px;
   }
 
@@ -48,79 +34,50 @@
   .msg.me{ justify-content:flex-end; }
 
   .bubble{
-    max-width:74%;
-    padding:10px 12px;
-    border-radius:18px;
+    max-width:74%; padding:10px 12px; border-radius:18px;
     word-wrap:break-word; white-space:pre-wrap; line-height:1.5; font-size:15px;
-    box-shadow:0 2px 6px rgba(2,8,20,.06);
-    border:1px solid rgba(59,64,68,.10);
+    box-shadow:0 2px 6px rgba(2,8,20,.06); border:1px solid rgba(59,64,68,.10);
   }
-  .msg.ai .bubble{
-    background:var(--white);
-    color:var(--ink);
-  }
-  .msg.me .bubble{
-    background:var(--dark-blue);
-    color:#fff;
-    border-color:rgba(11,42,107,.35);
-  }
+  .msg.ai .bubble{ background:var(--white); color:var(--ink); }
+  .msg.me .bubble{ background:var(--dark-blue); color:#fff; border-color:rgba(11,42,107,.35); }
 
   .typing{ display:inline-block; letter-spacing:2px; }
   .typing::after{
     content:""; display:inline-block; width:18px; height:10px; vertical-align:-1px;
     background: radial-gradient(circle currentColor 2px, transparent 3px) left/6px 100% repeat-x;
-    animation: dots 1.2s steps(3,end) infinite;
-    color:#9aa1a8;
+    animation:dots 1.2s steps(3,end) infinite; color:#9aa1a8;
   }
-  @keyframes dots { to { background-position: -18px 0; } }
+  @keyframes dots { to { background-position:-18px 0; } }
 
-  /* 入力欄（下固定） */
   .chat-input{
-    flex:0 0 auto;
+    flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;
     padding:8px 10px calc(8px + env(safe-area-inset-bottom));
     background:linear-gradient(180deg, rgba(246,241,231,.94), rgba(246,241,231,1));
     border-top:1px solid rgba(59,64,68,.14);
-    display:flex; align-items:flex-end; gap:8px;
   }
   .chat-text{
     flex:1; min-height:42px; max-height:128px; resize:none; overflow:auto;
-    border-radius:14px; padding:10px 12px;
-    background:var(--white);
-    border:1px solid rgba(59,64,68,.22);
-    font-size:15px; line-height:1.5;
+    border-radius:14px; padding:10px 12px; background:var(--white);
+    border:1px solid rgba(59,64,68,.22); font-size:15px; line-height:1.5;
   }
   .chat-send{
     flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:6px;
     padding:12px 14px; border-radius:14px; border:1px solid rgba(65,105,225,.55);
     background:linear-gradient(180deg, #4169E1, #3a5fd0); color:#fff; font-weight:800;
-    box-shadow:0 14px 30px rgba(65,105,225,.30), 0 8px 16px rgba(11,42,107,.12);
-    cursor:pointer;
+    box-shadow:0 14px 30px rgba(65,105,225,.30), 0 8px 16px rgba(11,42,107,.12); cursor:pointer;
   }
-  .chat-send:disabled{
-    opacity:.6; cursor:not-allowed; box-shadow:none; filter:grayscale(.1);
-  }
+  .chat-send:disabled{ opacity:.6; cursor:not-allowed; box-shadow:none; filter:grayscale(.1); }
   .chat-send svg{ width:16px; height:16px; }
 
-  /* 進捗バー（将来のオリーブ/オレンジ用。今回は未使用） */
-  .progress{ height:10px; border-radius:8px; background:rgba(59,64,68,.15); overflow:hidden; border:1px solid rgba(59,64,68,.18); }
-  .progress > i{ display:block; height:100%; width:0; }
-  .progress--learning > i{ background:var(--olive); }
-  .progress--important > i{ background:var(--burnt-orange); }
-
-  @media (min-width:920px){
-    .chat-frame{ border-radius:16px; border:1px solid rgba(59,64,68,.12) }
-  }
+  @media (min-width:920px){ .chat-frame{ border-radius:16px; border:1px solid rgba(59,64,68,.12); } }
 </style>
 
 <div class="chat-bleed">
   <section class="chat-frame" id="chatFrame" role="application" aria-label="作戦会議チャット">
-    <header class="chat-header">
-      <h1>作戦会議</h1>
-    </header>
+    <header class="chat-header"><h1>作戦会議</h1></header>
 
     <div class="chat-log" id="chatLog">
       <div class="daymark">今日</div>
-
       <div class="msg ai">
         <div class="bubble">
           はじめまして。いまの関心や目標を一言で教えてください。<br/>
@@ -132,7 +89,9 @@
     <form class="chat-input" id="chatForm" autocomplete="off">
       <textarea id="chatText" class="chat-text" rows="1" placeholder="メッセージを入力…" aria-label="メッセージを入力"></textarea>
       <button class="chat-send" id="chatSend" type="submit" aria-label="送信">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12l15-7-4 7 4 7-15-7z" stroke="currentColor" stroke-width="2" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 12l15-7-4 7 4 7-15-7z" stroke="currentColor" stroke-width="2" fill="currentColor"/>
+        </svg>
       </button>
     </form>
   </section>
@@ -142,14 +101,11 @@
   (function(){
     const headerEl = document.querySelector('.site-header');
     const root = document.documentElement;
-
     function setHeaderH(){
       const h = headerEl ? headerEl.getBoundingClientRect().height : 64;
       root.style.setProperty('--header-h', h + 'px');
     }
-    setHeaderH();
-    window.addEventListener('resize', setHeaderH);
-    window.addEventListener('orientationchange', setHeaderH);
+    setHeaderH(); window.addEventListener('resize', setHeaderH); window.addEventListener('orientationchange', setHeaderH);
 
     const log = document.getElementById('chatLog');
     const form = document.getElementById('chatForm');
@@ -157,35 +113,19 @@
     const btn = document.getElementById('chatSend');
 
     function scrollToBottom(){ log.scrollTop = log.scrollHeight + 999; }
-
     function bubble(role, text){
-      const wrap = document.createElement('div');
-      wrap.className = 'msg ' + role;
-      const b = document.createElement('div');
-      b.className = 'bubble';
-      b.textContent = text;
-      wrap.appendChild(b);
-      log.appendChild(wrap);
-      scrollToBottom();
-      return b;
+      const wrap = document.createElement('div'); wrap.className = 'msg ' + role;
+      const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
+      wrap.appendChild(b); log.appendChild(wrap); scrollToBottom(); return b;
     }
-
     function bubbleTyping(){
-      const wrap = document.createElement('div');
-      wrap.className = 'msg ai';
-      const b = document.createElement('div');
-      b.className = 'bubble';
-      const span = document.createElement('span');
-      span.className = 'typing';
-      span.textContent = '…';
-      b.appendChild(span);
-      wrap.appendChild(b);
-      log.appendChild(wrap);
-      scrollToBottom();
+      const wrap = document.createElement('div'); wrap.className = 'msg ai';
+      const b = document.createElement('div'); b.className = 'bubble';
+      const span = document.createElement('span'); span.className = 'typing'; span.textContent = '…';
+      b.appendChild(span); wrap.appendChild(b); log.appendChild(wrap); scrollToBottom();
       return {wrap, b};
     }
 
-    // テキストエリア自動伸縮
     input.addEventListener('input', function(){
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight, 128) + 'px';
@@ -196,13 +136,9 @@
       const text = (input.value || '').trim();
       if (!text) return;
 
-      // 自分の発言
       bubble('me', text);
-      input.value = '';
-      input.style.height = 'auto';
-      input.focus();
+      input.value = ''; input.style.height = 'auto'; input.focus();
 
-      // タイピング表示
       btn.disabled = true;
       const typing = bubbleTyping();
 
@@ -212,24 +148,17 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text })
         });
-
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         const reply = (data && (data.reply || data.text)) || '（応答を取得できませんでした）';
-
-        // タイピングを差し替え
         typing.b.textContent = reply;
       } catch (err) {
-        typing.b.innerHTML =
-          'サーバのチャットAPIが未設定です。<br/>' +
-          '次の手順で <code>/api/chat</code> を有効化し、Gemini APIキーをサーバ環境変数に設定してください。';
+        typing.b.innerHTML = 'サーバのチャットAPIに接続できませんでした。<br/>管理者は環境変数 <code>GEMINI_API_KEY</code> を確認してください。';
       } finally {
-        btn.disabled = false;
-        scrollToBottom();
+        btn.disabled = false; scrollToBottom();
       }
     });
 
-    // 初期スクロール
     scrollToBottom();
   })();
 </script>
