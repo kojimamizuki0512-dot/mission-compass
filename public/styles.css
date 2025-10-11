@@ -1,42 +1,117 @@
 :root{
-  --bg:#ffffff;
-  --fg:#111111;
-  --primary:#1f6feb;
-  --accent:#ff7f32;
-  --muted:#666;
-  --card:#f6f8fa;
-  --bd:#e5e7eb;
+  /* Base palette (Calm Navy + Accents) */
+  --bg:#F8FAFC;
+  --panel:#FFFFFF;
+  --ink:#0F172A;
+  --muted:#64748B;
+  --bd:#E5E7EB;
+
+  --primary:#1F6FEB;   /* 信頼のブルー */
+  --accent:#10B981;    /* 希望のティール */
+  --orange:#F97316;    /* 行動のオレンジ */
+
+  --cta-grad: linear-gradient(135deg, var(--primary), var(--accent) 55%, var(--orange));
 }
 
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg)}
-.container{max-width:960px;margin:0 auto;padding:16px}
-
-.site-header, .site-footer{border-bottom:1px solid var(--bd);border-top:1px solid var(--bd);background:#fff}
-.header-inner{display:flex;align-items:center;justify-content:space-between}
-.brand{font-weight:700}
-
-.btn{display:inline-block;padding:10px 16px;border-radius:10px;border:1px solid var(--primary);background:var(--primary);color:#fff;text-decoration:none;font-weight:600}
-.btn.ghost{background:#fff;color:var(--primary)}
-.btn.cta{background:linear-gradient(135deg,var(--primary),var(--accent));border:none}
-
-.hero{padding:48px 0;text-align:center}
-.hero h1{font-size:28px;margin:0 0 8px}
-.hero .lead{color:var(--muted);margin:0 0 16px}
-
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
-.feature{background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--bd)}
-.feature h3{margin:0 0 8px}
-
-.auth{max-width:420px;margin:24px auto}
-.auth-form{display:flex;flex-direction:column;gap:8px}
-.auth-form input{padding:10px;border:1px solid var(--bd);border-radius:8px}
-.alert{padding:10px;background:#ffe8e6;border:1px solid #ffb3ac;border-radius:8px;margin-bottom:12px}
-.muted{color:var(--muted);font-size:14px}
-
-.dialog{max-width:520px;margin:32px auto;text-align:center}
-
-@media (max-width:720px){
-  .features{grid-template-columns:1fr}
-  .hero h1{font-size:22px}
+html,body{
+  margin:0; padding:0;
+  background:var(--bg); color:var(--ink);
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;
+  line-height:1.6;
 }
+img{max-width:100%; display:block; height:auto}
+a{color:inherit; text-decoration:none}
+.container{max-width:1040px; margin:0 auto; padding:16px}
+
+/* Header */
+.site-header{
+  position:sticky; top:0; z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter: saturate(160%) blur(10px);
+  border-bottom:1px solid var(--bd);
+}
+.header-inner{display:flex; align-items:center; justify-content:space-between}
+.brand{font-weight:800; letter-spacing:.2px}
+.nav-email{font-size:14px; color:var(--muted); margin-right:8px}
+
+/* Buttons */
+.btn{
+  display:inline-block; padding:12px 16px; border-radius:12px;
+  font-weight:700; border:1px solid var(--primary);
+  background:var(--primary); color:#fff; cursor:pointer;
+  transition:transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+  box-shadow:0 10px 24px rgba(31,111,235,.18);
+}
+.btn:hover{box-shadow:0 12px 28px rgba(31,111,235,.22)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{
+  background:#fff; color:var(--primary); border-color:var(--bd);
+  box-shadow:none;
+}
+.btn.cta{
+  background:var(--cta-grad); border:none;
+  box-shadow:0 12px 28px rgba(31,111,235,.18), 0 4px 8px rgba(16,185,129,.12);
+}
+
+/* Main / Sections */
+main.container{padding-top:24px; padding-bottom:32px}
+.hero{padding:28px 0; display:grid; grid-template-columns:1.05fr .95fr; gap:28px; align-items:center}
+.hero h1{font-size:32px; line-height:1.2; margin:0 0 8px}
+.lead{color:var(--muted); margin:0 0 16px; font-size:15.5px}
+
+.features{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0}
+.feature{background:var(--panel); padding:16px; border-radius:16px; border:1px solid var(--bd);
+  box-shadow:0 1px 2px rgba(2,8,20,.04), 0 8px 24px rgba(2,8,20,.06)}
+.feature h3{margin:6px 0 6px; font-size:18px}
+.feature p{margin:0; color:var(--muted); font-size:14px}
+
+/* Auth */
+.auth{max-width:420px; margin:24px auto}
+.auth-form{display:grid; gap:10px}
+.auth-form label{font-size:14px; color:var(--muted)}
+.auth-form input{
+  padding:12px; border:1px solid var(--bd); border-radius:10px; background:#fff;
+  outline:none; transition:border-color .15s ease, box-shadow .15s ease;
+}
+.auth-form input:focus{
+  border-color:#c7d2fe;
+  box-shadow:0 0 0 4px rgba(59,130,246,.15);
+}
+.alert{
+  padding:10px 12px; background:#FFE8E6; border:1px solid #FFB3AC;
+  color:#7a2e2a; border-radius:10px; margin-bottom:12px; font-size:14px
+}
+.muted{color:var(--muted); font-size:13.5px}
+
+/* Dialog */
+.dialog{max-width:560px; margin:32px auto; text-align:center}
+
+/* Footer */
+.site-footer{
+  border-top:1px solid var(--bd); background:#fff; color:var(--muted); font-size:13px
+}
+
+/* Utilities */
+.chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+.chip{
+  font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--bd);
+  background:#fff; color:#0b1430
+}
+
+/* Responsive */
+@media (max-width:920px){
+  .container{padding:14px}
+  .hero{grid-template-columns:1fr}
+  .hero h1{font-size:28px}
+  .features{grid-template-columns:1fr}
+}
+
+/* Links & focus */
+a:focus, button:focus{outline:2px solid #93c5fd; outline-offset:2px; border-radius:8px}
+a:hover{opacity:.92}
+
+/* Forms misc */
+button{font-family:inherit}
+form{margin:0}
