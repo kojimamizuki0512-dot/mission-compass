@@ -8,7 +8,7 @@ import Stripe from 'stripe';
 import { v4 as uuidv4 } from 'uuid';
 import expressLayouts from 'express-ejs-layouts';
 
-import { db, initDb, getUserByEmail, createUser } from './src/db.js';
+import { initDb, getUserByEmail, createUser } from './src/db.js';
 import { requireAuth, requirePaidAccess } from './src/middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,11 +20,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '20
 // View & static
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src', 'views'));
-
-// ★ レイアウト有効化（layout.ejs を共通レイアウトに）
 app.use(expressLayouts);
-app.set('layout', 'layout');
-
+app.set('layout', 'layout'); // src/views/layout.ejs を共通レイアウトにする
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Body parser
@@ -46,23 +43,22 @@ app.use(
   })
 );
 
-// locals
+// ★ locals（layout を「関数」で上書きしないこと！）
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.hasPaid = req.session.hasPaid || false;
   res.locals.OPENAI_CUSTOM_GPT_URL = process.env.OPENAI_CUSTOM_GPT_URL || '#';
   res.locals.STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
-  // ★ 互換：ビュー内の `layout('layout')` 呼び出しを無害化
-  res.locals.layout = () => '';
+  // res.locals.layout は絶対に設定しない（文字列パスである必要があるため）
   next();
 });
 
-// Initialize DB (lowdb JSON)
+// Initialize DB (lowdb JSON; 本番は /tmp を使うように src/db.js 側で制御)
 await initDb();
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('index', { title: 'Mission Compass — 何を学ぶのかの前に、なぜ学ぶのかを。' });
+  res.render('index', { title: 'Mission Compass — 何を学ぶかの前に、なぜ学ぶのかを。' });
 });
 
 // CTA: 対話セッションを開始（100円）
