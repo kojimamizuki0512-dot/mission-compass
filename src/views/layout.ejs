@@ -12,67 +12,112 @@
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><circle cx="48" cy="48" r="41" fill="none" stroke="%230B2A6B" stroke-width="6"/><path d="M48 12v72M12 48h72" stroke="%230B2A6B" stroke-width="6"/><path d="M48 18l-10 28-28 10 28 10 10 28 10-28 28-10-28-10-10-28z" fill="%230B2A6B"/></svg>' />
 
   <style>
-    /* ===== Layout base ===== */
-    .site-header{ background:#fff; position:sticky; top:0; z-index:50; }
+    /* ===== Base ===== */
+    :root{
+      --navy:#0B2A6B;
+      --ink:#0F172A;
+      --brand:#1F6FEB;
+      --line:#E5E7EB;
+      --bg:#FFFFFF;
+      --shadow:0 10px 28px rgba(2,8,20,.06), 0 2px 6px rgba(2,8,20,.04);
+      --radius:16px;
+    }
     .container{ max-width:1100px; margin:0 auto; padding:12px 16px; }
-    .header-inner{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
 
-    /* ===== Brand (映え強化版) ===== */
+    /* ===== Header ===== */
+    .site-header{
+      position:sticky; top:0; z-index:50;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:saturate(140%) blur(10px);
+      -webkit-backdrop-filter:saturate(140%) blur(10px);
+      transition:box-shadow .2s ease, background .2s ease;
+      border-bottom:1px solid rgba(0,0,0,.04);
+    }
+    /* iOSノッチ安全領域 */
+    .site-header .container{
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+      padding-top:  max(10px, 12px);
+      padding-bottom: max(10px, 12px);
+    }
+    .header-inner{
+      display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+    }
+    body[data-scrolled="1"] .site-header{ box-shadow:var(--shadow); }
+
+    /* ===== Brand (上質な“映え”) ===== */
     .brand-wrap{
-      display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit;
-      position:relative;
+      display:flex; align-items:baseline; gap:10px; text-decoration:none; color:inherit;
+      min-height:36px;
     }
     .brand-logo{
-      position:relative;
-      display:inline-flex; align-items:center; justify-content:center;
-      width:34px; height:34px; color:#0B2A6B;
+      position:relative; display:inline-flex; align-items:center; justify-content:center;
+      width:34px; height:34px; color:var(--navy);
       transition:transform .25s ease, filter .25s ease, opacity .25s ease;
+      margin-top:2px; /* テキストとベースライン合わせ */
     }
-    .brand-logo svg{ display:block; width:34px; height:34px }
+    .brand-logo svg{ width:34px; height:34px; display:block }
     .brand-logo::before{
       content:""; position:absolute; inset:-8px; border-radius:50%;
       background:conic-gradient(from 0deg, rgba(31,111,235,.0), rgba(31,111,235,.22), rgba(16,185,129,.0) 60%);
-      filter:blur(8px); opacity:.35; z-index:-1; animation:haloSpin 8s linear infinite;
+      filter:blur(8px); opacity:.30; z-index:-1; animation:haloSpin 8s linear infinite;
     }
     @keyframes haloSpin{ to{ transform:rotate(360deg); } }
-    .brand-wrap:hover .brand-logo{ transform:rotate(8deg); filter:drop-shadow(0 6px 10px rgba(11,42,107,.26)); }
-    .brand-wrap:hover .brand-logo::before{ opacity:.5; }
+    .brand-wrap:hover .brand-logo{ transform:rotate(6deg); filter:drop-shadow(0 6px 10px rgba(11,42,107,.22)); }
+    .brand-wrap:hover .brand-logo::before{ opacity:.44; }
 
-    .brand-name{ font-weight:800; letter-spacing:.2px; position:relative; padding-bottom:3px; }
+    .brand-name{
+      font-weight:800; letter-spacing:.2px; line-height:1; position:relative; padding-bottom:4px;
+    }
     .brand-name::after{
       content:""; position:absolute; left:0; bottom:0; height:2px; width:100%;
-      background:linear-gradient(90deg,#0B2A6B,#1F6FEB 55%,#0EA5A5);
-      border-radius:2px; background-size:200% 100%; animation:shine 5.5s linear infinite;
+      background:linear-gradient(90deg,var(--navy),#1F6FEB 55%,#0EA5A5);
+      border-radius:2px; background-size:200% 100%; animation:shine 6.2s linear infinite;
+      opacity:.9;
     }
     @keyframes shine{ 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
-    body[data-scrolled="1"] .site-header{
-      box-shadow:0 10px 28px rgba(2,8,20,.08), 0 2px 6px rgba(2,8,20,.05);
-    }
 
     /* ===== Nav buttons ===== */
     .site-header nav{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    .site-header .btn{ cursor:pointer; }
-    .btn{ padding:10px 16px; border-radius:14px; border:none; background:#1f6feb; color:#fff; font-weight:700; }
-    .btn.ghost{ background:#fff; color:#0B2A6B; border:1px solid #dbe4ff; }
+    .btn{
+      appearance:none; -webkit-appearance:none;
+      padding:12px 16px; border-radius:14px; border:1px solid transparent;
+      background:var(--brand); color:#fff; font-weight:800; letter-spacing:.2px;
+      line-height:1; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+      min-height:44px; /* タップ領域 */
+    }
+    .btn:hover{ transform:translateY(-1px) }
+    .btn:active{ transform:translateY(0) scale(.99) }
+    .btn:focus-visible{ outline:3px solid rgba(31,111,235,.35); outline-offset:2px }
 
-    /* --- モバイル調整：横2並び・等幅 --- */
+    .btn.ghost{
+      background:#fff; color:var(--navy); border:1px solid #dbe4ff;
+    }
+    /* モバイル：横2並び・等幅（崩れ防止） */
     @media (max-width:520px){
       .site-header nav{
-        display:grid; grid-template-columns:1fr 1fr; gap:10px; width:min(320px, 78vw);
+        display:grid; grid-template-columns:1fr 1fr; gap:10px; width:min(340px, 82vw);
       }
-      .site-header .btn, .site-header .btn.ghost{
-        width:100%; justify-content:center; padding:12px 12px; border-radius:16px;
-      }
+      .site-header .btn{ width:100%; justify-content:center; border-radius:16px; padding:12px 12px }
     }
 
-    /* ===== CTA pulse（既存） ===== */
+    /* CTA pulse（下層で使用） */
     .btn.cta{ animation:ctaPulse 2.6s ease-in-out infinite alternate; }
     @keyframes ctaPulse{
       from{ box-shadow:0 12px 28px rgba(31,111,235,.20), 0 4px 8px rgba(16,185,129,.12); transform:translateY(0) scale(1.00) }
-      to  { box-shadow:0 18px 40px rgba(31,111,235,.30), 0 10px 20px rgba(16,185,129,.18); transform:translateY(-1px) scale(1.015) }
+      to  { box-shadow:0 18px 40px rgba(31,111,235,.28), 0 10px 20px rgba(16,185,129,.16); transform:translateY(-1px) scale(1.012) }
     }
 
-    /* PC時ロゴサイズ */
+    /* 動きが苦手なユーザーへの配慮 */
+    @media (prefers-reduced-motion:reduce){
+      .brand-logo::before, .brand-wrap:hover .brand-logo, .brand-name::after, .btn.cta{
+        animation:none !important;
+      }
+      .btn, .brand-logo{ transition:none !important; }
+      .site-header{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+    }
+
+    /* PCロゴ少し大きく */
     @media (min-width:920px){
       .brand-logo{ width:36px; height:36px }
       .brand-logo svg{ width:36px; height:36px }
@@ -118,7 +163,7 @@
     <div class="container">© <script>document.write(new Date().getFullYear())</script> Mission Compass</div>
   </footer>
 
-  <!-- Scroll detector -->
+  <!-- Scroll detector (ヘッダー影ON/OFF) -->
   <script>
     (function(){
       function onScroll(){ document.body.setAttribute('data-scrolled', (window.pageYOffset>6 ? '1':'0')); }
