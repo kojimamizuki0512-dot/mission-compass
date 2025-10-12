@@ -1,9 +1,16 @@
 // functions/index.js
 import functions from 'firebase-functions';
 import cors from 'cors';
+import { defineSecret } from 'firebase-functions/params';
 
 const REGION = 'asia-northeast1'; // 東京
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+
+// ---- Firebase Secrets（安全管理） ----
+// 先に CLI で `firebase functions:secrets:set GEMINI_API_KEY` を設定しておく。
+// 取得は key.value() で行う。
+const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+
+// ---- モデル/バージョンは環境変数 or 既定値 ----
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 const GEMINI_API_VERSION = process.env.GEMINI_API_VERSION || 'v1beta';
 
@@ -20,22 +27,16 @@ const DEFAULT_SYSTEM_PROMPT = [
 ].join('\n');
 const SYSTEM_PROMPT = (process.env.GEMINI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT).trim();
 
-const corsHandler = cors({
-  origin: true, // Hostingからの呼び出しを許可（必要に応じてドメイン絞り込み）
-  credentials: false
-});
+const corsHandler = cors({ origin: true });
 
-function geminiUrl(model, ver) {
-  // generateContent（非ストリーミング）
+function geminiUrl(model, ver, key) {
   return `https://generativelanguage.googleapis.com/${ver}/models/${encodeURIComponent(
     model
-  )}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+  )}:generateContent?key=${encodeURIComponent(key)}`;
 }
 
-async function callGeminiNonStreaming(prompt) {
-  if (!GEMINI_API_KEY) {
-    return { ok: false, reply: '（管理者向け）GEMINI_API_KEY が未設定です。' };
-  }
+async function callGeminiNonStreaming(prompt, apiKey) {
+  if (!apiKey) return { ok: false, reply: '（管理者向け）GEMINI_API_KEY が未設定です。' };
 
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), 20000);
@@ -48,15 +49,15 @@ async function callGeminiNonStreaming(prompt) {
     for (const ver of versions) {
       for (const model of models) {
         try {
-          const resp = await fetch(geminiUrl(model, ver), {
+          const resp = await fetch(geminiUrl(model, ver, apiKey), {
             method: 'POST',
             signal: ctrl.signal,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: prompt.slice(0, 4000) }]}],
               generationConfig: {
-                temperature: 0.5,        // 安定寄り（必要なら0.7などに）
-                maxOutputTokens: 256     // 速さ重視で短め
+                temperature: 0.5,
+                maxOutputTokens: 256
               }
             })
           });
@@ -66,7 +67,7 @@ async function callGeminiNonStreaming(prompt) {
           try { data = raw ? JSON.parse(raw) : {}; } catch {}
 
           if (!resp.ok) {
-            if (resp.status === 404 || resp.status === 400) continue; // 次へ
+            if (resp.status === 404 || resp.status === 400) continue; // 次候補へ
             return { ok: false, reply: `Gemini API error: HTTP ${resp.status} ${raw}` };
           }
 
@@ -83,12 +84,12 @@ async function callGeminiNonStreaming(prompt) {
           if (text && text.trim()) {
             return { ok: true, reply: text.trim() };
           }
-          // 空なら次候補
+          // 空なら次候補を試す
         } catch (e) {
           if (e?.name === 'AbortError') {
             return { ok: false, reply: '（タイムアウト）少し待って再試行してください。' };
           }
-          // 次候補へ
+          // 通信エラーは次候補へ
         }
       }
     }
@@ -105,7 +106,8 @@ export const api = functions
     cpu: 1,
     memory: '256MB',
     timeoutSeconds: 25,
-    minInstances: 1 // Blaze でコールドスタート緩和（コスト最小でOK）
+    minInstances: 1, // Blaze でコールドスタート緩和
+    secrets: [GEMINI_API_KEY] // ← Secrets をバインド
   })
   .https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
@@ -113,14 +115,17 @@ export const api = functions
         res.status(405).json({ reply: 'Method Not Allowed' });
         return;
       }
+
       try {
         const message = (req.body?.message || '').toString().trim();
         if (!message) {
           res.status(400).json({ reply: 'メッセージが空です。' });
           return;
         }
+
+        const apiKey = GEMINI_API_KEY.value(); // ← 安全に取得
         const prompt = SYSTEM_PROMPT ? `${SYSTEM_PROMPT}\n\nユーザー: ${message}` : message;
-        const result = await callGeminiNonStreaming(prompt);
+        const result = await callGeminiNonStreaming(prompt, apiKey);
         res.status(200).json({ reply: result.reply });
       } catch (err) {
         res.status(500).json({ reply: 'サーバーエラーが発生しました。' });
