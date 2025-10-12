@@ -20,6 +20,15 @@
           { "key": "Cache-Control", "value": "no-cache" }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": {
+          "name": "api",
+          "region": "asia-northeast1"
+        }
+      }
     ]
   },
   "functions": {
