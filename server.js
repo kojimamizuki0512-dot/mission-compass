@@ -182,7 +182,6 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GEMINI_API_VERSION = process.env.GEMINI_API_VERSION || 'v1beta';
 
-// ★“薄い土台”を環境変数で差し替え可能に（未設定ならデフォルト文言を使用）
 const DEFAULT_SYSTEM_PROMPT = [
   'あなたはキャリア探索を手伝う汎用アシスタントです。',
   '目的：ユーザーが「なぜ学ぶのか」を言語化し、今日の一歩を決める支援。',
@@ -207,17 +206,17 @@ async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
-  // フォールバック候補（モデル & バージョン）
   const modelCandidates = [
-    GEMINI_MODEL, // 既定（gemini-2.5-flash）
+    GEMINI_MODEL,                                 // 2.5（既定）
     GEMINI_MODEL.endsWith('-latest') ? GEMINI_MODEL.replace(/-latest$/, '') : null,
     'gemini-2.0-flash',
-    'gemini-1.5-flash-8b'
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-flash'
   ].filter(Boolean);
 
   const verCandidates = Array.from(new Set([
     GEMINI_API_VERSION,                           // 既定（v1beta）
-    GEMINI_API_VERSION === 'v1' ? 'v1beta' : 'v1' // 404時の相互フォールバック
+    GEMINI_API_VERSION === 'v1' ? 'v1beta' : 'v1' // 相互フォールバック
   ]));
 
   try {
@@ -230,32 +229,49 @@ async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: prompt.slice(0, 4000) }]}],
-              generationConfig: { temperature: 0.5, maxOutputTokens: 512 } // ← 落ち着き寄り
+              generationConfig: { temperature: 0.5, maxOutputTokens: 512 }
             })
           });
-          if (resp.ok) {
-            const data = await resp.json();
-            const text =
-              data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') ||
-              data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-              '（応答が取得できませんでした）';
-            return { ok: true, reply: text };
-          } else if (resp.status !== 404) {
-            const txt = await resp.text().catch(() => '');
-            return { ok: false, reply: `Gemini API error: HTTP ${resp.status} ${txt}` };
+
+          const raw = await resp.text(); // ← ボディは必ず文字列で確保（デバッグ・分岐用）
+          let data = {};
+          try { data = raw ? JSON.parse(raw) : {}; } catch { /* JSONでない場合もある */ }
+
+          if (!resp.ok) {
+            // 404/400 は次候補へ、それ以外はエラー返す
+            if (resp.status === 404 || resp.status === 400) continue;
+            return { ok: false, reply: `Gemini API error: HTTP ${resp.status} ${raw}` };
           }
-          // 404 の場合は次候補へ
+
+          // OK でも candidates が空のケース（安全ブロック等）をハンドリング
+          const blocked = data?.promptFeedback?.blockReason;
+          const candidate = data?.candidates?.[0];
+          const text =
+            candidate?.content?.parts?.map(p => p.text).join('') ||
+            candidate?.content?.parts?.[0]?.text ||
+            '';
+
+          if (blocked) {
+            // ブロックはユーザーに理由を明示
+            return { ok: false, reply: `（安全ポリシーでブロックされました: ${blocked}）別の言い回しでお試しください。` };
+          }
+
+          if (text && text.trim().length > 0) {
+            return { ok: true, reply: text.trim() };
+          }
+
+          // テキストが空＝実質失敗とみなして次候補へ
+          continue;
         } catch (e) {
-          if (e?.name !== 'AbortError') {
-            // 次候補を試す
+          if (e?.name === 'AbortError') {
+            return { ok: false, reply: '（タイムアウト）少し待ってもう一度お試しください。' };
           }
+          // 通信エラーは次候補を試す
+          continue;
         }
       }
     }
-    return { ok: false, reply: '（モデル未対応）モデル/バージョンの組合せが見つかりませんでした。GEMINI_MODEL / GEMINI_API_VERSION を確認してください。' };
-  } catch (err) {
-    const msg = err?.name === 'AbortError' ? 'タイムアウトしました。' : (err?.message || '通信エラー');
-    return { ok: false, reply: `Geminiとの通信に失敗しました：${msg}` };
+    return { ok: false, reply: '（応答を取得できませんでした）モデル/バージョンの組合せを変更して再試行してください。' };
   } finally {
     clearTimeout(t);
   }
@@ -266,7 +282,6 @@ app.post('/api/chat', async (req, res) => {
   const message = (req.body?.message || '').toString().trim();
   if (!message) return res.status(400).json({ reply: 'メッセージが空です。' });
 
-  // 「薄い土台」を先頭に、ユーザー発話を続ける
   const userPrompt = `${SYSTEM_PROMPT}\n\nユーザー: ${message}`;
   const result = await callGemini(userPrompt);
   return res.json({ reply: result.reply });
