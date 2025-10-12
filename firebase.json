@@ -1,7 +1,4 @@
 {
-  "functions": {
-    "source": "functions"
-  },
   "hosting": {
     "public": "public",
     "ignore": [
@@ -9,33 +6,10 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "cleanUrls": true,
-    "headers": [
-      {
-        "source": "**/*.@(js|css)",
-        "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-        ]
-      },
-      {
-        "source": "/index.html",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-cache" }
-        ]
-      }
-    ],
     "rewrites": [
-      {
-        "source": "/api/**",
-        "function": {
-          "name": "api",
-          "region": "asia-northeast1"
-        }
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/api/**", "function": "api" },
+      { "source": "**", "destination": "/index.html" }
     ]
-  }
+  },
+  "functions": { "source": "functions" }
 }
