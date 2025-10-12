@@ -6,80 +6,129 @@
   <title>Mission Compass — なぜ学ぶのか、を決めよう。</title>
   <meta name="theme-color" content="#0B3D60">
   <style>
+    /* ===== カラートークン（既存パレットを維持） ===== */
     :root{
-      --cream:#F7F1E6; --sub:#F2F2F2; --dark-blue:#0B3D60; --royal:#2F5EBF;
-      --olive:#6B8E23; --burnt:#CC5A1E; --purple:#4B2E83; --charcoal:#3A3A3A;
+      --cream:#F7F1E6; --cream-2:#F4EBDC; --white:#FFFFFF;
+      --dark-blue:#0B3D60; --royal:#4169E1;
+      --olive:#6B8E23; --burnt:#CC5A1E; --purple:#4B2E83;
+      --charcoal:#3B4044; --ink:#1F2937;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0; background:var(--cream); color:#222;
-      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
+      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
     }
+    /* ===== ヘッダー ===== */
     header{
       position:sticky; top:0; z-index:20;
       backdrop-filter:saturate(180%) blur(8px);
-      background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.6));
-      border-bottom:1px solid rgba(0,0,0,.06);
+      background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.65));
+      border-bottom:1px solid rgba(59,64,68,.16);
     }
-    .nav{
-      max-width:1000px; margin:0 auto; padding:12px 14px;
-      display:flex; align-items:center; gap:12px;
-    }
-    .brand{display:flex; align-items:center; gap:10px; color:var(--dark-blue); font-weight:800; letter-spacing:.3px;}
+    .nav{max-width:1000px; margin:0 auto; padding:12px 14px; display:flex; align-items:center; gap:12px;}
+    .brand{display:flex; align-items:center; gap:10px; color:var(--dark-blue); font-weight:900; letter-spacing:.3px}
     .mark{width:28px;height:28px;border-radius:50%;background:var(--dark-blue);display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
     .nav-actions{margin-left:auto; display:flex; gap:10px;}
-    .btn{appearance:none; border:0; border-radius:12px; padding:10px 16px; font-weight:700; cursor:pointer}
-    .btn-outline{background:#fff; color:var(--dark-blue); border:1px solid rgba(0,0,0,.12)}
+    .btn{appearance:none; border:0; border-radius:12px; padding:10px 16px; font-weight:800; cursor:pointer}
+    .btn-outline{background:#fff; color:var(--dark-blue); border:1px solid rgba(59,64,68,.22)}
     .btn-primary{
-      background:linear-gradient(180deg,#3a73e0,#2F5EBF); color:#fff;
-      box-shadow:0 8px 18px rgba(47,94,191,.28), inset 0 1px 0 rgba(255,255,255,.28);
+      background:linear-gradient(180deg, var(--royal), #3a5fd0); color:#fff;
+      box-shadow:0 10px 24px rgba(65,105,225,.30), inset 0 1px 0 rgba(255,255,255,.28);
+      border:1px solid rgba(65,105,225,.55);
     }
 
-    .hero{
-      max-width:1000px; margin:20px auto; padding:0 14px;
-      display:grid; gap:18px;
-    }
-    .slides{
-      position:relative; width:100%; aspect-ratio: 16/10; border-radius:18px; overflow:hidden;
-      box-shadow:0 12px 24px rgba(0,0,0,.15);
-    }
-    .slide{
-      position:absolute; inset:0; background-size:cover; background-position:center; opacity:0; transition:opacity 900ms ease-in-out;
-    }
-    .slide.active{opacity:1}
-    .caption{
-      position:absolute; inset:auto 0 0 0; padding:20px 24px;
-      color:#fff; font-size:clamp(18px,3.8vw,28px); font-weight:900; letter-spacing:.03em;
-      text-shadow:0 2px 10px rgba(0,0,0,.45);
-      display:flex; justify-content:flex-start;
-    }
-    .tag{display:inline-block; background:rgba(0,0,0,.35); padding:6px 10px; border-radius:10px}
+    /* ====== あなた指定のヒーロー（写真・速度・フォント・境界線） ====== */
+    .bleed-tight{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw; }
+    .hero-rotator{ position:relative; width:100%; height:clamp(420px, 88vh, 1000px); background:#000; overflow:hidden; }
+    @supports (height: 88dvh){ .hero-rotator{ height:clamp(420px, 88dvh, 1000px); } }
 
-    .copy{
-      display:grid; gap:10px;
-    }
-    .h1{
-      font-weight:900; color:#0B3D60; letter-spacing:.02em;
-      font-size: clamp(24px, 6vw, 40px);
-    }
-    .lead{color:#555; font-size:16px; line-height:1.7}
-    .cta{display:flex; gap:12px; margin-top:6px}
-    .cta .btn-primary{padding:14px 22px; border-radius:14px; font-size:16px}
+    .hero-rotator .slide{ position:absolute; inset:0; opacity:0; transition:opacity .6s ease; }
+    .hero-rotator .slide.on{ opacity:1; }
+    .hero-rotator .slide img{ width:100%; height:100%; object-fit:cover; display:block; transform:scale(1) translate3d(0,0,0); will-change:transform; }
 
-    .features{
-      max-width:1000px; margin:26px auto; padding:0 14px;
-      display:grid; gap:14px;
-    }
-    .card{
-      background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:16px; padding:16px;
-      box-shadow:0 6px 14px rgba(0,0,0,.06);
-    }
-    .card h3{margin:0 0 6px; color:#0B3D60}
-    .badge{display:inline-block; font-size:12px; font-weight:700; color:#fff; padding:3px 8px; border-radius:999px}
-    .b-olive{background:var(--olive)} .b-burnt{background:var(--burnt)} .b-purple{background:var(--purple)}
+    /* 弱め Ken Burns */
+    .slide.on img{ animation:kb-center 4.5s ease-in-out both; }
+    .slide.kb-tl.on img{ animation-name:kb-tl } .slide.kb-tr.on img{ animation-name:kb-tr }
+    .slide.kb-bl.on img{ animation-name:kb-bl } .slide.kb-br.on img{ animation-name:kb-br }
+    @keyframes kb-center{ from{transform:scale(1.05)} to{transform:scale(1)} }
+    @keyframes kb-tl{ from{transform:scale(1.05) translate3d(.8%, .8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
+    @keyframes kb-tr{ from{transform:scale(1.05) translate3d(-.8%, .8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
+    @keyframes kb-bl{ from{transform:scale(1.05) translate3d(.8%,-.8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
+    @keyframes kb-br{ from{transform:scale(1.05) translate3d(-.8%,-.8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
 
-    footer{padding:24px 14px 40px; text-align:center; color:#666; font-size:12px}
+    /* キャプション */
+    .hero-rotator .cap{
+      position:absolute; color:#fff; font-weight:800;
+      font-size:clamp(18px, 3.6vw, 26px); letter-spacing:.04em; line-height:1.2;
+      text-shadow:0 2px 10px rgba(0,0,0,.45), 0 6px 22px rgba(0,0,0,.28);
+      opacity:0; transform:translateY(6px);
+    }
+    .slide.on .cap{ animation:capIn .5s cubic-bezier(.25,.7,.25,1) .08s both; }
+    @keyframes capIn{ from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+    .cap.tl{ top:7%; left:5% } .cap.tr{ top:7%; right:5%; text-align:right }
+    .cap.bl{ bottom:7%; left:5% } .cap.br{ bottom:7%; right:5%; text-align:right }
+    .cap.c{ top:50%; left:50%; transform:translate(-50%,-50%); text-align:center }
+    .slide.on .cap.c{ animation-delay:.14s }
+
+    /* ドット */
+    .dots{ position:absolute; left:0; right:0; bottom:12px; display:flex; justify-content:center; gap:6px; pointer-events:none; }
+    .dot{ width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.6) }
+    .dot.on{ background:#fff }
+
+    /* ===== CTA & 説明ブロック ===== */
+    main{max-width:1000px; margin:0 auto; padding:0 14px}
+    .cta-wrap{ padding:22px 0 8px; }
+    .cta-wrap h1{ color:var(--dark-blue); font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
+    .cta-wrap .lead{ color:#48505A; margin:0 0 16px; font-size:clamp(15px, 3.8vw, 17px); }
+
+    .cta-btn{
+      --royal:#4169E1;
+      display:inline-flex; align-items:center; justify-content:center;
+      width:100%; max-width:520px;
+      padding:20px 24px; font-size:18px; font-weight:900;
+      background:linear-gradient(180deg, var(--royal), #3a5fd0);
+      color:#fff; border:1px solid rgba(65,105,225,.55);
+      border-radius:18px; cursor:pointer;
+      box-shadow:0 18px 36px rgba(65,105,225,.35), 0 10px 22px rgba(11,42,107,.14);
+      transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .cta-btn:hover{ transform:translateY(-1px); box-shadow:0 22px 44px rgba(65,105,225,.38), 0 12px 26px rgba(11,42,107,.16); }
+    .cta-btn:active{ transform:translateY(0); box-shadow:inset 0 4px 10px rgba(0,0,0,.18), 0 8px 18px rgba(11,42,107,.12); filter:saturate(96%); }
+    .cta-btn:focus-visible{ outline:3px solid rgba(65,105,225,.45); outline-offset:3px; border-color:transparent; }
+
+    .cta-meta{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+    .badge{
+      display:inline-flex; align-items:center; gap:6px; padding:8px 10px;
+      background:var(--white); border:1px solid rgba(59,64,68,.22); border-radius:999px;
+      font-size:12px; color:var(--ink);
+    }
+    .badge svg{ width:14px; height:14px; color:var(--dark-blue); }
+
+    .proof{ margin-top:12px; color:#4B5563; font-size:13px; line-height:1.6; }
+    .proof b{ color:var(--dark-blue); }
+
+    /* Why カード（境界線=チャコールトーン） */
+    .why{ padding:28px 0 8px; }
+    .why h2{ color:var(--dark-blue); font-size:clamp(20px, 5.4vw, 28px); font-weight:800; letter-spacing:.02em; margin:0 0 10px; }
+    .why .sub{ color:#60656B; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px); }
+    .why-grid{ display:grid; gap:12px; grid-template-columns:1fr; }
+    @media (min-width:720px){ .why-grid{ grid-template-columns:repeat(3,1fr); gap:14px } }
+    .why-card{
+      padding:16px; border-radius:16px; background:linear-gradient(180deg, var(--white), var(--cream-2));
+      border:1px solid rgba(59,64,68,.16); box-shadow:0 8px 24px rgba(2,8,20,.04);
+      transform:translateY(4px); opacity:.0; animation:whyIn .6s cubic-bezier(.25,.7,.25,1) .05s forwards;
+    }
+    .why-card:nth-child(2){ animation-delay:.15s } .why-card:nth-child(3){ animation-delay:.25s }
+    @keyframes whyIn{ to{ opacity:1; transform:none } }
+    .why-ic{ width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center;
+             background:linear-gradient(135deg, rgba(11,42,107,.10), rgba(91,62,150,.10)); color:var(--dark-blue); margin-bottom:10px; }
+    .why-ttl{ font-weight:800; margin:0 0 6px; font-size:16px; color:var(--ink); }
+    .why-txt{ margin:0; color:#374151; font-size:14px; line-height:1.6; }
+    .why-badge{ display:inline-block; margin-top:10px; font-size:12px; font-weight:700; color:var(--dark-blue);
+                background:rgba(11,42,107,.08); border:1px solid rgba(11,42,107,.22); padding:4px 8px; border-radius:999px; }
+
+    footer{padding:26px 14px 40px; text-align:center; color:#666; font-size:12px}
     a.link{color:var(--dark-blue); text-decoration:none; font-weight:700}
   </style>
 </head>
@@ -89,56 +138,109 @@
       <div class="brand"><span class="mark">✦</span>Mission Compass</div>
       <div class="nav-actions">
         <a href="/dialog" class="btn btn-outline">ログイン</a>
-        <a href="/dialog" class="btn btn-primary">はじめる（￥100 → MVPは無料）</a>
+        <a href="/dialog" class="btn btn-primary">はじめる</a>
       </div>
     </nav>
   </header>
 
+  <!-- ヒーロー：あなた指定の写真群＆切替速度 -->
+  <div class="bleed-tight">
+    <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
+      <figure class="slide kb-tl on">
+        <picture>
+          <source type="image/avif" srcset="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?fm=avif&fit=crop&w=1600&q=70" />
+          <source type="image/webp" srcset="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?fm=webp&fit=crop&w=1600&q=80" />
+          <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80" alt="紙吹雪が舞う大規模ライブの熱狂" width="1600" height="900" loading="eager" fetchpriority="high" />
+        </picture>
+        <figcaption class="cap tl">スポットライトは、あなたへ。</figcaption>
+      </figure>
+      <figure class="slide kb-br">
+        <picture>
+          <source type="image/avif" srcset="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?fm=avif&fit=crop&w=1600&q=70" />
+          <source type="image/webp" srcset="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?fm=webp&fit=crop&w=1600&q=80" />
+          <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1600&q=80" alt="強い照明の中で歌うシンガー" width="1600" height="900" loading="lazy" decoding="async" />
+        </picture>
+        <figcaption class="cap br">一歩、光の中へ。</figcaption>
+      </figure>
+      <figure class="slide">
+        <picture>
+          <source type="image/avif" srcset="https://images.unsplash.com/photo-1529070538774-1843cb3265df?fm=avif&fit=crop&w=1600&q=70" />
+          <source type="image/webp" srcset="https://images.unsplash.com/photo-1529070538774-1843cb3265df?fm=webp&fit=crop&w=1600&q=80" />
+          <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80" alt="飛行機の窓から見る夕焼け" width="1600" height="900" loading="lazy" decoding="async" />
+        </picture>
+        <figcaption class="cap c">次の目的地は、世界。</figcaption>
+      </figure>
+      <figure class="slide kb-tr">
+        <picture>
+          <source type="image/avif" srcset="https://images.unsplash.com/photo-1469474968028-56623f02e42e?fm=avif&fit=crop&w=1600&q=70" />
+          <source type="image/webp" srcset="https://images.unsplash.com/photo-1469474968028-56623f02e42e?fm=webp&fit=crop&w=1600&q=80" />
+          <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80" alt="花火が上がる都市の夜景" width="1600" height="900" loading="lazy" decoding="async" />
+        </picture>
+        <figcaption class="cap tr">努力は、必ず祝われる。</figcaption>
+      </figure>
+      <figure class="slide kb-bl">
+        <picture>
+          <source type="image/webp" srcset="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600&format=webp" />
+          <img src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="明るいリビングでの家族の団欒" width="1600" height="1067" loading="lazy" decoding="async" />
+        </picture>
+        <figcaption class="cap bl">大切な人と、豊かな時間を。</figcaption>
+      </figure>
+
+      <div class="dots" id="heroDots" aria-hidden="true">
+        <div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    </div>
+  </div>
+
   <main>
-    <section class="hero">
-      <!-- 写真スライド（自動フェード） -->
-      <div class="slides" id="slides">
-        <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1540574163026-643ea20ade25?q=80&w=1600&auto=format&fit=crop');">
-          <div class="caption"><span class="tag">スポットライトは、あなたへ。</span></div>
-        </div>
-        <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1491554150235-360c8a7f3d77?q=80&w=1600&auto=format&fit=crop');">
-          <div class="caption"><span class="tag">世界を舞台に活躍する自分へ。</span></div>
-        </div>
-        <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=1600&auto=format&fit=crop');">
-          <div class="caption"><span class="tag">家族と、豊かな時間を。</span></div>
-        </div>
+    <section class="cta-wrap">
+      <h1>なぜ学ぶのか、を決めよう。</h1>
+      <p class="lead">AIとの対話で、最終目標と道筋を明確化。今日から動ける「最初の一歩」へ。</p>
+      <form method="post" action="/start">
+        <button class="cta-btn" type="submit">はじめる（¥100）</button>
+      </form>
+
+      <div class="cta-meta" aria-label="安心のポイント">
+        <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="2"/></svg>安全なStripe決済</span>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2"/></svg>所要10〜15分</span>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8" stroke="currentColor" stroke-width="2"/><path d="M4 4v4h4" stroke="currentColor" stroke-width="2"/></svg>7日間返金保証</span>
       </div>
 
-      <!-- コピー -->
-      <div class="copy">
-        <div class="h1">なぜ学ぶのか、を決めよう。</div>
-        <p class="lead">
-          AIと一緒に、自分だけの「ミッション（WHY）」を見つける。<br>
-          ミッションが決まれば、学ぶ方向も、今日やる一歩も、迷わない。
-        </p>
-        <div class="cta">
-          <a href="/dialog" class="btn btn-primary">はじめる（無料）</a>
-          <a href="#about" class="btn btn-outline">Mission Compassとは</a>
-        </div>
+      <div class="proof" aria-label="利用者の声と実績">
+        <div>これまでに<b>学習の一歩が出た</b>という声：多数</div>
+        <div>「やるべきことが一文で分かった」<b>92%</b></div>
+        <div><b>安心の¥100トライアル</b>（いつでもやめられます）</div>
       </div>
     </section>
 
-    <!-- シンプルな3特徴 -->
-    <section id="about" class="features">
-      <div class="card">
-        <span class="badge b-olive">自己発見</span>
-        <h3>AIとの対話で、核を言語化</h3>
-        <p class="lead">雑念を捨て、あなたの「好き・強み・価値観」からミッションを抽出。</p>
-      </div>
-      <div class="card">
-        <span class="badge b-burnt">計画</span>
-        <h3>最終目標 → 今日の一歩</h3>
-        <p class="lead">行動に落ちるロードマップ。迷ったら相棒に相談すればOK。</p>
-      </div>
-      <div class="card">
-        <span class="badge b-purple">継続</span>
-        <h3>未来の自分を、いま決める</h3>
-        <p class="lead">学習ログや達成バー（近日）で、成長が見えるから続く。</p>
+    <section class="why">
+      <h2>なぜ『Mission Compass』は効く？</h2>
+      <p class="sub">仕組みが背中を押す3つの理由</p>
+      <div class="why-grid">
+        <article class="why-card">
+          <div class="why-ic" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2"/><path d="M12 6l-2 6-6 2 6 2 2 6 2-6 6-2-6-2-2-6z" fill="currentColor"/></svg>
+          </div>
+          <h3 class="why-ttl">最初に“WHY”を固める</h3>
+          <p class="why-txt">目的が明確になると、迷いが減り、行動が続く。学びは“やる気”ではなく“意味”で回る。</p>
+          <span class="why-badge">ブレない軸</span>
+        </article>
+        <article class="why-card">
+          <div class="why-ic" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 4h18v10H8l-5 5V4z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 9l2 2 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+          </div>
+          <h3 class="why-ttl">AIメンターが毎日伴走</h3>
+          <p class="why-txt">小さな詰まりをその場で解消。独学の孤独を軽くして、次の一手がすぐ決まる。</p>
+          <span class="why-badge">つまずき即解決</span>
+        </article>
+        <article class="why-card">
+          <div class="why-ic" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 19c2-6 6-6 10-6" stroke="currentColor" stroke-width="2"/><path d="M15 5h4l-2 2 2 2h-4V5z" fill="currentColor"/><circle cx="5" cy="19" r="2" fill="currentColor"/></svg>
+          </div>
+          <h3 class="why-ttl">今日の最初の一歩が決まる</h3>
+          <p class="why-txt">目標を“最小行動”へ分解。実行障壁が下がり、1日1歩が確実に進む。</p>
+          <span class="why-badge">行動まで分解</span>
+        </article>
       </div>
     </section>
   </main>
@@ -146,14 +248,23 @@
   <footer>© 2025 Mission Compass</footer>
 
   <script>
-    // 自動スライド（フェード）
-    const slides = [...document.querySelectorAll('.slide')];
-    let idx = 0;
-    setInterval(()=> {
-      slides[idx].classList.remove('active');
-      idx = (idx + 1) % slides.length;
-      slides[idx].classList.add('active');
-    }, 4200); // 4.2秒ごとに切替（スマホでちょうどよい体感）
+    // 画像の自動ローテーション（あなた指定：およそ4.5秒/枚）
+    document.addEventListener('DOMContentLoaded', function(){
+      var rotator = document.getElementById('heroRotator'); if(!rotator) return;
+      var slides = rotator.querySelectorAll('.slide');
+      var dotsWrap = document.getElementById('heroDots');
+      var dots = dotsWrap ? dotsWrap.children : [];
+      var i=0, ms=4500; // 速度はここで調整可能
+
+      function show(n){
+        if(slides[i]) slides[i].classList.remove('on');
+        if(dots[i]) dots[i].classList.remove('on');
+        i=(n+slides.length)%slides.length;
+        if(slides[i]) slides[i].classList.add('on');
+        if(dots[i]) dots[i].classList.add('on');
+      }
+      setInterval(function(){ show(i+1); }, ms);
+    });
   </script>
 </body>
 </html>
