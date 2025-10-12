@@ -6,20 +6,19 @@
   <title>Mission Compass — なぜ学ぶのか、を決めよう。</title>
   <meta name="theme-color" content="#0B3D60">
   <style>
-    /* ===== カラートークン（既存パレットを維持） ===== */
     :root{
       --cream:#F7F1E6; --cream-2:#F4EBDC; --white:#FFFFFF;
       --dark-blue:#0B3D60; --royal:#4169E1;
       --olive:#6B8E23; --burnt:#CC5A1E; --purple:#4B2E83;
       --charcoal:#3B4044; --ink:#1F2937;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{box-sizing:border-box} html,body{height:100%}
     body{
       margin:0; background:var(--cream); color:#222;
       font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
     }
-    /* ===== ヘッダー ===== */
+
+    /* Header */
     header{
       position:sticky; top:0; z-index:20;
       backdrop-filter:saturate(180%) blur(8px);
@@ -29,7 +28,7 @@
     .nav{max-width:1000px; margin:0 auto; padding:12px 14px; display:flex; align-items:center; gap:12px;}
     .brand{display:flex; align-items:center; gap:10px; color:var(--dark-blue); font-weight:900; letter-spacing:.3px}
     .mark{width:28px;height:28px;border-radius:50%;background:var(--dark-blue);display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-    .nav-actions{margin-left:auto; display:flex; gap:10px;}
+    .nav-actions{margin-left:auto; display:flex; gap:10px; align-items:center}
     .btn{appearance:none; border:0; border-radius:12px; padding:10px 16px; font-weight:800; cursor:pointer}
     .btn-outline{background:#fff; color:var(--dark-blue); border:1px solid rgba(59,64,68,.22)}
     .btn-primary{
@@ -37,17 +36,15 @@
       box-shadow:0 10px 24px rgba(65,105,225,.30), inset 0 1px 0 rgba(255,255,255,.28);
       border:1px solid rgba(65,105,225,.55);
     }
+    .user{font-size:12px; color:#444}
 
-    /* ====== あなた指定のヒーロー（写真・速度・フォント・境界線） ====== */
+    /* Hero（あなた指定の写真＆速度＆境界線トーン） */
     .bleed-tight{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw; }
     .hero-rotator{ position:relative; width:100%; height:clamp(420px, 88vh, 1000px); background:#000; overflow:hidden; }
     @supports (height: 88dvh){ .hero-rotator{ height:clamp(420px, 88dvh, 1000px); } }
-
     .hero-rotator .slide{ position:absolute; inset:0; opacity:0; transition:opacity .6s ease; }
     .hero-rotator .slide.on{ opacity:1; }
     .hero-rotator .slide img{ width:100%; height:100%; object-fit:cover; display:block; transform:scale(1) translate3d(0,0,0); will-change:transform; }
-
-    /* 弱め Ken Burns */
     .slide.on img{ animation:kb-center 4.5s ease-in-out both; }
     .slide.kb-tl.on img{ animation-name:kb-tl } .slide.kb-tr.on img{ animation-name:kb-tr }
     .slide.kb-bl.on img{ animation-name:kb-bl } .slide.kb-br.on img{ animation-name:kb-br }
@@ -56,8 +53,6 @@
     @keyframes kb-tr{ from{transform:scale(1.05) translate3d(-.8%, .8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
     @keyframes kb-bl{ from{transform:scale(1.05) translate3d(.8%,-.8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
     @keyframes kb-br{ from{transform:scale(1.05) translate3d(-.8%,-.8%,0)} to{transform:scale(1) translate3d(0,0,0)} }
-
-    /* キャプション */
     .hero-rotator .cap{
       position:absolute; color:#fff; font-weight:800;
       font-size:clamp(18px, 3.6vw, 26px); letter-spacing:.04em; line-height:1.2;
@@ -70,18 +65,15 @@
     .cap.bl{ bottom:7%; left:5% } .cap.br{ bottom:7%; right:5%; text-align:right }
     .cap.c{ top:50%; left:50%; transform:translate(-50%,-50%); text-align:center }
     .slide.on .cap.c{ animation-delay:.14s }
-
-    /* ドット */
     .dots{ position:absolute; left:0; right:0; bottom:12px; display:flex; justify-content:center; gap:6px; pointer-events:none; }
     .dot{ width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.6) }
     .dot.on{ background:#fff }
 
-    /* ===== CTA & 説明ブロック ===== */
+    /* CTA */
     main{max-width:1000px; margin:0 auto; padding:0 14px}
     .cta-wrap{ padding:22px 0 8px; }
     .cta-wrap h1{ color:var(--dark-blue); font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
     .cta-wrap .lead{ color:#48505A; margin:0 0 16px; font-size:clamp(15px, 3.8vw, 17px); }
-
     .cta-btn{
       --royal:#4169E1;
       display:inline-flex; align-items:center; justify-content:center;
@@ -108,25 +100,35 @@
     .proof{ margin-top:12px; color:#4B5563; font-size:13px; line-height:1.6; }
     .proof b{ color:var(--dark-blue); }
 
-    /* Why カード（境界線=チャコールトーン） */
+    /* Why（色分け） */
     .why{ padding:28px 0 8px; }
     .why h2{ color:var(--dark-blue); font-size:clamp(20px, 5.4vw, 28px); font-weight:800; letter-spacing:.02em; margin:0 0 10px; }
     .why .sub{ color:#60656B; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px); }
     .why-grid{ display:grid; gap:12px; grid-template-columns:1fr; }
     @media (min-width:720px){ .why-grid{ grid-template-columns:repeat(3,1fr); gap:14px } }
     .why-card{
-      padding:16px; border-radius:16px; background:linear-gradient(180deg, var(--white), var(--cream-2));
+      padding:16px; border-radius:16px; background:#fff;
       border:1px solid rgba(59,64,68,.16); box-shadow:0 8px 24px rgba(2,8,20,.04);
       transform:translateY(4px); opacity:.0; animation:whyIn .6s cubic-bezier(.25,.7,.25,1) .05s forwards;
+      color:#1b1b1b;
     }
     .why-card:nth-child(2){ animation-delay:.15s } .why-card:nth-child(3){ animation-delay:.25s }
     @keyframes whyIn{ to{ opacity:1; transform:none } }
-    .why-ic{ width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center;
-             background:linear-gradient(135deg, rgba(11,42,107,.10), rgba(91,62,150,.10)); color:var(--dark-blue); margin-bottom:10px; }
+    .why-ic{ width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:10px; color:#fff; }
     .why-ttl{ font-weight:800; margin:0 0 6px; font-size:16px; color:var(--ink); }
     .why-txt{ margin:0; color:#374151; font-size:14px; line-height:1.6; }
-    .why-badge{ display:inline-block; margin-top:10px; font-size:12px; font-weight:700; color:var(--dark-blue);
-                background:rgba(11,42,107,.08); border:1px solid rgba(11,42,107,.22); padding:4px 8px; border-radius:999px; }
+    .why-badge{ display:inline-block; margin-top:10px; font-size:12px; font-weight:700; padding:4px 8px; border-radius:999px; }
+
+    /* 色の割当て */
+    .why-card.olive  { border-color: rgba(107,142,35,.35);  background:linear-gradient(180deg,#fff,#F6F8EC) }
+    .why-card.burnt  { border-color: rgba(204,90,30,.35);   background:linear-gradient(180deg,#fff,#FBF1EA) }
+    .why-card.purple { border-color: rgba(75,46,131,.35);   background:linear-gradient(180deg,#fff,#F3EEF9) }
+    .why-card.olive  .why-ic{ background:var(--olive) }
+    .why-card.burnt  .why-ic{ background:var(--burnt) }
+    .why-card.purple .why-ic{ background:var(--purple) }
+    .why-card.olive  .why-badge{ color:var(--olive);  background:rgba(107,142,35,.10);  border:1px solid rgba(107,142,35,.25) }
+    .why-card.burnt  .why-badge{ color:var(--burnt);  background:rgba(204,90,30,.10);   border:1px solid rgba(204,90,30,.25) }
+    .why-card.purple .why-badge{ color:var(--purple); background:rgba(75,46,131,.10);  border:1px solid rgba(75,46,131,.25) }
 
     footer{padding:26px 14px 40px; text-align:center; color:#666; font-size:12px}
     a.link{color:var(--dark-blue); text-decoration:none; font-weight:700}
@@ -137,13 +139,14 @@
     <nav class="nav">
       <div class="brand"><span class="mark">✦</span>Mission Compass</div>
       <div class="nav-actions">
-        <a href="/dialog" class="btn btn-outline">ログイン</a>
-        <a href="/dialog" class="btn btn-primary">はじめる</a>
+        <span id="user" class="user" hidden></span>
+        <button id="loginBtn"  class="btn btn-outline">Googleでログイン</button>
+        <button id="logoutBtn" class="btn btn-primary" hidden>ログアウト</button>
       </div>
     </nav>
   </header>
 
-  <!-- ヒーロー：あなた指定の写真群＆切替速度 -->
+  <!-- Hero -->
   <div class="bleed-tight">
     <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
       <figure class="slide kb-tl on">
@@ -196,20 +199,19 @@
     <section class="cta-wrap">
       <h1>なぜ学ぶのか、を決めよう。</h1>
       <p class="lead">AIとの対話で、最終目標と道筋を明確化。今日から動ける「最初の一歩」へ。</p>
-      <form method="post" action="/start">
-        <button class="cta-btn" type="submit">はじめる（¥100）</button>
-      </form>
+      <!-- MVPでは課金フローを省き、ダイアログへ誘導 -->
+      <a href="/dialog" class="cta-btn">はじめる</a>
 
       <div class="cta-meta" aria-label="安心のポイント">
-        <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="2"/></svg>安全なStripe決済</span>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="2"/></svg>安全な運用を目指します</span>
         <span class="badge"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2"/></svg>所要10〜15分</span>
-        <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8" stroke="currentColor" stroke-width="2"/><path d="M4 4v4h4" stroke="currentColor" stroke-width="2"/></svg>7日間返金保証</span>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8" stroke="currentColor" stroke-width="2"/><path d="M4 4v4h4" stroke="currentColor" stroke-width="2"/></svg>いつでも中断OK</span>
       </div>
 
-      <div class="proof" aria-label="利用者の声と実績">
+      <div class="proof" aria-label="補足">
         <div>これまでに<b>学習の一歩が出た</b>という声：多数</div>
-        <div>「やるべきことが一文で分かった」<b>92%</b></div>
-        <div><b>安心の¥100トライアル</b>（いつでもやめられます）</div>
+        <div>「やるべきことが一文で分かった」<b>高評価</b></div>
+        <div>まずは<b>無料でお試し</b>ください</div>
       </div>
     </section>
 
@@ -217,7 +219,7 @@
       <h2>なぜ『Mission Compass』は効く？</h2>
       <p class="sub">仕組みが背中を押す3つの理由</p>
       <div class="why-grid">
-        <article class="why-card">
+        <article class="why-card olive">
           <div class="why-ic" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2"/><path d="M12 6l-2 6-6 2 6 2 2 6 2-6 6-2-6-2-2-6z" fill="currentColor"/></svg>
           </div>
@@ -225,7 +227,7 @@
           <p class="why-txt">目的が明確になると、迷いが減り、行動が続く。学びは“やる気”ではなく“意味”で回る。</p>
           <span class="why-badge">ブレない軸</span>
         </article>
-        <article class="why-card">
+        <article class="why-card burnt">
           <div class="why-ic" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 4h18v10H8l-5 5V4z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 9l2 2 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
           </div>
@@ -233,7 +235,7 @@
           <p class="why-txt">小さな詰まりをその場で解消。独学の孤独を軽くして、次の一手がすぐ決まる。</p>
           <span class="why-badge">つまずき即解決</span>
         </article>
-        <article class="why-card">
+        <article class="why-card purple">
           <div class="why-ic" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 19c2-6 6-6 10-6" stroke="currentColor" stroke-width="2"/><path d="M15 5h4l-2 2 2 2h-4V5z" fill="currentColor"/><circle cx="5" cy="19" r="2" fill="currentColor"/></svg>
           </div>
@@ -247,15 +249,14 @@
 
   <footer>© 2025 Mission Compass</footer>
 
+  <!-- Hero rotation -->
   <script>
-    // 画像の自動ローテーション（あなた指定：およそ4.5秒/枚）
     document.addEventListener('DOMContentLoaded', function(){
       var rotator = document.getElementById('heroRotator'); if(!rotator) return;
       var slides = rotator.querySelectorAll('.slide');
       var dotsWrap = document.getElementById('heroDots');
       var dots = dotsWrap ? dotsWrap.children : [];
-      var i=0, ms=4500; // 速度はここで調整可能
-
+      var i=0, ms=4500; // 4.5秒/枚（あなた指定）
       function show(n){
         if(slides[i]) slides[i].classList.remove('on');
         if(dots[i]) dots[i].classList.remove('on');
@@ -264,6 +265,38 @@
         if(dots[i]) dots[i].classList.add('on');
       }
       setInterval(function(){ show(i+1); }, ms);
+    });
+  </script>
+
+  <!-- Firebase Auth（Google） -->
+  <script type="module">
+    import { firebaseConfig } from '/firebase-config.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import {
+      getAuth, GoogleAuthProvider, onAuthStateChanged,
+      signInWithPopup, signOut
+    } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const $ = s => document.querySelector(s);
+    const userEl   = $('#user');
+    const loginBtn = $('#loginBtn');
+    const logoutBtn= $('#logoutBtn');
+
+    loginBtn?.addEventListener('click', ()=> signInWithPopup(auth, provider).catch(console.error));
+    logoutBtn?.addEventListener('click', ()=> signOut(auth).catch(console.error));
+
+    onAuthStateChanged(auth, (user)=>{
+      if(user){
+        userEl.hidden = false; logoutBtn.hidden = false; loginBtn.hidden = true;
+        userEl.textContent = user.email || user.displayName || 'ログイン済み';
+      }else{
+        userEl.hidden = true; logoutBtn.hidden = true; loginBtn.hidden = false;
+        userEl.textContent = '';
+      }
     });
   </script>
 </body>
