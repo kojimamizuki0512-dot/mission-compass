@@ -7,45 +7,34 @@
   <meta name="theme-color" content="#0B3D60" />
   <style>
     :root{
-      --cream:#F7F1E6;
-      --sub:#F2F2F2;
-      --dark-blue:#0B3D60;
-      --olive:#6B8E23;
-      --burnt:#CC5A1E;
-      --purple:#4B2E83;
-      --charcoal:#3A3A3A;
-      --bubble-user:#0B3D60;
-      --bubble-ai:#ffffff;
+      --cream:#F7F1E6; --sub:#F2F2F2; --dark-blue:#0B3D60; --olive:#6B8E23;
+      --burnt:#CC5A1E; --purple:#4B2E83; --charcoal:#3A3A3A;
+      --bubble-user:#0B3D60; --bubble-ai:#ffffff;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0; background:var(--cream);
-      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
-      color:#222; writing-mode: horizontal-tb; text-orientation: mixed;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
+      color:#222; writing-mode:horizontal-tb; text-orientation:mixed;
     }
     header{
       position:sticky; top:0; z-index:10;
       backdrop-filter:saturate(180%) blur(8px);
-      background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.6));
+      background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.6));
       border-bottom:1px solid rgba(0,0,0,.06);
-      padding:10px 12px;
-      display:flex; align-items:center; gap:12px;
+      padding:10px 12px; display:flex; align-items:center; gap:12px;
     }
     .brand{display:flex; align-items:center; gap:10px; color:var(--dark-blue); font-weight:800; letter-spacing:.3px;}
     .brand .mark{width:28px;height:28px;border-radius:50%;background:var(--dark-blue);display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
     .brand small{display:block;font-weight:600;font-size:12px;opacity:.75}
     main{height:calc(100% - 64px); display:flex; flex-direction:column;}
-    .timeline{flex:1; overflow:auto; padding:14px 12px 110px; scroll-behavior:smooth;}
+    .timeline{flex:1; overflow:auto; padding:14px 12px 130px; scroll-behavior:smooth;}
     .chip{display:block; width:max-content; margin:8px auto; padding:4px 10px; border-radius:999px; font-size:12px; color:#555; background:rgba(0,0,0,.06);}
     .msg{display:flex; margin:8px 0; gap:8px; align-items:flex-end;}
     .msg.ai{justify-content:flex-start}
     .msg.me{justify-content:flex-end}
-    .bubble{
-      max-width:82vw; padding:10px 12px; border-radius:16px;
-      box-shadow:0 2px 8px rgba(0,0,0,.08); line-height:1.55; word-break:break-word;
-      border:1px solid rgba(0,0,0,.06);
-    }
+    .bubble{max-width:82vw; padding:10px 12px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.08); line-height:1.55; word-break:break-word; border:1px solid rgba(0,0,0,.06);}
     .msg.ai .bubble{background:var(--bubble-ai); color:#222;}
     .msg.me .bubble{background:var(--bubble-user); color:#fff;}
     .typing{display:inline-flex; gap:6px; align-items:center}
@@ -54,31 +43,31 @@
     .dot:nth-child(3){animation-delay:.3s}
     @keyframes blink{0%,80%,100%{opacity:.2} 40%{opacity:1}}
 
-    /* —— フッターコンポーザー（修正点） —— */
+    /* ===== 入力エリア（大きめ & 自動伸縮） ===== */
     .composer{
       position:fixed; bottom:0; left:0; right:0; z-index:20;
-      padding:10px; background:linear-gradient(180deg, rgba(247,241,230,.6), rgba(247,241,230,1));
+      padding:12px 10px;
+      background:linear-gradient(180deg,rgba(247,241,230,.6),rgba(247,241,230,1));
       border-top:1px solid rgba(0,0,0,.06);
     }
-    .row{display:flex; gap:8px; align-items:flex-end;}
+    .row{display:flex; gap:10px; align-items:flex-end; max-width:820px; margin:0 auto;}
     textarea{
-      flex:1; resize:none; border-radius:14px; border:1px solid rgba(0,0,0,.1);
-      padding:12px 14px; min-height:48px; max-height:120px; outline:none;
-      background:#fff; font-size:16px; line-height:1.4; /* 16px以上でiOSのオートズーム抑止 */
-      writing-mode: horizontal-tb;
+      flex:1; resize:none; border-radius:16px; border:1px solid rgba(0,0,0,.12);
+      padding:14px 16px; min-height:56px; max-height:180px; outline:none; background:#fff;
+      font-size:17px; line-height:1.5; /* 16px以上でiOSズーム防止、読みやすさUp */
+      overflow:hidden; /* 自動伸縮用 */
     }
     button.send{
-      height:48px; min-width:64px; border:0; border-radius:14px; padding:0 18px; font-weight:800;
-      background:linear-gradient(180deg, #1a4f7a, #0b3d60); color:#fff;
-      box-shadow:0 6px 16px rgba(11,61,96,.35), inset 0 1px 0 rgba(255,255,255,.25);
+      height:56px; min-width:72px; border:0; border-radius:16px; padding:0 20px;
+      font-weight:800; background:linear-gradient(180deg,#1a4f7a,#0b3d60); color:#fff;
+      box-shadow:0 8px 18px rgba(11,61,96,.35), inset 0 1px 0 rgba(255,255,255,.25);
       display:grid; place-items:center; transition:transform .06s ease; white-space:nowrap;
     }
     button.send:active{transform:translateY(1px)}
-    .helper{padding:6px 4px 0; font-size:12px; color:#666; writing-mode: horizontal-tb; text-align:right; white-space:nowrap;}
+    .helper{max-width:820px; margin:6px auto 0; padding:0 2px; font-size:12px; color:#666; text-align:right;}
 
     @media (min-width:768px){
       .timeline{margin:0 auto; max-width:820px;}
-      .composer{left:50%; right:50%; transform:translateX(-50%); max-width:820px;}
     }
     a.link{color:var(--dark-blue); font-weight:600; text-decoration:none;}
   </style>
@@ -139,11 +128,21 @@
       return wrap;
     }
 
+    // —— 自動伸縮（入力に応じて背伸び）
+    function autosize(){
+      $input.style.height = 'auto';
+      const next = Math.min($input.scrollHeight, 180);
+      $input.style.height = next + 'px';
+    }
+    ['input','change'].forEach(ev => $input.addEventListener(ev, autosize));
+    window.addEventListener('load', autosize);
+
     async function send(){
       const text = ($input.value || '').trim();
       if(!text) return;
       addMsg('user', escapeHtml(text));
       $input.value = '';
+      autosize();
       $send.disabled = true;
 
       const typing = addTyping();
