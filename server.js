@@ -176,13 +176,24 @@ app.get('/dialog', (req, res) => {
 });
 
 /* =========================
-   Gemini 連携 API
+   Gemini 連携 API（薄い土台）
    ========================= */
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-// ★ 既定モデルを 2.5 Flash に固定（環境変数で上書き可）
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-// 2.x 系は v1beta のことが多いので既定は v1beta（環境変数で v1 に切替可能）
 const GEMINI_API_VERSION = process.env.GEMINI_API_VERSION || 'v1beta';
+
+// ★“薄い土台”を環境変数で差し替え可能に（未設定ならデフォルト文言を使用）
+const DEFAULT_SYSTEM_PROMPT = [
+  'あなたはキャリア探索を手伝う汎用アシスタントです。',
+  '目的：ユーザーが「なぜ学ぶのか」を言語化し、今日の一歩を決める支援。',
+  'スタイル：日本語、落ち着いた口調。先に1つ質問→要点整理→提案は最大3つ。',
+  '注意：断定しすぎない／根拠が薄い時は「仮説」と明示／医療・法律などは一般論まで。',
+  '出力フォーマット：',
+  '1) 質問（短く1つ）',
+  '2) 要点（・で3つ以内）',
+  '3) 今日の一歩（1文）'
+].join('\n');
+const SYSTEM_PROMPT = (process.env.GEMINI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT).trim();
 
 function buildUrl(model, ver) {
   return `https://generativelanguage.googleapis.com/${ver}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
@@ -198,7 +209,7 @@ async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
 
   // フォールバック候補（モデル & バージョン）
   const modelCandidates = [
-    GEMINI_MODEL,                                 // gemini-2.5-flash（既定）
+    GEMINI_MODEL, // 既定（gemini-2.5-flash）
     GEMINI_MODEL.endsWith('-latest') ? GEMINI_MODEL.replace(/-latest$/, '') : null,
     'gemini-2.0-flash',
     'gemini-1.5-flash-8b'
@@ -219,7 +230,7 @@ async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: prompt.slice(0, 4000) }]}],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
+              generationConfig: { temperature: 0.5, maxOutputTokens: 512 } // ← 落ち着き寄り
             })
           });
           if (resp.ok) {
@@ -241,7 +252,7 @@ async function callGemini(prompt, { timeoutMs = 20000 } = {}) {
         }
       }
     }
-    return { ok: false, reply: '（モデル未対応）利用可能なモデル/バージョンの組合せが見つかりませんでした。GEMINI_MODEL / GEMINI_API_VERSION を確認してください。' };
+    return { ok: false, reply: '（モデル未対応）モデル/バージョンの組合せが見つかりませんでした。GEMINI_MODEL / GEMINI_API_VERSION を確認してください。' };
   } catch (err) {
     const msg = err?.name === 'AbortError' ? 'タイムアウトしました。' : (err?.message || '通信エラー');
     return { ok: false, reply: `Geminiとの通信に失敗しました：${msg}` };
@@ -255,10 +266,8 @@ app.post('/api/chat', async (req, res) => {
   const message = (req.body?.message || '').toString().trim();
   if (!message) return res.status(400).json({ reply: 'メッセージが空です。' });
 
-  const persona =
-    'あなたはMission CompassのAI相棒。口調は丁寧で前向き、回答は短く要点を箇条書きし、最後に「今日の一歩」を1文で提案してください。';
-
-  const userPrompt = `${persona}\n\nユーザー: ${message}`;
+  // 「薄い土台」を先頭に、ユーザー発話を続ける
+  const userPrompt = `${SYSTEM_PROMPT}\n\nユーザー: ${message}`;
   const result = await callGemini(userPrompt);
   return res.json({ reply: result.reply });
 });
