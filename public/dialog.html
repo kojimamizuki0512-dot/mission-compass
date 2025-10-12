@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>作戦会議（AIメンター） - Mission Compass</title>
+  <meta name="theme-color" content="#0B3D60" />
+  <style>
+    :root{
+      --cream:#F7F1E6;             /* ベース（70%） */
+      --sub:#F2F2F2;                /* サブ（20%に白・薄グレー） */
+      --dark-blue:#0B3D60;          /* アクション/見出し */
+      --olive:#6B8E23;              /* 進捗バー等 */
+      --burnt:#CC5A1E;              /* 高重要度 */
+      --purple:#4B2E83;             /* 設定/プロフィール */
+      --charcoal:#3A3A3A;           /* ボーダー */
+      --bubble-user:#0B3D60;
+      --bubble-ai:#ffffff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--cream);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN",
+                   "Noto Sans JP", Arial, sans-serif;
+      color:#222;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter:saturate(180%) blur(8px);
+      background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.6));
+      border-bottom:1px solid rgba(0,0,0,.06);
+      padding:10px 12px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      color:var(--dark-blue); font-weight:800; letter-spacing:.3px;
+    }
+    .brand .mark{
+      width:28px; height:28px; border-radius:50%;
+      background:var(--dark-blue);
+      display:grid; place-items:center; color:#fff; font-size:16px;
+      box-shadow:0 2px 6px rgba(0,0,0,.15);
+    }
+    .brand small{display:block; font-weight:600; font-size:12px; opacity:.75}
+    main{height:calc(100% - 64px); display:flex; flex-direction:column;}
+    .timeline{
+      flex:1; overflow:auto; padding:14px 12px 96px;
+      scroll-behavior:smooth;
+    }
+    .chip{display:block; width:max-content; margin:8px auto; padding:4px 10px;
+      border-radius:999px; font-size:12px; color:#555; background:rgba(0,0,0,.06);}
+    .msg{display:flex; margin:8px 0; gap:8px; align-items:flex-end;}
+    .msg.ai{justify-content:flex-start}
+    .msg.me{justify-content:flex-end}
+    .bubble{
+      max-width:82vw; padding:10px 12px; border-radius:16px;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+      line-height:1.55; word-break:break-word;
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .msg.ai .bubble{ background:var(--bubble-ai); color:#222;}
+    .msg.me .bubble{ background:var(--bubble-user); color:#fff; }
+    .typing{ display:inline-flex; gap:6px; align-items:center}
+    .dot{width:6px; height:6px; border-radius:50%; background:#999; opacity:.8;
+      animation:blink 1.2s infinite ease-in-out}
+    .dot:nth-child(2){animation-delay:.15s}
+    .dot:nth-child(3){animation-delay:.3s}
+    @keyframes blink{0%,80%,100%{opacity:.2} 40%{opacity:1}}
+    .composer{
+      position:fixed; bottom:0; left:0; right:0; z-index:20;
+      padding:10px; background:linear-gradient(180deg, rgba(247,241,230,.6), rgba(247,241,230,1));
+      border-top:1px solid rgba(0,0,0,.06);
+    }
+    .row{ display:flex; gap:8px; }
+    textarea{
+      flex:1; resize:none; border-radius:14px; border:1px solid rgba(0,0,0,.1);
+      padding:12px 14px; min-height:46px; max-height:120px; outline:none;
+      background:#fff; font-size:15px;
+    }
+    button.send{
+      min-width:56px; border:0; border-radius:14px; padding:0 16px; font-weight:700;
+      background:linear-gradient(180deg, #1a4f7a, #0b3d60); color:#fff;
+      box-shadow:0 6px 16px rgba(11,61,96,.35), inset 0 1px 0 rgba(255,255,255,.25);
+      display:grid; place-items:center; transition:transform .06s ease;
+    }
+    button.send:active{ transform:translateY(1px) }
+    .helper{
+      padding:6px 12px 0; font-size:12px; color:#666;
+    }
+    @media (min-width:768px){
+      .timeline{ display:block; margin:0 auto; max-width:820px; }
+      .composer{ left:50%; right:50%; transform:translateX(-50%); max-width:820px; }
+    }
+    a.link{color:var(--dark-blue); font-weight:600; text-decoration:none;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="mark">✦</span>
+      <div>
+        Mission Compass
+        <small>作戦会議（AIメンター）</small>
+      </div>
+    </div>
+    <div style="margin-left:auto">
+      <a href="/" class="link">トップへ</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="timeline" id="timeline" aria-live="polite">
+      <span class="chip">今日</span>
+
+      <div class="msg ai">
+        <div class="bubble" id="hello">
+          はじめまして。いまの関心や目標を一言で教えてください。<br />
+          そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
+        </div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="row">
+        <textarea id="input" placeholder="メッセージを入力…" rows="1"></textarea>
+        <button class="send" id="send" aria-label="送信">送信</button>
+      </div>
+      <div class="helper">⚡ 速さ重視モード（gemini-2.0-flash / 非ストリーミング）</div>
+    </div>
+  </main>
+
+  <script>
+    const $timeline = document.getElementById('timeline');
+    const $input = document.getElementById('input');
+    const $send = document.getElementById('send');
+
+    function addMsg(role, html){
+      const wrap = document.createElement('div');
+      wrap.className = 'msg ' + (role === 'user' ? 'me' : 'ai');
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.innerHTML = html;
+      wrap.appendChild(b);
+      $timeline.appendChild(wrap);
+      $timeline.scrollTop = $timeline.scrollHeight;
+      return b;
+    }
+
+    function addTyping(){
+      const wrap = document.createElement('div');
+      wrap.className = 'msg ai';
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.innerHTML = '<span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+      wrap.appendChild(b);
+      $timeline.appendChild(wrap);
+      $timeline.scrollTop = $timeline.scrollHeight;
+      return wrap;
+    }
+
+    async function send(){
+      const text = ($input.value || '').trim();
+      if(!text) return;
+      addMsg('user', escapeHtml(text));
+      $input.value = '';
+      $send.disabled = true;
+
+      const typing = addTyping();
+
+      try{
+        const res = await fetch('/api/chat', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json().catch(()=>({reply:'（応答の解析に失敗しました）'}));
+        typing.remove();
+        addMsg('ai', formatMarkdownLite(data.reply || '（応答が取得できませんでした）'));
+      }catch(e){
+        typing.remove();
+        addMsg('ai', '（通信エラー）時間をおいて再試行してください。');
+      }finally{
+        $send.disabled = false;
+        $input.focus();
+      }
+    }
+
+    $send.addEventListener('click', send);
+    $input.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        send();
+      }
+    });
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function formatMarkdownLite(t){
+      // すごく簡易：改行→<br>、* や - の行頭を箇条書き風に
+      const lines = (t||'').split(/\r?\n/).map(l=>{
+        if (/^\s*[-*・]/.test(l)) return '• ' + escapeHtml(l.replace(/^\s*[-*・]\s*/, ''));
+        return escapeHtml(l);
+      });
+      return lines.join('<br>');
+    }
+  </script>
+</body>
+</html>
