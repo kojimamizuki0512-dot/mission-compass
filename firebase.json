@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "source": "functions"
+  },
   "hosting": {
     "public": "public",
     "ignore": [
@@ -28,10 +31,11 @@
           "name": "api",
           "region": "asia-northeast1"
         }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
-  },
-  "functions": {
-    "source": "functions"
   }
 }
