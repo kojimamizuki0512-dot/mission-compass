@@ -6,7 +6,6 @@
   "hosting": {
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "cleanUrls": true,
     "rewrites": [
       { "source": "/api/**", "function": { "functionId": "api", "region": "asia-northeast1" } },
       { "source": "/dialog", "destination": "/dialog.html" },
