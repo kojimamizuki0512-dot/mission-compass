@@ -6,26 +6,15 @@
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
   <style>
-    /* ===== ベース ===== */
     :root{
-      --bg:#F6EEDC;            /* 既存のクリーム系に寄せる */
-      --panel:#FFF7EA;
-      --ink:#1F2937;
-      --muted:#6B7280;
-      --brand:#4169E1;
-      --brand-2:#3a5fd0;
-      --shadow:0 8px 24px rgba(2,8,20,.04);
-      --radius:16px;
-      --max:860px;             /* チャットの最大幅 */
+      --bg:#F6EEDC; --panel:#FFF7EA; --ink:#1F2937; --muted:#6B7280;
+      --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
+      --radius:16px; --max:860px;
     }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    html,body{ margin:0; color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; }
-    /* 横スクロールを完全禁止（iOS含む） */
-    html,body{ overflow-x:hidden; }
+    *{ box-sizing:border-box; } html,body{ height:100%; margin:0; }
+    html,body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
     img,svg,video,canvas{ max-width:100%; height:auto; }
 
-    /* ===== ヘッダー（上部をまっすぐ整列） ===== */
     header{
       position:sticky; top:0; z-index:30;
       background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
@@ -36,103 +25,57 @@
     .brand{ font-weight:900; letter-spacing:.02em; white-space:nowrap; }
     .spacer{ flex:1; }
     .email{ padding:8px 10px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; font-size:13px; color:#374151; max-width:50vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .btn{
-      appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer;
-      background:#fff; border:1px solid rgba(0,0,0,.12);
-    }
+    .btn{ appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer; background:#fff; border:1px solid rgba(0,0,0,.12); }
     .btn.primary{ background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#fff; border-color:rgba(65,105,225,.55); }
     .btn.ghost{ background:#fff; }
-    /* 画面幅が狭い時は2段に折り返しても崩れない */
-    @media (max-width:600px){
-      .bar{ flex-wrap:wrap; row-gap:8px; }
-      .email{ order:3; width:100%; max-width:100%; }
-    }
+    @media (max-width:600px){ .bar{ flex-wrap:wrap; row-gap:8px; } .email{ order:3; width:100%; max-width:100%; } }
 
-    /* ===== レイアウト：LINE風のまっすぐな縦流れ ===== */
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
     .note{ color:var(--muted); font-size:12px; margin:10px 0; display:flex; align-items:center; gap:6px; }
 
-    /* チャットの縦スクロール領域（下の入力欄を“下部固定”するため） */
-    .chat-shell{
-      position:relative;
-      min-height:calc(100dvh - 130px);   /* ざっくり：ヘッダー＋下部入力ぶんを除いた高さ */
-      padding-bottom:120px;              /* ↓ 下部入力の固定分（被らないように底上げ） */
-    }
-    .stream{
-      display:flex; flex-direction:column; gap:14px;
-      padding:16px 0 24px;
-    }
+    .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:120px; }
+    .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
+    .bubble{ max-width:min(85%, 680px); padding:12px 14px; border-radius:14px; box-shadow:var(--shadow); line-height:1.65; word-break:break-word; overflow-wrap:anywhere; border:1px solid rgba(0,0,0,.06); }
+    .ai{ align-self:flex-start; background:#fff; }
+    .me{ align-self:flex-end; background:#eaf0ff; border-color:rgba(65,105,225,.25); }
 
-    /* 吹き出し（左＝AI / 右＝あなた） */
-    .bubble{
-      max-width:min(85%, 680px);
-      padding:12px 14px; border-radius:14px; box-shadow:var(--shadow);
-      line-height:1.65; word-break:break-word; overflow-wrap:anywhere;
-      border:1px solid rgba(0,0,0,.06);
-    }
-    .ai   { align-self:flex-start; background:#fff; }
-    .me   { align-self:flex-end;   background:#eaf0ff; border-color:rgba(65,105,225,.25); }
-
-    /* ===== 入力欄：下部固定（iOS安全域対応） ===== */
     .composer{
-      position:sticky; /* Safariでも安定。body固定より安全域対応しやすい */
-      bottom:0; z-index:20;
-      margin:0 calc(50% - min(50%, var(--max)/2)); /* 中央に吸着＋左右は画面端 */
-      background:linear-gradient(180deg, rgba(255,255,255,.0), rgba(255,255,255,.86) 30%, rgba(255,255,255,.98));
+      position:sticky; bottom:0; z-index:20;
+      margin:0 calc(50% - min(50%, var(--max)/2));
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.86) 30%, rgba(255,255,255,.98));
       backdrop-filter:saturate(150%) blur(6px);
       border-top:1px solid rgba(0,0,0,.06);
       padding:14px 12px calc(14px + env(safe-area-inset-bottom));
     }
-    .composer .row{
-      display:flex; gap:10px; align-items:flex-end;
-      max-width:var(--max); margin:0 auto;
-    }
-    textarea{
-      flex:1; min-height:44px; max-height:180px; resize:vertical;
-      background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px;
-      padding:12px 12px; font-size:16px; line-height:1.45;
-    }
+    .composer .row{ display:flex; gap:10px; align-items:flex-end; max-width:var(--max); margin:0 auto; }
+    textarea{ flex:1; min-height:44px; max-height:180px; resize:vertical; background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px; padding:12px; font-size:16px; line-height:1.45; }
     .send{ height:44px; padding:0 18px; border-radius:12px; font-weight:900; }
     .send[disabled]{ opacity:.5; pointer-events:none; }
-
-    /* アクセシビリティ */
     .sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); border:0; }
   </style>
 </head>
 <body>
-  <!-- ===== ヘッダー ===== -->
   <header>
     <div class="bar" role="navigation" aria-label="上部メニュー">
       <div class="brand">Mission Compass</div>
       <div class="spacer"></div>
-
-      <!-- トップへ -->
       <a class="btn ghost" href="/" aria-label="トップへ">トップへ</a>
-
-      <!-- メール表示（ログイン後に入る） -->
       <div id="userMail" class="email" title="ログイン中のメール" hidden></div>
-
-      <!-- ログイン／ログアウト -->
-      <button id="loginBtn"  class="btn"          type="button">Googleでログイン</button>
-      <button id="logoutBtn" class="btn primary"  type="button" hidden>ログアウト</button>
+      <button id="loginBtn" class="btn" type="button">Googleでログイン</button>
+      <button id="logoutBtn" class="btn primary" type="button" hidden>ログアウト</button>
     </div>
   </header>
 
-  <!-- ===== 本文 ===== -->
   <main class="wrap">
-    <!-- ガイド -->
     <section class="stream" id="chat">
       <div class="bubble ai">
         <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br />
         そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
       </div>
     </section>
-
-    <!-- 速度メモ -->
     <div class="note">⚡ 速達モード（gemini-2.0-flash / 非ストリーミング）</div>
   </main>
 
-  <!-- ===== 入力欄（下部固定） ===== -->
   <div class="composer" aria-label="メッセージ入力エリア">
     <div class="row">
       <label class="sr" for="text">メッセージ入力</label>
@@ -141,114 +84,91 @@
     </div>
   </div>
 
-  <!-- ===== スクリプト（UMD版で“確実に”動く構成） ===== -->
-  <!-- Firebase UMD（モジュール化で詰まらないよう、グローバル版） -->
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
-  <script>
-    // /firebase-config.js は既に本番で動いている想定。
-    // ここでは “モジュール輸出” を使わず、グローバルに置かれた config にも対応。
-  </script>
-  <script>
-    (function(){
-      // 1) Firebase 初期化
-      // - /firebase-config.js が export ではなく window.firebaseConfig を置く構成でも拾えるように両対応
-      let cfg = window.firebaseConfig || window.__FIREBASE_CONFIG__ || null;
-      if(!cfg){
-        // 最後の保険：public/firebase-config.js をプレーンに読み込んで window.firebaseConfig に代入してもらう
-        const s = document.createElement('script'); s.src='/firebase-config.js'; s.defer=true;
-        s.onload = boot; s.onerror = boot; document.head.appendChild(s);
-      }else{ boot(); }
+  <!-- ===== ここからESMで統一 ===== -->
+  <script type="module">
+    import { firebaseConfig } from '/firebase-config.js'; // ← ここが“export”を読むのでエラー解消
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import {
+      getAuth, GoogleAuthProvider, onAuthStateChanged,
+      signInWithPopup, signOut, setPersistence, browserLocalPersistence
+    } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
-      function boot(){
-        try{
-          const config = window.firebaseConfig || window.__FIREBASE_CONFIG__;
-          if(!firebase.apps.length){ firebase.initializeApp(config); }
-        }catch(e){ console.warn('Firebase init skipped (maybe already initialized):', e); }
+    // 1) Firebase 初期化（ESM・同一設定）
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    await setPersistence(auth, browserLocalPersistence); // ページをまたいでもログイン維持
 
-        const auth = firebase.auth();
-        const loginBtn  = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const userMail  = document.getElementById('userMail');
+    // UI要素
+    const $ = s => document.querySelector(s);
+    const loginBtn  = $('#loginBtn');
+    const logoutBtn = $('#logoutBtn');
+    const userMail  = $('#userMail');
+    const chat      = $('#chat');
+    const ta        = $('#text');
+    const sendBtn   = $('#send');
 
-        loginBtn?.addEventListener('click', async ()=>{
-          try{
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithPopup(provider);
-          }catch(err){ alert('ログインに失敗しました: ' + err.message); }
-        });
-        logoutBtn?.addEventListener('click', ()=> auth.signOut());
+    // 2) ログイン／ログアウト
+    loginBtn.addEventListener('click', async ()=>{
+      try{
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      }catch(e){ alert('ログインに失敗しました: ' + e.message); }
+    });
+    logoutBtn.addEventListener('click', ()=> signOut(auth));
 
-        auth.onAuthStateChanged(user=>{
-          const loggedIn = !!user;
-          loginBtn.hidden  = loggedIn;
-          logoutBtn.hidden = !loggedIn;
-          userMail.hidden  = !loggedIn;
-          userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
-        });
+    // 3) 状態に応じて表示
+    onAuthStateChanged(auth, user=>{
+      const loggedIn = !!user;
+      loginBtn.hidden  = loggedIn;
+      logoutBtn.hidden = !loggedIn;
+      userMail.hidden  = !loggedIn;
+      userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
+    });
 
-        // 2) チャット送信
-        const $ = sel => document.querySelector(sel);
-        const chat = $('#chat');
-        const ta   = $('#text');
-        const btn  = $('#send');
-
-        // 入力でボタンON/OFF
-        ta.addEventListener('input', ()=>{
-          btn.disabled = !ta.value.trim();
-        });
-
-        // Enter送信（Shift+Enterは改行）
-        ta.addEventListener('keydown', e=>{
-          if(e.key === 'Enter' && !e.shiftKey){
-            e.preventDefault();
-            btn.click();
-          }
-        });
-
-        btn.addEventListener('click', async ()=>{
-          const text = ta.value.trim();
-          if(!text) return;
-
-          // 自分の吹き出しを先に出す
-          appendBubble(text, 'me');
-          ta.value=''; btn.disabled = true;
-
-          // 自動スクロール
-          requestAnimationFrame(scrollToBottom);
-
-          try{
-            const res = await fetch('/api/chat', {
-              method:'POST',
-              headers:{ 'Content-Type':'application/json' },
-              body: JSON.stringify({ message:text })
-            });
-            if(!res.ok){
-              throw new Error('HTTP ' + res.status);
-            }
-            const data = await res.json();
-            // 関数の返却が {reply: "..."} 形式を想定（前に確認済みの形式）
-            const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
-            appendBubble(reply, 'ai');
-          }catch(err){
-            appendBubble('エラーが発生しました: ' + err.message, 'ai');
-          }finally{
-            btn.disabled = !ta.value.trim();
-            scrollToBottom();
-          }
-        });
-
-        function appendBubble(text, who){
-          const div = document.createElement('div');
-          div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
-          div.textContent = text;
-          chat.appendChild(div);
-        }
-        function scrollToBottom(){
-          window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
-        }
+    // 4) 送信ボタンの活性化
+    const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
+    ta.addEventListener('input', updateSend);
+    ta.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        sendBtn.click();
       }
-    })();
+    });
+    updateSend();
+
+    // 5) チャット送信
+    sendBtn.addEventListener('click', async ()=>{
+      const text = ta.value.trim();
+      if(!text) return;
+
+      appendBubble(text, 'me');
+      ta.value = ''; updateSend();
+      scrollToBottom();
+
+      try{
+        const res = await fetch('/api/chat', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ message:text })
+        });
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        appendBubble((data.reply || '').toString().trim() || '（返信を取得できませんでした）', 'ai');
+      }catch(err){
+        appendBubble('エラー: ' + err.message, 'ai');
+      }finally{
+        scrollToBottom();
+      }
+    });
+
+    function appendBubble(text, who){
+      const div = document.createElement('div');
+      div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
+      div.textContent = text;
+      chat.appendChild(div);
+    }
+    function scrollToBottom(){
+      window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
+    }
   </script>
 </body>
 </html>
