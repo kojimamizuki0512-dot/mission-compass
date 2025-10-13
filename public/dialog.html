@@ -1,193 +1,151 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mission Compass — 対話ページ</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
   <style>
-    :root {
-      --bg: #f8f3ea;
-      --accent: #4169E1;
-      --card: #fff;
-      --border: rgba(0, 0, 0, 0.1);
+    :root{
+      --bg:#F5EEDF; --card:#FFFFFF; --ink:#1F2937;
+      --primary:#4169E1; --primary-2:#3a5fd0; --muted:#6B7280;
     }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
-      background: var(--bg);
-    }
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      background: #fff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding: 8px 14px;
-    }
-    .brand {
-      font-weight: 900;
-      color: #0B3D60;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .btn {
-      border: 1px solid rgba(0,0,0,0.15);
-      border-radius: 12px;
-      background: #fff;
-      color: #0B3D60;
-      padding: 8px 14px;
-      font-weight: 700;
-      cursor: pointer;
-      z-index: 1001;
-      position: relative;
-    }
-    main {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-    .msg {
-      background: var(--card);
-      border-radius: 14px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .from-ai {
-      border-left: 4px solid var(--accent);
-    }
-    form {
-      display: flex;
-      gap: 8px;
-      padding: 12px 0;
-      position: sticky;
-      bottom: 0;
-      background: var(--bg);
-    }
-    input[type="text"] {
-      flex: 1;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      padding: 12px;
-      font-size: 15px;
-    }
-    button[type="submit"] {
-      border: none;
-      border-radius: 10px;
-      padding: 0 20px;
-      background: var(--accent);
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-      opacity: 0.9;
-    }
-    button[type="submit"]:hover {
-      opacity: 1;
-    }
-    button[type="submit"]:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family: system-ui,-apple-system,"Segoe UI","Noto Sans JP",Arial,sans-serif;}
+
+    header{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.95);
+      backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid rgba(0,0,0,.08)}
+    .bar{max-width:1000px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center}
+    .brand{font-weight:900}
+    .grow{flex:1}
+    .btn{appearance:none;border:1px solid rgba(0,0,0,.15);background:#fff;color:#111;
+      border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;pointer-events:auto}
+    .btn-primary{background:linear-gradient(180deg,var(--primary),var(--primary-2));color:#fff;border-color:rgba(65,105,225,.6)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+    main{max-width:1000px;margin:0 auto;padding:14px}
+    .tip{font-size:12px;color:#6b7280;margin:2px 0 8px}
+    .sys{background:var(--card);border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:14px 16px;box-shadow:0 6px 20px rgba(2,8,20,.04)}
+
+    .input-row{display:flex;gap:12px;align-items:flex-end;margin-top:18px}
+    textarea{flex:1;min-height:56px;padding:12px 14px;border-radius:12px;border:1px solid rgba(0,0,0,.15);resize:vertical;font-size:16px}
+    #sendBtn{min-width:92px;height:56px}
   </style>
 </head>
 <body>
   <header>
-    <div class="brand">Mission Compass</div>
-    <div>
-      <a href="/" class="btn">トップへ</a>
-      <button id="loginBtn" class="btn">Googleでログイン</button>
+    <div class="bar">
+      <div class="brand">Mission Compass</div>
+      <div class="grow"></div>
+      <a href="/" class="btn" id="toTopBtn">トップへ</a>
+      <button class="btn" id="googleLoginBtn" type="button" onclick="login()">Googleでログイン</button>
+      <button class="btn btn-primary" id="logoutBtn" type="button" hidden onclick="logout()">ログアウト</button>
+      <span id="who" class="tip" aria-live="polite"></span>
     </div>
   </header>
 
-  <main id="chatContainer">
-    <div class="msg from-ai">
-      はじめまして。いまの関心や目標を一言で教えてください。<br>
+  <main>
+    <div class="tip">Q 0 / 5</div>
+    <div class="sys" id="sysMsg">
+      <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br />
       そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
     </div>
+
+    <form class="input-row" id="chatForm" onsubmit="return sendChat(event)">
+      <textarea id="message" placeholder="はじめまして" oninput="toggleSend()" oncompositionstart="ime=1;toggleSend()" oncompositionend="ime=0;toggleSend()"></textarea>
+      <button class="btn btn-primary" id="sendBtn" type="submit" disabled>送信</button>
+    </form>
+
+    <div class="tip">⚡ 速達モード（gemini-2.0-flash / 非ストリーミング）</div>
   </main>
 
-  <form id="chatForm">
-    <input id="chatInput" type="text" placeholder="入力してください…" autocomplete="off" />
-    <button id="sendBtn" type="submit" disabled>送信</button>
-  </form>
+  <!-- Firebase（互換レイヤのグローバル版＝モジュール不要） -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  <script type="module">
-    import { firebaseConfig } from '/firebase-config.js';
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
-    import {
-      getAuth,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signInWithRedirect,
-      onAuthStateChanged
-    } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+  <!-- 公開用の設定（グローバルに載せる） -->
+  <script src="/firebase-config.js"></script>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+  <script>
+    // --- Auth 初期化（グローバル版）-----------------------------------------
+    const app = firebase.initializeApp(window.__FIREBASE_CONFIG__ || {});
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-    // --- Googleログイン ---
-    const loginBtn = document.getElementById("loginBtn");
-    loginBtn.addEventListener("click", () => {
-      if (/iPhone|iPad|Android/i.test(navigator.userAgent)) {
-        signInWithRedirect(auth, provider);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const loginBtn  = document.getElementById('googleLoginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const who       = document.getElementById('who');
+
+    function updateAuthUI(user){
+      if (user){
+        loginBtn.hidden = true;
+        logoutBtn.hidden = false;
+        who.textContent = user.email || user.displayName || 'ログイン中';
       } else {
-        signInWithPopup(auth, provider);
+        loginBtn.hidden = false;
+        logoutBtn.hidden = true;
+        who.textContent = '';
       }
-    });
+    }
 
-    // --- チャット送信 ---
-    const form = document.getElementById("chatForm");
-    const input = document.getElementById("chatInput");
-    const sendBtn = document.getElementById("sendBtn");
-    const chatContainer = document.getElementById("chatContainer");
+    window.login = function(){
+      // クリックが確実に届く（onclick直付け）
+      if (isMobile) {
+        auth.signInWithRedirect(provider).catch(err => { console.error(err); alert('ログインに失敗しました'); });
+      } else {
+        auth.signInWithPopup(provider).catch(err => { console.error(err); alert('ログインに失敗しました（ポップアップ許可を確認）'); });
+      }
+    };
 
-    input.addEventListener("input", () => {
-      sendBtn.disabled = input.value.trim() === "";
-    });
+    window.logout = function(){
+      auth.signOut().catch(console.error);
+    };
 
-    form.addEventListener("submit", async (e) => {
+    auth.onAuthStateChanged(updateAuthUI);
+
+    // --- 送信ボタンの有効化/送信 --------------------------------------------
+    let ime = 0;  // IME中フラグ
+    let sending = 0;
+
+    function toggleSend(){
+      const t = (document.getElementById('message').value || '').trim();
+      const btn = document.getElementById('sendBtn');
+      btn.disabled = !(t && !ime && !sending);
+    }
+    window.toggleSend = toggleSend;
+
+    async function sendChat(e){
       e.preventDefault();
-      const text = input.value.trim();
-      if (!text) return;
+      const ta = document.getElementById('message');
+      const btn = document.getElementById('sendBtn');
+      const text = (ta.value || '').trim();
+      if (!text || btn.disabled) return false;
 
-      // ユーザーのメッセージを表示
-      const userMsg = document.createElement("div");
-      userMsg.className = "msg";
-      userMsg.textContent = text;
-      chatContainer.appendChild(userMsg);
-      input.value = "";
-      sendBtn.disabled = true;
-
-      // API呼び出し
-      const res = await fetch("https://missioncompass-3b58e.web.app/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
-      });
-      const data = await res.json();
-      const aiMsg = document.createElement("div");
-      aiMsg.className = "msg from-ai";
-      aiMsg.textContent = data.reply || "応答がありません。";
-      chatContainer.appendChild(aiMsg);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    });
-
-    // --- ログイン状態確認 ---
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loginBtn.textContent = "ログアウト";
-        loginBtn.onclick = () => auth.signOut();
-      } else {
-        loginBtn.textContent = "Googleでログイン";
+      sending = 1; toggleSend();
+      try{
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        if (!res.ok) throw new Error('API ' + res.status);
+        await res.json().catch(()=> ({}));
+      }catch(err){
+        console.error(err); alert('送信に失敗しました');
+      }finally{
+        ta.value = '';
+        sending = 0; toggleSend();
+        ta.focus();
       }
-    });
+      return false;
+    }
+    window.sendChat = sendChat;
+
+    // 初期状態
+    toggleSend();
   </script>
 </body>
 </html>
