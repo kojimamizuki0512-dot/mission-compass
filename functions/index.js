@@ -1,127 +1,89 @@
-/* Firebase Functions — 1st Gen（asia-northeast1） */
-const functions = require("firebase-functions");
-const express = require("express");
+// functions/index.js  ←全文これでOK（1st Gen / ESM / /api/chatも受ける）
+import * as functions from "firebase-functions/v1";
+import express from "express";
+import cors from "cors";
+import fetch from "node-fetch";
+
+// 許可オリジン（必要に応じて追加）
+const allowOrigins = [
+  "https://missioncompass-3b58e.web.app",
+  "https://missioncompass-3b58e.firebaseapp.com",
+  "http://localhost:5000",
+  "http://localhost:5173",
+];
 
 const app = express();
 app.use(express.json());
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin || allowOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
-/** 共通 */
-const REGION = "asia-northeast1";
-const MODEL = "gemini-2.5-flash"; // ご希望のモデル
-const GEMINI_ENDPOINT = (model) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+// ★ 1st Gen の config からキー取得（なければ環境変数）
+const GEMINI_API_KEY =
+  (functions.config().gemini && functions.config().gemini.api_key) ||
+  process.env.GEMINI_API_KEY ||
+  "";
 
-/** ヘルス（GETは405にしておく） */
-app.get("/", (_, res) => res.status(405).send("POST only. Use /chat or /guided"));
+// ヘルスチェック（/ と /api の両方で返す）
+app.get("/", (_req, res) => res.status(200).json({ ok: true, service: "api" }));
+app.get("/api", (_req, res) => res.status(200).json({ ok: true, service: "api" }));
 
-/** フリーチャット: 既存LPテストやデバッグ用（必要なら残す） */
-app.post("/chat", async (req, res) => {
+// 共通ハンドラ（/chat と /api/chat の両方にマウント）
+async function chatHandler(req, res) {
   try {
-    const userText = (req.body?.message || "").toString().slice(0, 4000);
-    if (!userText) return res.status(400).json({ error: "message is required" });
-
-    const body = {
-      contents: [{ role: "user", parts: [{ text: userText }] }],
-    };
-
-    const r = await fetch(GEMINI_ENDPOINT(MODEL), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const j = await r.json();
-
-    const text =
-      j?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      j?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("\n") ||
-      "(応答が取得できませんでした)";
-    return res.json({ reply: text });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: "chat failed" });
-  }
-});
-
-/** ガイド付き対話: /api/guided  */
-app.post("/guided", async (req, res) => {
-  try {
-    const step = Number(req.body?.step ?? 0);
-    const answers = Array.isArray(req.body?.answers) ? req.body.answers : [];
-
-    // 5つの設問（MVP用にシンプル）
-    const QUESTIONS = [
-      "初めまして。どんなキャリアに関心がありますか？（例：教育／起業／研究／クリエイティブ など）",
-      "これまでで一番『充実していた瞬間』は？ どんな活動・理由でしたか？",
-      "あなたが大事にしている価値観を3つ挙げてください。（例：挑戦・誠実・貢献 など）",
-      "人から頼られがちな『強み』は何ですか？（例：整理／説明／前に進める など）",
-      "周りや社会に『こう役立ちたい』と思うことは何ですか？",
-    ];
-    const TOTAL = QUESTIONS.length;
-
-    // まだ質問が残っている
-    if (step < TOTAL) {
-      return res.json({ type: "question", step, total: TOTAL, question: QUESTIONS[step] });
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
+    }
+    const { message, system, history } = req.body || {};
+    if (!message || typeof message !== "string") {
+      return res.status(400).json({ error: "message is required (string)" });
     }
 
-    // ここから最終サマリ
-    // Q&Aをテキストにまとめる
-    const qa = answers
-      .slice(0, TOTAL)
-      .map((x, i) => `Q${i + 1}: ${x.q}\nA${i + 1}: ${x.a}`)
-      .join("\n\n");
+    const model = "gemini-2.0-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
+      GEMINI_API_KEY
+    )}`;
 
-    const prompt = [
-      "あなたはキャリア戦略コーチです。以下のQ&Aから、ユーザーの価値観・情熱を発掘し、",
-      "最後に心に響く『ミッション・ステートメント』を日本語で1行にまとめてください。",
-      "",
-      "出力は厳密に次のJSONだけにしてください：",
-      '{ "values": ["...","...", "..."], "passions": ["...","..."], "statement": "..." }',
-      "",
-      "制約：",
-      "• valuesは抽象語（例：誠実・挑戦・貢献）。3語を目安に。",
-      "• passionsは具体的な興味や活動（例：人の成長を助ける、複雑な課題を解く）。2〜3個まで。",
-      "• statementは30〜50字程度。「私は、…」で始める。",
-      "",
-      "―― 以下、ユーザーの回答 ――",
-      qa,
-    ].join("\n");
+    const contents = [
+      ...(system ? [{ role: "user", parts: [{ text: system }] }] : []),
+      ...(Array.isArray(history) ? history : []),
+      { role: "user", parts: [{ text: message }] },
+    ];
 
-    const body = {
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-    };
-
-    const r = await fetch(GEMINI_ENDPOINT(MODEL), {
+    const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        contents,
+        generationConfig: { temperature: 0.6, topP: 0.9, topK: 32, maxOutputTokens: 1024 },
+      }),
     });
-    const j = await r.json();
 
-    const raw =
-      j?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      j?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("\n") ||
-      "";
+    if (!r.ok) {
+      const text = await r.text();
+      return res.status(502).json({ error: "upstream_error", status: r.status, body: text });
+    }
 
-    // JSON抽出（コードフェンスが付く場合に備える）
-    const m = raw.match(/\{[\s\S]*\}/);
-    let parsed;
-    try { parsed = m ? JSON.parse(m[0]) : JSON.parse(raw); } catch (_) {}
-
-    const mission = {
-      values: Array.isArray(parsed?.values) ? parsed.values : [],
-      passions: Array.isArray(parsed?.passions) ? parsed.passions : [],
-      statement: typeof parsed?.statement === "string" ? parsed.statement : raw.replace(/\s+/g, " ").trim(),
-    };
-
-    return res.json({ type: "final", mission });
+    const data = await r.json();
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") ||
+      "(応答が取得できませんでした)";
+    return res.json({ reply });
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ error: "guided failed" });
+    return res.status(500).json({ error: "internal_error", detail: String(e) });
   }
-});
+}
 
-/** エクスポート（1st Gen + Secret） */
-exports.api = functions
-  .region(REGION)
-  .runWith({ secrets: ["GEMINI_API_KEY"] })
-  .https.onRequest(app);
+// ★ここがポイント：/chat と /api/chat の両方を受ける
+app.post("/chat", chatHandler);
+app.post("/api/chat", chatHandler);
+
+// 1st Gen エクスポート（リージョン固定）
+export const api = functions.region("asia-northeast1").https.onRequest(app);

@@ -1,29 +1,16 @@
 {
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  },
   "hosting": {
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "cleanUrls": true,
     "rewrites": [
-      { "source": "/api{,/**}", "function": { "functionId": "api", "region": "asia-northeast1" }},
-
-      // ← これを追加：/dialog は dialog.html を配信
+      { "source": "/api/**", "function": { "functionId": "api", "region": "asia-northeast1" } },
       { "source": "/dialog", "destination": "/dialog.html" },
-
-      // そのほかのパスは SPA として index.html にフォールバック
       { "source": "**", "destination": "/index.html" }
-    ],
-    "headers": [
-      {
-        "source": "**",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-      },
-      {
-        "source": "/index.html",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
-      },
-      {
-        "source": "/dialog.html",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
-      }
     ]
   }
 }

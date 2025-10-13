@@ -2,111 +2,47 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60">
   <style>
     :root{
-      --cream:#F7F1E6; --cream-2:#F4EBDC; --white:#FFFFFF;
-      --dark-blue:#0B3D60; --royal:#4169E1;
-      --olive:#6B8E23; --burnt:#CC5A1E; --purple:#4B2E83;
-      --charcoal:#3B4044; --ink:#1F2937;
-      --composer-h:84px;
+      --bg:#F7F1E6; --card:#fff; --ink:#1F2937; --muted:#6B7280;
+      --blue:#0B3D60; --royal:#4169E1; --accent:#CC5A1E;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background:var(--cream); color:#222;
-      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
-      display:flex; flex-direction:column; min-height:100vh;
-    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;}
+    header{position:sticky;top:0;z-index:20;background:
+      linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.75));
+      border-bottom:1px solid rgba(0,0,0,.08);backdrop-filter:saturate(180%) blur(8px);}
+    .nav{max-width:1000px;margin:0 auto;padding:12px 14px;display:flex;align-items:center;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--blue);font-weight:900}
+    .mark{width:28px;height:28px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff}
+    .nav-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .btn{appearance:none;border:1px solid rgba(0,0,0,.12);background:#fff;color:var(--blue);
+      border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
+    .btn-primary{background:linear-gradient(180deg,var(--royal),#3a5fd0);color:#fff;border-color:rgba(65,105,225,.55)}
+    .user{font-size:12px;color:#444}
 
-    /* Header */
-    header{
-      position:sticky; top:0; z-index:30;
-      backdrop-filter:saturate(180%) blur(8px);
-      background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.65));
-      border-bottom:1px solid rgba(59,64,68,.16);
-    }
-    .nav{max-width:900px; margin:0 auto; padding:12px 14px; display:flex; align-items:center; gap:12px;}
-    .brand{display:flex; align-items:center; gap:10px; color:var(--dark-blue); font-weight:900; letter-spacing:.3px}
-    .mark{width:28px;height:28px;border-radius:50%;background:var(--dark-blue);display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-    .nav-actions{margin-left:auto; display:flex; gap:10px; align-items:center}
-    .btn{appearance:none; border:0; border-radius:12px; padding:8px 12px; font-weight:800; cursor:pointer}
-    .btn-outline{background:#fff; color:var(--dark-blue); border:1px solid rgba(59,64,68,.22)}
-    .btn-primary{ background:linear-gradient(180deg, var(--royal), #3a5fd0); color:#fff; border:1px solid rgba(65,105,225,.55) }
-    .user{font-size:12px; color:#444}
+    .wrap{max-width:1000px;margin:0 auto;padding:18px 14px 26px}
+    .sys{color:var(--muted);font-size:12px;margin:4px 0 12px}
+    .board{display:flex;flex-direction:column;gap:12px;min-height:40vh}
+    .msg{max-width:min(720px,92%);padding:14px 16px;border-radius:16px;background:var(--card);
+      box-shadow:0 4px 14px rgba(2,8,20,.06);border:1px solid rgba(0,0,0,.06)}
+    .msg.me{margin-left:auto;border-color:rgba(65,105,225,.35);box-shadow:0 6px 18px rgba(65,105,225,.12)}
+    .msg .badge{display:inline-block;margin:-6px 0 6px;padding:2px 8px;font-size:11px;
+      border-radius:999px;background:rgba(11,61,96,.08);color:var(--blue);font-weight:700}
 
-    /* Progress pill */
-    .progress{
-      max-width:900px; margin:6px auto 0; padding:0 14px 8px; display:flex; gap:8px; align-items:center;
-    }
-    .pill{
-      font-size:12px; color:#334155; background:#fff; border:1px solid rgba(59,64,68,.16);
-      border-radius:999px; padding:6px 10px; font-weight:800;
-    }
-
-    /* Chat area */
-    main{flex:1; display:flex; flex-direction:column}
-    #messages{
-      flex:1; overflow:auto; -webkit-overflow-scrolling:touch;
-      max-width:900px; margin:0 auto; padding:14px 14px calc(var(--composer-h) + 16px);
-    }
-    .msg{ display:flex; margin:10px 0; }
-    .msg .bubble{
-      max-width:80%; padding:10px 12px; border-radius:16px; line-height:1.5; font-size:15px;
-      border:1px solid rgba(59,64,68,.16); box-shadow:0 4px 14px rgba(2,8,20,.05);
-      word-wrap:break-word; white-space:pre-wrap;
-    }
-    .msg.bot{ justify-content:flex-start }
-    .msg.bot .bubble{
-      background:#fff;
-    }
-    .msg.user{ justify-content:flex-end }
-    .msg.user .bubble{
-      background:linear-gradient(180deg,#e7efff,#dfe8ff);
-      border-color:rgba(65,105,225,.35);
-    }
-    .msg.bot .q-olive{ border-left:4px solid var(--olive) }
-    .msg.bot .q-burnt{ border-left:4px solid var(--burnt) }
-    .msg.bot .q-purple{ border-left:4px solid var(--purple) }
-
-    /* Composer（固定） */
-    .composer{
-      position:fixed; left:0; right:0; bottom:0; z-index:40;
-      background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.96));
-      border-top:1px solid rgba(59,64,68,.16);
-      padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-      display:flex; justify-content:center;
-    }
-    .composer-inner{
-      width:100%; max-width:900px; display:flex; gap:8px; align-items:flex-end;
-    }
-    textarea{
-      flex:1; resize:none; min-height:46px; max-height:34vh;
-      border-radius:14px; padding:12px 12px; font-size:15px; line-height:1.5;
-      border:1px solid rgba(59,64,68,.22); background:#fff; outline:none;
-    }
-    .send{
-      appearance:none; border:0; border-radius:14px; padding:12px 16px; font-weight:900; cursor:pointer;
-      background:linear-gradient(180deg, var(--royal), #3a5fd0); color:#fff; border:1px solid rgba(65,105,225,.55);
-      box-shadow:0 10px 24px rgba(65,105,225,.30), inset 0 1px 0 rgba(255,255,255,.28);
-    }
-    .send:disabled{ opacity:.6; cursor:default }
-
-    /* Final card */
-    .final{
-      margin:16px 0; padding:16px; background:#fff; border:1px solid rgba(59,64,68,.16);
-      border-radius:16px; box-shadow:0 8px 24px rgba(2,8,20,.06);
-    }
-    .final h3{ margin:0 0 8px; color:var(--dark-blue) }
-    .kv{ font-weight:800; color:#374151; margin:6px 0 }
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
-    .ghost{ appearance:none; border-radius:12px; border:1px solid rgba(59,64,68,.22); background:#fff; padding:10px 12px; font-weight:800; cursor:pointer }
-    .primary{ appearance:none; border-radius:12px; border:1px solid rgba(65,105,225,.55); background:linear-gradient(180deg, var(--royal), #3a5fd0); color:#fff; padding:10px 12px; font-weight:800; cursor:pointer }
-
-    .hint{ font-size:12px; color:#6b7280; margin-top:6px }
-    .typing{ font-size:12px; color:#6b7280; padding:0 6px }
+    .composer{position:sticky;bottom:0;background:
+      linear-gradient(180deg,rgba(247,241,230,0),var(--bg) 18%,var(--bg));
+      padding:10px 0 0;margin-top:14px}
+    .row{display:flex;gap:10px;align-items:flex-end}
+    textarea{flex:1;min-height:56px;max-height:180px;padding:14px;border-radius:12px;border:1px solid rgba(0,0,0,.12);
+      resize:vertical;background:#fff}
+    .send{min-width:74px;height:40px;border-radius:12px;border:0;background:var(--royal);color:#fff;font-weight:900;cursor:pointer}
+    .pill{display:inline-block;margin-top:6px;font-size:12px;color:var(--muted)}
+    .error{border-left:5px solid var(--accent)}
   </style>
 </head>
 <body>
@@ -114,206 +50,34 @@
     <nav class="nav">
       <div class="brand"><span class="mark">✦</span>Mission Compass</div>
       <div class="nav-actions">
+        <a class="btn" href="/">トップへ</a>
         <span id="user" class="user" hidden></span>
-        <button id="loginBtn"  class="btn btn-outline">Googleでログイン</button>
+        <button id="loginBtn"  class="btn">Googleでログイン</button>
         <button id="logoutBtn" class="btn btn-primary" hidden>ログアウト</button>
       </div>
     </nav>
-    <div class="progress">
-      <span class="pill" id="pill">Q <b id="prog">0</b> / 5</span>
-      <span class="typing" id="typing" hidden>AIが考え中…</span>
-    </div>
   </header>
 
-  <main>
-    <section id="messages" aria-live="polite" aria-label="チャットログ"></section>
+  <main class="wrap">
+    <div class="sys">Q <span id="qNow">0</span> / 5</div>
+    <div id="board" class="board">
+      <div class="msg">
+        <div class="badge">案内</div>
+        はじめまして。いまの関心や目標を一言で教えてください。<br>
+        そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="row">
+        <textarea id="input" placeholder="ここに回答を入力（例：一番充実したのは、〇〇に挑戦して達成できたとき…）"></textarea>
+        <button id="send" class="send">送信</button>
+      </div>
+      <div class="pill">⚡ 速さ重視モード</div>
+    </div>
   </main>
 
-  <div class="composer">
-    <div class="composer-inner">
-      <textarea id="input" placeholder="ここに回答を入力（例：一番充実したのは、〇〇に挑戦して達成できたとき…）" rows="2"></textarea>
-      <button id="send" class="send">送信</button>
-    </div>
-  </div>
-
-  <!-- App script -->
-  <script>
-    const API_BASE = '/api'; // Firebase Hosting の rewrite で Functions に届く
-
-    const $ = s => document.querySelector(s);
-    const messages = $('#messages');
-    const input = $('#input');
-    const sendBtn = $('#send');
-    const progEl = $('#prog');
-    const typingEl = $('#typing');
-
-    const state = {
-      step: 0,
-      total: 5,
-      answers: []
-    };
-
-    function scrollToBottom(){
-      messages.scrollTop = messages.scrollHeight + 9990;
-    }
-
-    function addBot(text, color='olive'){
-      const wrap = document.createElement('div');
-      wrap.className = 'msg bot';
-      const b = document.createElement('div');
-      b.className = 'bubble q-' + color;
-      b.textContent = text;
-      wrap.appendChild(b);
-      messages.appendChild(wrap);
-      scrollToBottom();
-    }
-
-    function addUser(text){
-      const wrap = document.createElement('div');
-      wrap.className = 'msg user';
-      const b = document.createElement('div');
-      b.className = 'bubble';
-      b.textContent = text;
-      wrap.appendChild(b);
-      messages.appendChild(wrap);
-      scrollToBottom();
-    }
-
-    function setProgress(){
-      progEl.textContent = Math.min(state.step, state.total);
-    }
-
-    async function fetchNext(){
-      typingEl.hidden = false;
-      try{
-        const res = await fetch(`${API_BASE}/guided`, {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ step: state.step, answers: state.answers })
-        });
-        const data = await res.json();
-        typingEl.hidden = true;
-
-        if(!res.ok){
-          addBot('エラーが発生しました。少し時間をおいてお試しください。','burnt');
-          console.error(data);
-          return;
-        }
-
-        if(data.type === 'question'){
-          const colors = ['olive','burnt','purple','olive','burnt'];
-          addBot(data.question, colors[state.step % colors.length]);
-        }else if(data.type === 'final'){
-          renderFinal(data);
-        }
-      }catch(e){
-        typingEl.hidden = true;
-        addBot('ネットワークエラーです。接続を確認してください。','burnt');
-        console.error(e);
-      }
-    }
-
-    function renderFinal(payload){
-      // 入力を無効化
-      input.disabled = true;
-      sendBtn.disabled = true;
-
-      const box = document.createElement('div');
-      box.className = 'final';
-
-      const h3 = document.createElement('h3');
-      h3.textContent = 'あなたのミッション・ステートメント';
-      box.appendChild(h3);
-
-      const v = document.createElement('div');
-      v.className = 'kv';
-      v.textContent = `私の価値観: [${(payload.mission.values||[]).join(', ')}]`;
-      box.appendChild(v);
-
-      const p = document.createElement('div');
-      p.className = 'kv';
-      p.textContent = `私の情熱: [${(payload.mission.passions||[]).join(', ')}]`;
-      box.appendChild(p);
-
-      const s = document.createElement('div');
-      s.className = 'kv';
-      s.textContent = `私のミッション: 「${payload.mission.statement || '（生成結果）'}」`;
-      box.appendChild(s);
-
-      const actions = document.createElement('div');
-      actions.className = 'actions';
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'ghost';
-      copyBtn.textContent = 'コピー';
-      copyBtn.onclick = async () => {
-        const txt = `${v.textContent}\n${p.textContent}\n${s.textContent}`;
-        try{ await navigator.clipboard.writeText(txt); copyBtn.textContent = 'コピー✓' }catch(e){ copyBtn.textContent='コピー失敗' }
-        setTimeout(()=> copyBtn.textContent='コピー', 1600);
-      };
-      const shareBtn = document.createElement('button');
-      shareBtn.className = 'primary';
-      shareBtn.textContent = '共有…';
-      shareBtn.onclick = async () => {
-        const txt = s.textContent;
-        if(navigator.share){
-          try{ await navigator.share({ text: txt }); }catch(e){}
-        }else{
-          try{ await navigator.clipboard.writeText(txt); shareBtn.textContent='コピー✓' }catch(e){ shareBtn.textContent='コピー失敗' }
-          setTimeout(()=> shareBtn.textContent='共有…', 1600);
-        }
-      };
-      actions.appendChild(copyBtn);
-      actions.appendChild(shareBtn);
-      box.appendChild(actions);
-
-      const hint = document.createElement('div');
-      hint.className = 'hint';
-      hint.textContent = '※ 後から書き直しや微調整もOK。次の一歩に落とし込みましょう。';
-      box.appendChild(hint);
-
-      const wrap = document.createElement('div');
-      wrap.className = 'msg bot';
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.appendChild(box);
-      wrap.appendChild(bubble);
-      messages.appendChild(wrap);
-      scrollToBottom();
-    }
-
-    async function onSend(){
-      const t = (input.value || '').trim();
-      if(!t) return;
-      addUser(t);
-
-      // 進捗更新
-      if(state.step < state.total){
-        // 直前の質問を answers に保存
-        const lastQBubble = Array.from(document.querySelectorAll('.msg.bot .bubble')).pop();
-        const lastQ = lastQBubble ? lastQBubble.textContent : '';
-        state.answers.push({ q: lastQ, a: t });
-        state.step += 1;
-        setProgress();
-      }
-
-      input.value = '';
-      await fetchNext();
-    }
-
-    sendBtn.addEventListener('click', onSend);
-    input.addEventListener('keydown', (e)=>{
-      if(e.key === 'Enter' && !e.shiftKey){
-        e.preventDefault();
-        onSend();
-      }
-    });
-
-    // 初期ロード：最初の質問を取得
-    setProgress();
-    fetchNext();
-  </script>
-
-  <!-- Firebase Auth（任意でLPと同じ制御を表示） -->
+  <!-- Firebase Auth -->
   <script type="module">
     import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
@@ -327,21 +91,69 @@
     const provider = new GoogleAuthProvider();
 
     const $ = s => document.querySelector(s);
-    const userEl   = $('#user');
-    const loginBtn = $('#loginBtn');
-    const logoutBtn= $('#logoutBtn');
+    const board  = $('#board');
+    const input  = $('#input');
+    const send   = $('#send');
+    const userEl = $('#user');
+    const login  = $('#loginBtn');
+    const logout = $('#logoutBtn');
+    const qNowEl = $('#qNow');
 
-    loginBtn?.addEventListener('click', ()=> signInWithPopup(auth, provider).catch(console.error));
-    logoutBtn?.addEventListener('click', ()=> signOut(auth).catch(console.error));
-
+    login?.addEventListener('click', ()=> signInWithPopup(auth, provider).catch(console.error));
+    logout?.addEventListener('click', ()=> signOut(auth).catch(console.error));
     onAuthStateChanged(auth, (user)=>{
       if(user){
-        userEl.hidden = false; logoutBtn.hidden = false; loginBtn.hidden = true;
+        userEl.hidden=false; logout.hidden=false; login.hidden=true;
         userEl.textContent = user.email || user.displayName || 'ログイン済み';
       }else{
-        userEl.hidden = true; logoutBtn.hidden = true; loginBtn.hidden = false;
-        userEl.textContent = '';
+        userEl.hidden=true; logout.hidden=true; login.hidden=false; userEl.textContent='';
       }
+    });
+
+    function addMsg(text, me=false, isError=false){
+      const div = document.createElement('div');
+      div.className = 'msg'+(me?' me':'')+(isError?' error':'');
+      div.innerHTML = text.replace(/\n/g,'<br>');
+      board.appendChild(div);
+      div.scrollIntoView({behavior:'smooth',block:'end'});
+    }
+
+    async function postChat(message){
+      try{
+        const res = await fetch('/api/chat', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ message })
+        });
+        if(!res.ok){
+          const t = await res.text().catch(()=> '');
+          throw new Error('API ' + res.status + ' ' + t);
+        }
+        const data = await res.json().catch(()=> ({}));
+        return data.reply || '（応答が取得できませんでした）';
+      }catch(err){
+        console.error(err);
+        return { error: true, text: 'ネットワークエラーです。接続を確認してください。' };
+      }
+    }
+
+    send.addEventListener('click', async ()=>{
+      const text = (input.value || '').trim();
+      if(!text) return;
+      addMsg(text, true);
+      input.value = '';
+      const reply = await postChat(text);
+      if(typeof reply === 'object' && reply.error){
+        addMsg(reply.text, false, true);
+      }else{
+        addMsg(reply);
+        const cur = Number(qNowEl.textContent||'0');
+        qNowEl.textContent = String(Math.min(cur+1,5));
+      }
+    });
+
+    input.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send.click(); }
     });
   </script>
 </body>
