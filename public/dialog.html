@@ -23,12 +23,17 @@
       --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
       --radius:16px; --max:860px;
 
-      /* iOS keyboard padding (updated via JS) */
-      --kb: 0px;
+      /* iOS keyboard / viewport */
+      --kb: 0px;          /* キーボード高さ（JS更新） */
+      --vvh: 100svh;      /* visualViewport.height の代替/初期値（JS更新） */
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; scroll-behavior:smooth; }
-    html,body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
+    html,body{
+      color:var(--ink); background:var(--bg);
+      -webkit-text-size-adjust:100%; overflow-x:hidden;
+      overscroll-behavior:contain;         /* 引っ張り挙動の影響を抑える */
+    }
     body{
       font-family:var(--font-sans); font-weight:var(--fw-regular);
       font-size:var(--fs-md); line-height:var(--lh-body); letter-spacing:var(--ls-tight);
@@ -41,7 +46,9 @@
       background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
       backdrop-filter:saturate(160%) blur(8px);
       border-bottom:1px solid rgba(0,0,0,.06);
+      transition: transform .18s ease;     /* 退避アニメ */
     }
+    header.hide{ transform:translateY(-100%); }
     .bar{ max-width:var(--max); margin:0 auto; padding:10px 12px; display:flex; align-items:center; gap:10px; }
     .brand{ font-family:var(--font-sans); font-weight:var(--fw-semibold); letter-spacing:.02em; white-space:nowrap; font-size:22px; line-height:var(--lh-heading); }
     .spacer{ flex:1; }
@@ -95,15 +102,14 @@
     /* 入力シート（キーボード出現時のモード） */
     .composer.sheet{
       position:fixed; left:0; right:0; bottom:0; z-index:100;
-      margin:0;
-      background:#fff;
+      margin:0; background:#fff;
       box-shadow:0 -12px 30px rgba(0,0,0,.18);
       padding:12px 12px calc(12px + env(safe-area-inset-bottom) + var(--kb));
     }
     .composer.sheet .row{ max-width:var(--max); }
     .composer.sheet textarea{
-      min-height:56px;            /* 1回目から見やすい */
-      max-height:44svh;           /* ChatGPT風に大きめ */
+      min-height:56px;
+      max-height:min(44svh, var(--vvh));  /* vv基準で確実に可視領域内に収める */
     }
 
     /* シート用マスク */
@@ -174,6 +180,7 @@
     await setPersistence(auth, browserLocalPersistence);
 
     const $ = s => document.querySelector(s);
+    const headerEl = document.querySelector('header');
     const loginBtn  = $('#loginBtn');
     const logoutBtn = $('#logoutBtn');
     const userMail  = $('#userMail');
@@ -214,9 +221,10 @@
       onChipClick(btn.dataset.choice || btn.textContent.trim());
     });
 
-    // ===== iPhoneキーボード対策：visualViewport + 入力シート化 =====
+    // ===== iPhoneキーボード対策：visualViewport + 入力シート化（強化版） =====
     const vv = window.visualViewport;
-    // マスクをJSで生成（1ファイル変更ルール維持）
+
+    // マスク（背面タップで閉じる）
     const mask = document.createElement('div');
     mask.className = 'mask'; mask.hidden = true; document.body.appendChild(mask);
     mask.addEventListener('click', ()=> ta.blur());
@@ -226,29 +234,42 @@
       const hidden = Math.max(0, (window.innerHeight - (vv.height + vv.offsetTop)));
       document.documentElement.style.setProperty('--kb', Math.ceil(hidden) + 'px');
     };
+    const applyVVH = ()=>{
+      if(!vv) return;
+      document.documentElement.style.setProperty('--vvh', Math.round(vv.height) + 'px');
+    };
+
     if(vv){
-      vv.addEventListener('resize', applyKB);
-      vv.addEventListener('scroll', applyKB);
-      window.addEventListener('orientationchange', applyKB);
-      applyKB();
+      vv.addEventListener('resize', ()=>{ applyKB(); applyVVH(); });
+      vv.addEventListener('scroll', ()=>{ applyKB(); applyVVH(); });
+      window.addEventListener('orientationchange', ()=>{ applyKB(); applyVVH(); });
+      applyKB(); applyVVH();
     }
 
-    // フォーカス時は「入力シート」に。blurで戻す。
-    ta.addEventListener('focus', ()=>{
+    const afterReflow = (cb)=> requestAnimationFrame(()=> requestAnimationFrame(cb));
+
+    function enterSheet(){
       composer.classList.add('sheet');
+      document.body.style.overflow = 'hidden';      // 背面スクロール停止
+      headerEl.classList.add('hide');               // ヘッダー退避
       mask.hidden = false;
-      // 2回目以降でも確実に前面へ
-      setTimeout(()=>{
-        applyKB();
+
+      // 2段階reflow -> スクロール確定（2回目以降のズレ対策）
+      afterReflow(()=>{
+        applyKB(); applyVVH();
         bottom.scrollIntoView({ block:'end', behavior:'smooth' });
-      }, 60);
-    });
-    ta.addEventListener('blur', ()=>{
+      });
+    }
+    function leaveSheet(){
       composer.classList.remove('sheet');
+      document.body.style.overflow = '';            // 戻す
+      headerEl.classList.remove('hide');
       mask.hidden = true;
-      // 画面を通常に戻す
-      setTimeout(applyKB, 60);
-    });
+      setTimeout(()=>{ applyKB(); applyVVH(); }, 60);
+    }
+
+    ta.addEventListener('focus', enterSheet);
+    ta.addEventListener('blur',  leaveSheet);
 
     // ===== 基本スクロール =====
     let stickToBottom = true;
@@ -354,7 +375,7 @@ ${refine ? '\n※直前の草案をより端的に、重複を削り、主語を
       let card = document.getElementById('missionCard');
       if(!card){
         card = document.createElement('section'); card.id='missionCard'; card.className='mission-card';
-        const title = document.createElement('h3'); title.className='mission-title'; title.textContent='ミッション草案';
+        const title = document.createElement('h3'); title.className='mission-title'; text: 'ミッション草案'; title.textContent='ミッション草案';
         const body = document.createElement('p'); body.id='missionText'; body.className='mission-text';
         const actions = document.createElement('div'); actions.id='missionActions'; actions.className='mission-actions'; actions.hidden=true;
 
