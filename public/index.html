@@ -8,11 +8,13 @@
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.webmanifest">
-  <!-- iOS PWA meta（今回追加） -->
+  <!-- iOS PWA meta -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Mission Compass">
   <meta name="format-detection" content="telephone=no">
+  <!-- 追加：apple-touch-icon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
 
   <style>
     :root{
@@ -117,9 +119,6 @@
     .why-card.olive  .why-ic{ background:var(--olive) }
     .why-card.burnt  .why-ic{ background:var(--burnt) }
     .why-card.purple .why-ic{ background:var(--purple) }
-    .why-card.olive  .why-badge{ color:var(--olive);  background:rgba(107,142,35,.10);  border:1px solid rgba(107,142,35,.25) }
-    .why-card.burnt  .why-badge{ color:var(--burnt);  background:rgba(204,90,30,.10);   border:1px solid rgba(204,90,30,.25) }
-    .why-card.purple .why-badge{ color:var(--purple); background:rgba(75,46,131,.10);  border:1px solid rgba(75,46,131,.25) }
 
     footer{padding:26px 14px 40px; text-align:center; color:#666; font-size:12px}
     .ver{ font-size:10px; color:#8A92A2; margin-left:.5rem; user-select:text; }
@@ -207,7 +206,7 @@
 
   <footer>
     © 2025 Mission Compass
-    <span class="ver" title="build version">build: 2025-10-14-idx-meta-1</span>
+    <span class="ver" title="build version">build: 2025-10-14-idx-pwaicon-1</span>
   </footer>
 
   <!-- Hero rotation -->
