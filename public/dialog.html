@@ -20,7 +20,7 @@
       --fw-medium: 500;
       --fw-semibold: 600;
 
-      /* font-size scale (px ≒ rem) */
+      /* font-size scale */
       --fs-xs: 0.75rem;   /* 12px */
       --fs-sm: 0.875rem;  /* 14px */
       --fs-md: 1rem;      /* 16px */
@@ -32,7 +32,7 @@
       --lh-heading: 1.3;
       --ls-tight: 0.01em;
 
-      /* colors / layout */
+      /* colors / layout（既存パレット固定） */
       --bg:#F6EEDC; --panel:#FFF7EA; --ink:#1F2937; --muted:#6B7280;
       --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
       --radius:16px; --max:860px;
@@ -72,8 +72,8 @@
     .spacer{ flex:1; }
     .email{ padding:8px 10px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; font-size:13px; color:#374151; max-width:50vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .btn{
-      appearance:none; border:0; border-radius:12px; padding:9px 14px; cursor:pointer;
-      background:#fff; border:1px solid rgba(0,0,0,.12);
+      appearance:none; border:1px solid rgba(0,0,0,.12); background:#fff;
+      border-radius:12px; padding:9px 14px; cursor:pointer;
       font-family:var(--font-sans); font-weight:var(--fw-semibold); font-size:var(--fs-sm);
     }
     .btn.primary{ background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#fff; border-color:rgba(65,105,225,.55); }
@@ -87,7 +87,7 @@
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
     .note{ color:var(--muted); font-size:var(--fs-xs); margin:10px 0; display:flex; align-items:center; gap:6px; }
 
-    .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:140px; }
+    .chat-shell{ position:relative; min-height:calc(100dvh - 150px); padding-bottom:160px; }
     .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
     .bubble{
       max-width:min(85%, 680px);
@@ -127,9 +127,9 @@
       border-top:1px solid rgba(0,0,0,.06);
       padding:14px 12px calc(14px + env(safe-area-inset-bottom));
     }
-    .composer .row{ display:flex; gap:10px; align-items:flex-end; max-width:var(--max); margin:0 auto; }
+    .composer .row{ display:flex; gap:10px; align-items:flex-end; max-width:var(--max); margin:0 auto; flex-wrap:wrap; }
     textarea{
-      flex:1; min-height:44px; max-height:180px; resize:vertical;
+      flex:1 1 420px; min-height:44px; max-height:180px; resize:vertical;
       background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px;
       padding:12px; font-size:var(--fs-md); line-height:1.45; font-family:var(--font-sans);
     }
@@ -145,6 +145,26 @@
       color:var(--muted);
       padding-left:6px;
     }
+
+    /* mission draft card */
+    .mission-card{
+      background:var(--panel);
+      border:1px solid rgba(0,0,0,.06);
+      border-left:4px solid var(--brand);
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      padding:14px 16px;
+      max-width:min(85%, 680px);
+    }
+    .mission-title{
+      font-weight:var(--fw-semibold);
+      font-size:var(--fs-md);
+      margin:0 0 6px;
+      color:#0B3D60;
+    }
+    .mission-text{ margin:0 0 10px; white-space:pre-wrap; }
+    .mission-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .mission-actions .btn{ font-size:var(--fs-xs); padding:6px 10px; }
   </style>
 </head>
 <body>
@@ -171,6 +191,8 @@
         <button class="chip" data-choice="情熱から始めたい">情熱から始めたい</button>
         <button class="chip" data-choice="得意・才能から始めたい">得意・才能から始めたい</button>
       </div>
+      <!-- 草案カードの差し込み先（必要時のみ生成） -->
+      <div id="missionAnchor"></div>
       <!-- 自動スクロールの終端マーカー -->
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
@@ -181,6 +203,7 @@
     <div class="row">
       <label class="sr" for="text">メッセージ入力</label>
       <textarea id="text" placeholder="3択チップを押すか、短く入力（Enter で送信 / Shift+Enter で改行）" rows="1"></textarea>
+      <button id="draft" class="btn" type="button" aria-label="ミッション草案を作る">草案を作る</button>
       <button id="send" class="btn primary send" type="button" disabled>送信</button>
     </div>
     <div id="status" class="status" role="status" aria-live="polite" hidden>送信中…</div>
@@ -208,9 +231,11 @@
     const chat      = $('#chat');
     const ta        = $('#text');
     const sendBtn   = $('#send');
+    const draftBtn  = $('#draft');
     const bottom    = $('#bottomSentinel');
     const statusEl  = $('#status');
     const initChips = $('#initChips');
+    const missionAnchor = $('#missionAnchor');
 
     // ログイン制御
     loginBtn.addEventListener('click', async ()=>{
@@ -227,8 +252,12 @@
       userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
     });
 
+    // ユーザーの自発言ログ（草案用に直近をまとめる）
+    const userTurns = [];
+
     // 送信中インジケータ＆連投ガード
     let pending = false;
+    let pendingDraft = false;
 
     // 送信ボタンの活性化 & Enter送信
     const updateSend = ()=> sendBtn.disabled = pending || !ta.value.trim();
@@ -254,7 +283,7 @@
     function checkStick(){
       const sc = window.scrollY + window.innerHeight;
       const bottomY = document.body.scrollHeight;
-      stickToBottom = (bottomY - sc) < 140; // 140px以内なら追従（簡潔モードでも同じ）
+      stickToBottom = (bottomY - sc) < 140;
     }
     window.addEventListener('scroll', checkStick, {passive:true});
 
@@ -270,7 +299,7 @@
       }
     }
 
-    // チップ描画（AIの返信末尾の「1)〜3)」を抽出して生成）
+    // チップ描画（サーバーchoices優先）
     function extractChoices(text){
       const lines = text.split(/\r?\n/);
       const out = [];
@@ -306,12 +335,13 @@
       toBottom();
     }
 
-    // チャット送信（簡潔モード指示を付与）
+    // チャット送信（簡潔モード指示は維持）
     sendBtn.addEventListener('click', async ()=>{
       const text = ta.value.trim();
       if(!text || pending) return;
 
       appendBubble(text, 'me');
+      userTurns.push(text);
       ta.value = ''; updateSend();
       toBottom(true);
 
@@ -321,7 +351,6 @@
       sendBtn.textContent = '送信中…';
       statusEl.hidden = false;
 
-      // AIへのスタイル指示（短文＋最後に3択）
       const conciseDirective =
         '【AIへの指示: 返答は最大3文、可能なら箇条書き。最後に日本語で1) 2) 3) の3択を提案してください。各行は簡潔に。】';
 
@@ -335,8 +364,13 @@
         const data = await res.json();
         const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
         appendBubble(reply, 'ai');
-        // AIの末尾から3択を抽出してチップ化
-        renderChips(extractChoices(reply));
+
+        const serverChoices = Array.isArray(data.choices) ? data.choices.filter(Boolean) : [];
+        if(serverChoices.length >= 1){
+          renderChips(serverChoices.slice(0,3));
+        }else{
+          renderChips(extractChoices(reply));
+        }
       }catch(err){
         appendBubble('エラー: ' + err.message, 'ai');
       }finally{
@@ -349,7 +383,123 @@
       }
     });
 
-    // バブル追加 & 自動スクロール（要素を返す）
+    // ===== ミッション草案カード =====
+    draftBtn.addEventListener('click', ()=> makeDraft(false));
+
+    async function makeDraft(refine){
+      if(pendingDraft) return;
+      // 直近のユーザー発言（最大12件）を利用
+      const recent = userTurns.slice(-12);
+      if(recent.length === 0){
+        // 入力が無い場合はウェルカムの下にヒントだけ出す
+        renderMissionCard('まずは1〜2回やり取りしてから草案を作成します。');
+        return;
+      }
+
+      pendingDraft = true;
+      draftBtn.disabled = true;
+      const loadingText = refine ? '草案を磨いています…' : '草案を作成しています…';
+      renderMissionCard(loadingText);
+
+      // ミッション草案生成プロンプト（本体は1〜2文・宣言調、末尾は3択）
+      const list = recent.map(t=>`- ${t}`).join('\n');
+      const prompt =
+`【AIへの指示】
+次のユーザー発言の要点から、日本語で「ミッション・ステートメント」の草案を作成してください。
+- 文体：一人称の宣言文（です・ます調）。最大2文。
+- 形式：文頭に「私のミッションは、」を入れても良い。
+- 内容：価値観／情熱／才能／貢献対象が自然に含まれるように。
+- その後に、1) 2) 3) の小さな次アクション案を必ず提示（各行は10〜16文字程度）。
+
+【ユーザー発言（新しい順）】
+${list}
+${refine ? '\n※直前の草案をより端的に、重複を削り、主語を明確にしてください。' : ''}`;
+
+      try{
+        const res = await fetch('/api/chat', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ message: prompt })
+        });
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const raw = (data.reply || '').toString();
+
+        // 先頭（1)が登場する前までを草案本文として採用
+        const main = raw.split(/\n\s*[（(]?\s*[1１][\).．、)]/)[0]
+                        .replace(/^[-•\s]+/gm,'')
+                        .trim()
+                        || '（草案を取得できませんでした）';
+
+        renderMissionCard(main, { showActions:true });
+        // あわせて3択も表示（サーバchoices優先）
+        const serverChoices = Array.isArray(data.choices) ? data.choices.filter(Boolean) : [];
+        if(serverChoices.length) renderChips(serverChoices.slice(0,3));
+        else renderChips(extractChoices(raw));
+      }catch(err){
+        renderMissionCard('エラー: ' + err.message);
+      }finally{
+        pendingDraft = false;
+        draftBtn.disabled = false;
+        toBottom();
+      }
+    }
+
+    function renderMissionCard(text, opts={}){
+      let card = document.getElementById('missionCard');
+      if(!card){
+        card = document.createElement('section');
+        card.id = 'missionCard';
+        card.className = 'mission-card';
+        const title = document.createElement('h3');
+        title.className = 'mission-title';
+        title.textContent = 'ミッション草案';
+        const body = document.createElement('p');
+        body.id = 'missionText';
+        body.className = 'mission-text';
+        const actions = document.createElement('div');
+        actions.id = 'missionActions';
+        actions.className = 'mission-actions';
+        actions.hidden = true;
+
+        // アクション：コピー / 磨く / 再生成
+        const copyBtn   = document.createElement('button');
+        copyBtn.className = 'btn';
+        copyBtn.type = 'button';
+        copyBtn.textContent = 'コピー';
+        copyBtn.addEventListener('click', async ()=>{
+          try{
+            await navigator.clipboard.writeText($('#missionText').textContent || '');
+            copyBtn.textContent = 'コピー済み';
+            setTimeout(()=> copyBtn.textContent = 'コピー', 1200);
+          }catch{}
+        });
+
+        const refineBtn = document.createElement('button');
+        refineBtn.className = 'btn';
+        refineBtn.type = 'button';
+        refineBtn.textContent = '磨く';
+        refineBtn.addEventListener('click', ()=> makeDraft(true));
+
+        const regenBtn = document.createElement('button');
+        regenBtn.className = 'btn';
+        regenBtn.type = 'button';
+        regenBtn.textContent = '別案を作る';
+        regenBtn.addEventListener('click', ()=> makeDraft(false));
+
+        actions.append(copyBtn, refineBtn, regenBtn);
+        card.append(title, body, actions);
+
+        // 既存のストリームに差し込む（初期チップの直後）
+        chat.insertBefore(card, missionAnchor.nextSibling);
+      }
+      $('#missionText').textContent = text;
+      const actions = $('#missionActions');
+      if(actions) actions.hidden = !opts.showActions;
+      toBottom();
+    }
+
+    // バブル追加 & 自動スクロール
     function appendBubble(text, who){
       const div = document.createElement('div');
       div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
