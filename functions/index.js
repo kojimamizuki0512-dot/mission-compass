@@ -1,14 +1,6 @@
 /**
  * Mission Compass — Functions (Gen1 / Node.js 20, ESM)
- * 目的：
- * - /api/chat（および /chat）で「短文優先＋3択提案」を強制
- * - reply の末尾に 1) 2) 3) を含める（前方互換）
- * - choices を JSON でも返す（将来フロントで直接利用）
- *
- * 前提：
- * - functions/package.json に "type": "module"
- * - Node.js 20 なので global fetch が利用可
- * - GEMINI_API_KEY は Secret Manager 等で設定
+ * /api/chat: 短文＋最後に3択を強制し、choices もJSONで返す
  */
 
 import * as functions from "firebase-functions";
@@ -19,16 +11,24 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? "";
+// ---- APIキー取得（環境変数 or runtime config 両対応） -------------------------
+let runtimeConfig = {};
+try { runtimeConfig = functions.config?.() ?? {}; } catch { /* local/older */ }
+const GEMINI_API_KEY =
+  process.env.GEMINI_API_KEY ??
+  runtimeConfig?.keys?.gemini_api_key ??
+  runtimeConfig?.gemini?.api_key ??
+  "";
+
 const MODEL = "gemini-2.0-flash";
 
-// --- Gemini REST 呼び出し ---
+// ---- Gemini REST -------------------------------------------------------------
 async function callGemini(prompt) {
   if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not set on server.");
 
   const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${MODEL}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent` +
+    `?key=${encodeURIComponent(GEMINI_API_KEY)}`;
 
   const body = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -36,8 +36,7 @@ async function callGemini(prompt) {
       temperature: 0.6,
       topP: 0.9,
       topK: 40,
-      // 短文＋3択が収まる程度に制限
-      maxOutputTokens: 256,
+      maxOutputTokens: 256, // 短文＋3択に十分
     },
     safetySettings: [
       { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -65,7 +64,7 @@ async function callGemini(prompt) {
   return text.trim();
 }
 
-// --- プロンプト組み立て（短文＋3択を厳格化） ---
+// ---- プロンプト（短文＋3択テンプレ） -----------------------------------------
 function buildConcisePrompt(userMessage, context = {}) {
   const phase = context.phase || "discovery";
   const goal =
@@ -94,7 +93,7 @@ function buildConcisePrompt(userMessage, context = {}) {
   ].join("\n");
 }
 
-// --- 3択抽出（サーバー側でも配列化） ---
+// ---- 3択抽出 ---------------------------------------------------------------
 function extractChoicesFromText(text) {
   const lines = (text || "").split(/\r?\n/);
   const choices = [];
@@ -106,7 +105,7 @@ function extractChoicesFromText(text) {
   return choices;
 }
 
-// --- ハンドラ本体（/chat & /api/chat の双方にマウント） ---
+// ---- ハンドラ（/chat と /api/chat の両方を受ける） ---------------------------
 async function handleChat(req, res) {
   try {
     const { message, context } = req.body || {};
@@ -135,9 +134,8 @@ async function handleChat(req, res) {
   }
 }
 
-// ここがポイント：どちらのパスにも対応
 app.post("/chat", handleChat);
 app.post("/api/chat", handleChat);
 
-// --- Firebase Functions (Gen1) ---
+// ---- Firebase Functions (Gen1) ----------------------------------------------
 export const api = functions.region("asia-northeast1").https.onRequest(app);
