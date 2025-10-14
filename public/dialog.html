@@ -6,6 +6,13 @@
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
 
+  <!-- PWA（今回追加） -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mission Compass">
+  <meta name="format-detection" content="telephone=no">
+
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,15 +31,15 @@
       --radius:16px; --max:860px;
 
       /* iOS keyboard / viewport */
-      --kb: 0px;          /* キーボード高さ（JS更新） */
-      --vvh: 100svh;      /* visualViewport.height の代替/初期値（JS更新） */
+      --kb: 0px;     /* キーボード高さ（JS更新） */
+      --vvh: 100svh; /* visualViewport.height の初期値（JS更新） */
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; scroll-behavior:smooth; }
     html,body{
       color:var(--ink); background:var(--bg);
       -webkit-text-size-adjust:100%; overflow-x:hidden;
-      overscroll-behavior:contain;         /* 引っ張り挙動の影響を抑える */
+      overscroll-behavior:contain;
     }
     body{
       font-family:var(--font-sans); font-weight:var(--fw-regular);
@@ -46,7 +53,7 @@
       background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
       backdrop-filter:saturate(160%) blur(8px);
       border-bottom:1px solid rgba(0,0,0,.06);
-      transition: transform .18s ease;     /* 退避アニメ */
+      transition: transform .18s ease; /* 退避アニメ */
     }
     header.hide{ transform:translateY(-100%); }
     .bar{ max-width:var(--max); margin:0 auto; padding:10px 12px; display:flex; align-items:center; gap:10px; }
@@ -99,7 +106,7 @@
     .sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); border:0; }
     .status{ max-width:var(--max); margin:6px auto 0; font-size:var(--fs-xs); color:var(--muted); padding-left:6px; }
 
-    /* 入力シート（キーボード出現時のモード） */
+    /* 入力シート（フォーカス時） */
     .composer.sheet{
       position:fixed; left:0; right:0; bottom:0; z-index:100;
       margin:0; background:#fff;
@@ -107,17 +114,10 @@
       padding:12px 12px calc(12px + env(safe-area-inset-bottom) + var(--kb));
     }
     .composer.sheet .row{ max-width:var(--max); }
-    .composer.sheet textarea{
-      min-height:56px;
-      max-height:min(44svh, var(--vvh));  /* vv基準で確実に可視領域内に収める */
-    }
+    .composer.sheet textarea{ min-height:56px; max-height:min(44svh, var(--vvh)); }
 
     /* シート用マスク */
-    .mask{
-      position:fixed; inset:0; z-index:90;
-      background:rgba(0,0,0,.25);
-      -webkit-tap-highlight-color: transparent;
-    }
+    .mask{ position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.25); -webkit-tap-highlight-color: transparent; }
     .mask[hidden]{ display:none; }
 
     /* mission draft card */
@@ -126,6 +126,9 @@
     .mission-text{ margin:0 0 10px; white-space:pre-wrap; }
     .mission-actions{ display:flex; gap:8px; flex-wrap:wrap; }
     .mission-actions .btn{ font-size:var(--fs-xs); padding:6px 10px; }
+
+    /* ビルド表記（今回追加） */
+    .build{ max-width:var(--max); margin:6px auto 16px; padding:0 12px; color:#8A92A2; font-size:10px; user-select:text; }
   </style>
 </head>
 <body>
@@ -156,6 +159,9 @@
     </section>
     <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択（チップ表示）</div>
   </main>
+
+  <!-- ビルド表記（今回追加） -->
+  <div class="build">build: 2025-10-14-dlg-pwa-1</div>
 
   <div class="composer" aria-label="メッセージ入力エリア">
     <div class="row">
@@ -221,7 +227,7 @@
       onChipClick(btn.dataset.choice || btn.textContent.trim());
     });
 
-    // ===== iPhoneキーボード対策：visualViewport + 入力シート化（強化版） =====
+    // ===== iPhone対策：visualViewport + 入力シート =====
     const vv = window.visualViewport;
 
     // マスク（背面タップで閉じる）
@@ -250,11 +256,9 @@
 
     function enterSheet(){
       composer.classList.add('sheet');
-      document.body.style.overflow = 'hidden';      // 背面スクロール停止
-      headerEl.classList.add('hide');               // ヘッダー退避
+      document.body.style.overflow = 'hidden';
+      headerEl.classList.add('hide');
       mask.hidden = false;
-
-      // 2段階reflow -> スクロール確定（2回目以降のズレ対策）
       afterReflow(()=>{
         applyKB(); applyVVH();
         bottom.scrollIntoView({ block:'end', behavior:'smooth' });
@@ -262,7 +266,7 @@
     }
     function leaveSheet(){
       composer.classList.remove('sheet');
-      document.body.style.overflow = '';            // 戻す
+      document.body.style.overflow = '';
       headerEl.classList.remove('hide');
       mask.hidden = true;
       setTimeout(()=>{ applyKB(); applyVVH(); }, 60);
@@ -271,21 +275,28 @@
     ta.addEventListener('focus', enterSheet);
     ta.addEventListener('blur',  leaveSheet);
 
-    // ===== 基本スクロール =====
+    // ===== スクロール制御 =====
     let stickToBottom = true;
     function checkStick(){ const sc = window.scrollY + window.innerHeight; const bottomY = document.body.scrollHeight; stickToBottom = (bottomY - sc) < 140; }
     window.addEventListener('scroll', checkStick, {passive:true});
     function toBottom(immediate=false){
       if(!stickToBottom && !immediate) return;
-      try{ bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' });
+      try{
+        bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' });
         if(!immediate){ setTimeout(()=>window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }), 60); }
-      }catch{ window.scrollTo({ top: document.body.scrollHeight, behavior: immediate?'auto':'smooth' }); }
+      }catch{
+        window.scrollTo({ top: document.body.scrollHeight, behavior: immediate?'auto':'smooth' });
+      }
     }
 
     // 3択抽出・表示（サーバ返り優先）
     function extractChoices(text){
       const lines = text.split(/\r?\n/); const out = [];
-      for(const ln of lines){ const m = ln.match(/^\s*([123１２３])[.)．、)]\s*(.+?)\s*$/); if(m && m[2]) out.push(m[2].trim()); if(out.length === 3) break; }
+      for(const ln of lines){
+        const m = ln.match(/^\s*([123１２３])[.)．、)]\s*(.+?)\s*$/);
+        if(m && m[2]) out.push(m[2].trim());
+        if(out.length === 3) break;
+      }
       return out;
     }
     function clearChips(){ chat.querySelectorAll('.chips.dynamic').forEach(n=> n.remove()); }
@@ -335,7 +346,7 @@
       }
     });
 
-    // ===== ミッション草案カード（既存） =====
+    // ===== ミッション草案カード =====
     draftBtn.addEventListener('click', ()=> makeDraft(false));
     async function makeDraft(refine){
       if(pendingDraft) return;
@@ -367,20 +378,28 @@ ${refine ? '\n※直前の草案をより端的に、重複を削り、主語を
 
         const serverChoices = Array.isArray(data.choices) ? data.choices.filter(Boolean) : [];
         if(serverChoices.length) renderChips(serverChoices.slice(0,3)); else renderChips(extractChoices(raw));
-      }catch(err){ renderMissionCard('エラー: ' + err.message);
-      }finally{ pendingDraft = false; draftBtn.disabled = false; toBottom(); }
+      }catch(err){
+        renderMissionCard('エラー: ' + err.message);
+      }finally{
+        pendingDraft = false; draftBtn.disabled = false; toBottom();
+      }
     }
 
     function renderMissionCard(text, opts={}){
       let card = document.getElementById('missionCard');
       if(!card){
         card = document.createElement('section'); card.id='missionCard'; card.className='mission-card';
-        const title = document.createElement('h3'); title.className='mission-title'; text: 'ミッション草案'; title.textContent='ミッション草案';
+        const title = document.createElement('h3'); title.className='mission-title'; title.textContent='ミッション草案';
         const body = document.createElement('p'); body.id='missionText'; body.className='mission-text';
         const actions = document.createElement('div'); actions.id='missionActions'; actions.className='mission-actions'; actions.hidden=true;
 
         const copyBtn = document.createElement('button'); copyBtn.className='btn'; copyBtn.type='button'; copyBtn.textContent='コピー';
-        copyBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText($('#missionText').textContent || ''); copyBtn.textContent='コピー済み'; setTimeout(()=>copyBtn.textContent='コピー',1200);}catch{} });
+        copyBtn.addEventListener('click', async ()=>{
+          try{
+            await navigator.clipboard.writeText($('#missionText').textContent || '');
+            copyBtn.textContent='コピー済み'; setTimeout(()=>copyBtn.textContent='コピー',1200);
+          }catch{}
+        });
 
         const refineBtn = document.createElement('button'); refineBtn.className='btn'; refineBtn.type='button'; refineBtn.textContent='磨く';
         refineBtn.addEventListener('click', ()=> makeDraft(true));
@@ -388,16 +407,23 @@ ${refine ? '\n※直前の草案をより端的に、重複を削り、主語を
         const regenBtn = document.createElement('button'); regenBtn.className='btn'; regenBtn.type='button'; regenBtn.textContent='別案を作る';
         regenBtn.addEventListener('click', ()=> makeDraft(false));
 
-        actions.append(copyBtn, refineBtn, regenBtn); card.append(title, body, actions);
+        actions.append(copyBtn, refineBtn, regenBtn);
+        card.append(title, body, actions);
         chat.insertBefore(card, missionAnchor.nextSibling);
       }
       document.getElementById('missionText').textContent = text;
-      const actions = document.getElementById('missionActions'); if(actions) actions.hidden = !opts.showActions; toBottom();
+      const actions = document.getElementById('missionActions');
+      if(actions) actions.hidden = !opts.showActions;
+      toBottom();
     }
 
     function appendBubble(text, who){
-      const div = document.createElement('div'); div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai'); div.textContent = text;
-      chat.insertBefore(div, bottom); toBottom(); return div;
+      const div = document.createElement('div');
+      div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
+      div.textContent = text;
+      chat.insertBefore(div, bottom);
+      toBottom();
+      return div;
     }
 
     // 初期・リサイズ
