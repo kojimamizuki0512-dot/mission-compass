@@ -122,6 +122,15 @@
     .send{ height:44px; padding:0 18px; border-radius:12px; font-weight:var(--fw-semibold); }
     .send[disabled]{ opacity:.5; pointer-events:none; }
     .sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+
+    /* status line under composer */
+    .status{
+      max-width:var(--max);
+      margin:6px auto 0;
+      font-size:var(--fs-xs);
+      color:var(--muted);
+      padding-left:6px;
+    }
   </style>
 </head>
 <body>
@@ -137,7 +146,7 @@
   </header>
 
   <main class="wrap chat-shell">
-    <section class="stream" id="chat">
+    <section class="stream" id="chat" role="log" aria-live="polite" aria-relevant="additions">
       <div class="bubble ai">
         <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br />
         そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
@@ -154,6 +163,7 @@
       <textarea id="text" placeholder="ここに回答を入力（例：一番充実したのは、〇〇に挑戦して達成できたとき…）" rows="1"></textarea>
       <button id="send" class="btn primary send" type="button" disabled>送信</button>
     </div>
+    <div id="status" class="status" role="status" aria-live="polite" hidden>送信中…</div>
   </div>
 
   <!-- ===== Firebase + チャット処理（ESM） ===== -->
@@ -179,6 +189,7 @@
     const ta        = $('#text');
     const sendBtn   = $('#send');
     const bottom    = $('#bottomSentinel');
+    const statusEl  = $('#status');
 
     // ログイン制御
     loginBtn.addEventListener('click', async ()=>{
@@ -195,13 +206,16 @@
       userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
     });
 
+    // 送信中インジケータ＆連投ガード
+    let pending = false;
+
     // 送信ボタンの活性化 & Enter送信
-    const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
+    const updateSend = ()=> sendBtn.disabled = pending || !ta.value.trim();
     ta.addEventListener('input', updateSend);
     ta.addEventListener('keydown', e=>{
       if(e.key === 'Enter' && !e.shiftKey){
         e.preventDefault();
-        sendBtn.click();
+        if(!pending) sendBtn.click();
       }
     });
     updateSend();
@@ -230,11 +244,18 @@
     // チャット送信
     sendBtn.addEventListener('click', async ()=>{
       const text = ta.value.trim();
-      if(!text) return;
+      if(!text || pending) return;
 
       appendBubble(text, 'me');
       ta.value = ''; updateSend();
       toBottom(true);
+
+      // 送信中のUIロック
+      pending = true;
+      ta.disabled = true;
+      sendBtn.textContent = '送信中…';
+      updateSend();
+      statusEl.hidden = false;
 
       try{
         const res = await fetch('/api/chat', {
@@ -248,11 +269,16 @@
       }catch(err){
         appendBubble('エラー: ' + err.message, 'ai');
       }finally{
+        pending = false;
+        ta.disabled = false;
+        sendBtn.textContent = '送信';
+        statusEl.hidden = true;
+        updateSend();
         toBottom();
       }
     });
 
-    // バブル追加 & 監視で自動スクロール
+    // バブル追加 & 自動スクロール
     function appendBubble(text, who){
       const div = document.createElement('div');
       div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
