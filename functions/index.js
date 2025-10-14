@@ -1,7 +1,7 @@
 /**
  * Mission Compass — Functions (Gen1 / Node.js 20, ESM)
  * 目的：
- * - /api/chat で「短文優先＋3択提案」を強制
+ * - /api/chat（および /chat）で「短文優先＋3択提案」を強制
  * - reply の末尾に 1) 2) 3) を含める（前方互換）
  * - choices を JSON でも返す（将来フロントで直接利用）
  *
@@ -106,18 +106,16 @@ function extractChoicesFromText(text) {
   return choices;
 }
 
-// --- エンドポイント：/api/chat ---
-app.post("/chat", async (req, res) => {
+// --- ハンドラ本体（/chat & /api/chat の双方にマウント） ---
+async function handleChat(req, res) {
   try {
     const { message, context } = req.body || {};
     const userMessage = (message || "").toString().trim();
     if (!userMessage) return res.status(400).json({ error: "empty message" });
 
-    // “短文＋3択”を強制するプロンプトに変換
     const concisePrompt = buildConcisePrompt(userMessage, context);
     const rawText = await callGemini(concisePrompt);
 
-    // 3択保証（不足時は保険で補完）
     let reply = rawText;
     let choices = extractChoicesFromText(reply);
     if (choices.length < 3) {
@@ -135,8 +133,11 @@ app.post("/chat", async (req, res) => {
     console.error(err);
     return res.status(500).json({ error: String(err?.message || err) });
   }
-});
+}
+
+// ここがポイント：どちらのパスにも対応
+app.post("/chat", handleChat);
+app.post("/api/chat", handleChat);
 
 // --- Firebase Functions (Gen1) ---
-// CommonJS の `exports.api = ...` ではなく、ESM の named export を使う
 export const api = functions.region("asia-northeast1").https.onRequest(app);
