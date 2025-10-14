@@ -5,16 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
+
+  <!-- 高級感のある統一フォント（見出し：Noto Serif JP / 本文：Noto Sans JP 系） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;900&family=Noto+Serif+JP:wght@600;700&display=swap" rel="stylesheet">
+
   <style>
     :root{
+      --font-sans: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Arial, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", serif;
+
       --bg:#F6EEDC; --panel:#FFF7EA; --ink:#1F2937; --muted:#6B7280;
       --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
       --radius:16px; --max:860px;
     }
-    *{ box-sizing:border-box; } html,body{ height:100%; margin:0; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; scroll-behavior:smooth; }
     html,body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
-    img,svg,video,canvas{ max-width:100%; height:auto; }
+    body{ font-family:var(--font-sans); line-height:1.65; }
 
+    /* header */
     header{
       position:sticky; top:0; z-index:30;
       background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
@@ -22,23 +33,34 @@
       border-bottom:1px solid rgba(0,0,0,.06);
     }
     .bar{ max-width:var(--max); margin:0 auto; padding:10px 12px; display:flex; align-items:center; gap:10px; }
-    .brand{ font-weight:900; letter-spacing:.02em; white-space:nowrap; }
+    .brand{ font-family:var(--font-serif); font-weight:700; letter-spacing:.02em; white-space:nowrap; font-size:22px; }
     .spacer{ flex:1; }
     .email{ padding:8px 10px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; font-size:13px; color:#374151; max-width:50vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .btn{ appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer; background:#fff; border:1px solid rgba(0,0,0,.12); }
+    .btn{ appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer; background:#fff; border:1px solid rgba(0,0,0,.12); font-family:var(--font-sans); }
     .btn.primary{ background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#fff; border-color:rgba(65,105,225,.55); }
     .btn.ghost{ background:#fff; }
-    @media (max-width:600px){ .bar{ flex-wrap:wrap; row-gap:8px; } .email{ order:3; width:100%; max-width:100%; } }
+    @media (max-width:600px){
+      .bar{ flex-wrap:wrap; row-gap:8px; }
+      .email{ order:3; width:100%; max-width:100%; }
+    }
 
+    /* main */
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
     .note{ color:var(--muted); font-size:12px; margin:10px 0; display:flex; align-items:center; gap:6px; }
 
     .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:120px; }
     .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
-    .bubble{ max-width:min(85%, 680px); padding:12px 14px; border-radius:14px; box-shadow:var(--shadow); line-height:1.65; word-break:break-word; overflow-wrap:anywhere; border:1px solid rgba(0,0,0,.06); }
+    .bubble{
+      max-width:min(85%, 680px);
+      padding:14px 16px; border-radius:14px; box-shadow:var(--shadow);
+      word-break:break-word; overflow-wrap:anywhere; border:1px solid rgba(0,0,0,.06);
+      background:#fff; font-size:16px;
+    }
+    .bubble b{ font-family:var(--font-serif); font-weight:700; font-size:18px; }
     .ai{ align-self:flex-start; background:#fff; }
-    .me{ align-self:flex-end; background:#eaf0ff; border-color:rgba(65,105,225,.25); }
+    .me{ align-self:flex-end; background:#eef3ff; border-color:rgba(65,105,225,.25); }
 
+    /* composer（入力エリア固定） */
     .composer{
       position:sticky; bottom:0; z-index:20;
       margin:0 calc(50% - min(50%, var(--max)/2));
@@ -48,7 +70,11 @@
       padding:14px 12px calc(14px + env(safe-area-inset-bottom));
     }
     .composer .row{ display:flex; gap:10px; align-items:flex-end; max-width:var(--max); margin:0 auto; }
-    textarea{ flex:1; min-height:44px; max-height:180px; resize:vertical; background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px; padding:12px; font-size:16px; line-height:1.45; }
+    textarea{
+      flex:1; min-height:44px; max-height:180px; resize:vertical;
+      background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px;
+      padding:12px; font-size:16px; line-height:1.45; font-family:var(--font-sans);
+    }
     .send{ height:44px; padding:0 18px; border-radius:12px; font-weight:900; }
     .send[disabled]{ opacity:.5; pointer-events:none; }
     .sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); border:0; }
@@ -66,12 +92,14 @@
     </div>
   </header>
 
-  <main class="wrap">
+  <main class="wrap chat-shell">
     <section class="stream" id="chat">
       <div class="bubble ai">
         <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br />
         そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
       </div>
+      <!-- 自動スクロールの終端マーカー -->
+      <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
     <div class="note">⚡ 速達モード（gemini-2.0-flash / 非ストリーミング）</div>
   </main>
@@ -84,19 +112,19 @@
     </div>
   </div>
 
-  <!-- ===== ここからESMで統一 ===== -->
+  <!-- ===== Firebase + チャット処理（ESM） ===== -->
   <script type="module">
-    import { firebaseConfig } from '/firebase-config.js'; // ← ここが“export”を読むのでエラー解消
+    import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
     import {
       getAuth, GoogleAuthProvider, onAuthStateChanged,
       signInWithPopup, signOut, setPersistence, browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
-    // 1) Firebase 初期化（ESM・同一設定）
+    // Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence); // ページをまたいでもログイン維持
+    await setPersistence(auth, browserLocalPersistence); // ページをまたいでも維持
 
     // UI要素
     const $ = s => document.querySelector(s);
@@ -106,16 +134,15 @@
     const chat      = $('#chat');
     const ta        = $('#text');
     const sendBtn   = $('#send');
+    const bottom    = $('#bottomSentinel');
 
-    // 2) ログイン／ログアウト
+    // ログイン制御
     loginBtn.addEventListener('click', async ()=>{
-      try{
-        await signInWithPopup(auth, new GoogleAuthProvider());
-      }catch(e){ alert('ログインに失敗しました: ' + e.message); }
+      try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
+      catch(e){ alert('ログインに失敗しました: ' + e.message); }
     });
     logoutBtn.addEventListener('click', ()=> signOut(auth));
 
-    // 3) 状態に応じて表示
     onAuthStateChanged(auth, user=>{
       const loggedIn = !!user;
       loginBtn.hidden  = loggedIn;
@@ -124,7 +151,7 @@
       userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
     });
 
-    // 4) 送信ボタンの活性化
+    // 送信ボタンの活性化 & Enter送信
     const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
     ta.addEventListener('input', updateSend);
     ta.addEventListener('keydown', e=>{
@@ -135,14 +162,35 @@
     });
     updateSend();
 
-    // 5) チャット送信
+    // “下端に追従”の判定（ユーザーが上にスクロールしているときは追従しない、にしたければ閾値を調整）
+    let stickToBottom = true;
+    function checkStick(){
+      const sc = window.scrollY + window.innerHeight;
+      const bottomY = document.body.scrollHeight;
+      stickToBottom = (bottomY - sc) < 140; // 140px以内なら追従
+    }
+    window.addEventListener('scroll', checkStick, {passive:true});
+
+    function toBottom(immediate=false){
+      if(!stickToBottom && !immediate) return;
+      try{
+        bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' });
+        if(!immediate){
+          setTimeout(()=>window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }), 60);
+        }
+      }catch{
+        window.scrollTo({ top: document.body.scrollHeight, behavior: immediate?'auto':'smooth' });
+      }
+    }
+
+    // チャット送信
     sendBtn.addEventListener('click', async ()=>{
       const text = ta.value.trim();
       if(!text) return;
 
       appendBubble(text, 'me');
       ta.value = ''; updateSend();
-      scrollToBottom();
+      toBottom(true);
 
       try{
         const res = await fetch('/api/chat', {
@@ -156,19 +204,23 @@
       }catch(err){
         appendBubble('エラー: ' + err.message, 'ai');
       }finally{
-        scrollToBottom();
+        toBottom();
       }
     });
 
+    // バブル追加 & 監視で自動スクロール（受信時にも確実に追従）
     function appendBubble(text, who){
       const div = document.createElement('div');
       div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
       div.textContent = text;
-      chat.appendChild(div);
+      chat.insertBefore(div, bottom);
+      toBottom();
     }
-    function scrollToBottom(){
-      window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
-    }
+
+    // 初期・リサイズ・フォーカス時の下端追従
+    window.addEventListener('load', ()=>{ checkStick(); toBottom(true); });
+    window.addEventListener('resize', ()=>{ checkStick(); toBottom(true); });
+    ta.addEventListener('focus', ()=>setTimeout(()=>toBottom(true), 80));
   </script>
 </body>
 </html>
