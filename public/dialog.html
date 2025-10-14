@@ -87,7 +87,7 @@
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
     .note{ color:var(--muted); font-size:var(--fs-xs); margin:10px 0; display:flex; align-items:center; gap:6px; }
 
-    .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:120px; }
+    .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:140px; }
     .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
     .bubble{
       max-width:min(85%, 680px);
@@ -103,6 +103,20 @@
     }
     .ai{ align-self:flex-start; background:#fff; }
     .me{ align-self:flex-end; background:#eef3ff; border-color:rgba(65,105,225,.25); }
+
+    /* quick reply chips */
+    .chips{
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-top:-6px; margin-bottom:6px;
+    }
+    .chip{
+      appearance:none; border:1px solid rgba(0,0,0,.12);
+      background:#fff; border-radius:999px;
+      padding:6px 10px; font-size:var(--fs-sm); font-weight:var(--fw-medium);
+      cursor:pointer;
+    }
+    .chip:hover{ box-shadow:0 2px 8px rgba(2,8,20,.08); }
+    .chip:focus-visible{ outline:3px solid rgba(65,105,225,.35); outline-offset:2px; }
 
     /* composer（入力エリア固定） */
     .composer{
@@ -147,20 +161,26 @@
 
   <main class="wrap chat-shell">
     <section class="stream" id="chat" role="log" aria-live="polite" aria-relevant="additions">
-      <div class="bubble ai">
+      <div class="bubble ai" id="welcome">
         <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br />
         そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
+      </div>
+      <!-- 初期のクイックチップ（導入3択） -->
+      <div class="chips" id="initChips" role="group" aria-label="初期の選択肢">
+        <button class="chip" data-choice="価値観から始めたい">価値観から始めたい</button>
+        <button class="chip" data-choice="情熱から始めたい">情熱から始めたい</button>
+        <button class="chip" data-choice="得意・才能から始めたい">得意・才能から始めたい</button>
       </div>
       <!-- 自動スクロールの終端マーカー -->
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
-    <div class="note">⚡ 速達モード（gemini-2.0-flash / 非ストリーミング）</div>
+    <div class="note">⚡ 簡潔モード：AIの返答は短文＋最後に3択案内</div>
   </main>
 
   <div class="composer" aria-label="メッセージ入力エリア">
     <div class="row">
       <label class="sr" for="text">メッセージ入力</label>
-      <textarea id="text" placeholder="ここに回答を入力（例：一番充実したのは、〇〇に挑戦して達成できたとき…）" rows="1"></textarea>
+      <textarea id="text" placeholder="3択チップを押すか、短く入力（Enter で送信 / Shift+Enter で改行）" rows="1"></textarea>
       <button id="send" class="btn primary send" type="button" disabled>送信</button>
     </div>
     <div id="status" class="status" role="status" aria-live="polite" hidden>送信中…</div>
@@ -190,6 +210,7 @@
     const sendBtn   = $('#send');
     const bottom    = $('#bottomSentinel');
     const statusEl  = $('#status');
+    const initChips = $('#initChips');
 
     // ログイン制御
     loginBtn.addEventListener('click', async ()=>{
@@ -220,12 +241,20 @@
     });
     updateSend();
 
+    // 初期チップ → クリックで即送信
+    initChips?.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.chip');
+      if(!btn) return;
+      ta.value = btn.dataset.choice || btn.textContent.trim();
+      sendBtn.click();
+    });
+
     // “下端に追従”の判定
     let stickToBottom = true;
     function checkStick(){
       const sc = window.scrollY + window.innerHeight;
       const bottomY = document.body.scrollHeight;
-      stickToBottom = (bottomY - sc) < 140; // 140px以内なら追従
+      stickToBottom = (bottomY - sc) < 140; // 140px以内なら追従（簡潔モードでも同じ）
     }
     window.addEventListener('scroll', checkStick, {passive:true});
 
@@ -241,7 +270,43 @@
       }
     }
 
-    // チャット送信
+    // チップ描画（AIの返信末尾の「1)〜3)」を抽出して生成）
+    function extractChoices(text){
+      const lines = text.split(/\r?\n/);
+      const out = [];
+      for(const ln of lines){
+        const m = ln.match(/^\s*([123１２３])[.)．、)]\s*(.+?)\s*$/);
+        if(m && m[2]) out.push(m[2].trim());
+        if(out.length === 3) break;
+      }
+      return out;
+    }
+    function clearChips(){
+      chat.querySelectorAll('.chips.dynamic').forEach(n=> n.remove());
+    }
+    function renderChips(choices){
+      clearChips();
+      if(!choices || !choices.length) return;
+      const box = document.createElement('div');
+      box.className = 'chips dynamic';
+      box.setAttribute('role','group');
+      box.setAttribute('aria-label','次の選択肢');
+      choices.forEach(label=>{
+        const b = document.createElement('button');
+        b.className = 'chip';
+        b.type = 'button';
+        b.textContent = label;
+        b.addEventListener('click', ()=>{
+          ta.value = label;
+          sendBtn.click();
+        });
+        box.appendChild(b);
+      });
+      chat.insertBefore(box, bottom);
+      toBottom();
+    }
+
+    // チャット送信（簡潔モード指示を付与）
     sendBtn.addEventListener('click', async ()=>{
       const text = ta.value.trim();
       if(!text || pending) return;
@@ -254,18 +319,24 @@
       pending = true;
       ta.disabled = true;
       sendBtn.textContent = '送信中…';
-      updateSend();
       statusEl.hidden = false;
+
+      // AIへのスタイル指示（短文＋最後に3択）
+      const conciseDirective =
+        '【AIへの指示: 返答は最大3文、可能なら箇条書き。最後に日本語で1) 2) 3) の3択を提案してください。各行は簡潔に。】';
 
       try{
         const res = await fetch('/api/chat', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ message:text })
+          body: JSON.stringify({ message: `${text}\n\n${conciseDirective}` })
         });
         if(!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        appendBubble((data.reply || '').toString().trim() || '（返信を取得できませんでした）', 'ai');
+        const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
+        appendBubble(reply, 'ai');
+        // AIの末尾から3択を抽出してチップ化
+        renderChips(extractChoices(reply));
       }catch(err){
         appendBubble('エラー: ' + err.message, 'ai');
       }finally{
@@ -278,13 +349,14 @@
       }
     });
 
-    // バブル追加 & 自動スクロール
+    // バブル追加 & 自動スクロール（要素を返す）
     function appendBubble(text, who){
       const div = document.createElement('div');
       div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
       div.textContent = text;
       chat.insertBefore(div, bottom);
       toBottom();
+      return div;
     }
 
     // 初期・リサイズ・フォーカス時の下端追従
