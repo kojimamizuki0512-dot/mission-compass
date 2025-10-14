@@ -6,8 +6,13 @@
   <title>Mission Compass — なぜ学ぶのか、を決めよう。</title>
   <meta name="theme-color" content="#0B3D60">
 
-  <!-- 追加（PWA有効化） -->
+  <!-- PWA -->
   <link rel="manifest" href="/manifest.webmanifest">
+  <!-- iOS PWA meta（今回追加） -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mission Compass">
+  <meta name="format-detection" content="telephone=no">
 
   <style>
     :root{
@@ -117,6 +122,7 @@
     .why-card.purple .why-badge{ color:var(--purple); background:rgba(75,46,131,.10);  border:1px solid rgba(75,46,131,.25) }
 
     footer{padding:26px 14px 40px; text-align:center; color:#666; font-size:12px}
+    .ver{ font-size:10px; color:#8A92A2; margin-left:.5rem; user-select:text; }
   </style>
 </head>
 <body>
@@ -199,7 +205,10 @@
     </section>
   </main>
 
-  <footer>© 2025 Mission Compass</footer>
+  <footer>
+    © 2025 Mission Compass
+    <span class="ver" title="build version">build: 2025-10-14-idx-meta-1</span>
+  </footer>
 
   <!-- Hero rotation -->
   <script>
