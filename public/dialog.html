@@ -6,12 +6,14 @@
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
 
-  <!-- PWA（今回追加） -->
+  <!-- PWA -->
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Mission Compass">
   <meta name="format-detection" content="telephone=no">
+  <!-- 追加：iOS ホーム画面アイコン -->
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180">
 
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -127,7 +129,7 @@
     .mission-actions{ display:flex; gap:8px; flex-wrap:wrap; }
     .mission-actions .btn{ font-size:var(--fs-xs); padding:6px 10px; }
 
-    /* ビルド表記（今回追加） */
+    /* ビルド表記（更新） */
     .build{ max-width:var(--max); margin:6px auto 16px; padding:0 12px; color:#8A92A2; font-size:10px; user-select:text; }
   </style>
 </head>
@@ -160,8 +162,8 @@
     <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択（チップ表示）</div>
   </main>
 
-  <!-- ビルド表記（今回追加） -->
-  <div class="build">build: 2025-10-14-dlg-pwa-1</div>
+  <!-- ビルド表記（更新済み） -->
+  <div class="build">build: 2025-10-14-dlg-pwaicon-1</div>
 
   <div class="composer" aria-label="メッセージ入力エリア">
     <div class="row">
