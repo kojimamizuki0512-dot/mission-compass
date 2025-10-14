@@ -1,0 +1,24 @@
+{
+  "name": "Mission Compass",
+  "short_name": "Compass",
+  "description": "AIと対話して、ミッションを見つけ、今日の一歩を決める。",
+  "lang": "ja",
+  "dir": "ltr",
+  "start_url": "/dialog",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0B3D60",
+  "background_color": "#F6EEDC",
+
+  /* まずは既存のファビコンを流用（後でPNGアイコンを別手順で追加） */
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon", "purpose": "any" }
+  ],
+
+  "categories": ["productivity", "education", "lifestyle"],
+  "shortcuts": [
+    { "name": "作戦会議を開く", "short_name": "作戦会議", "url": "/dialog" }
+  ],
+  "prefer_related_applications": false
+}
