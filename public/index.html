@@ -13,8 +13,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Mission Compass">
   <meta name="format-detection" content="telephone=no">
-  <!-- 追加：apple-touch-icon -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <!-- iOS ホーム画面アイコン（直下パスに統一） -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
   <style>
     :root{
@@ -29,7 +29,6 @@
       font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
     }
 
-    /* Header（z-indexを高く＆クリック可能に） */
     header{
       position:sticky; top:0; z-index:1000;
       backdrop-filter:saturate(180%) blur(8px);
@@ -50,7 +49,6 @@
     }
     .user{font-size:12px; color:#444}
 
-    /* Hero */
     .bleed-tight{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw; }
     .hero-rotator{ position:relative; width:100%; height:clamp(420px, 88vh, 1000px); background:#000; overflow:hidden; }
     @supports (height: 88dvh){ .hero-rotator{ height:clamp(420px, 88dvh, 1000px); } }
@@ -80,7 +78,6 @@
     .dot{ width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.6) }
     .dot.on{ background:#fff }
 
-    /* CTA */
     main{max-width:1000px; margin:0 auto; padding:0 14px}
     .cta-wrap{ padding:22px 0 8px; }
     .cta-wrap h1{ color:var(--dark-blue); font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
@@ -100,9 +97,7 @@
     .cta-btn:hover{ transform:translateY(-1px) }
     .cta-meta{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
     .badge{ display:inline-flex; align-items:center; gap:6px; padding:8px 10px; background:var(--white); border:1px solid rgba(59,64,68,.22); border-radius:999px; font-size:12px; color:var(--ink); }
-    .badge svg{ width:14px; height:14px; color:var(--dark-blue); }
 
-    /* Why（色分け） */
     .why{ padding:28px 0 8px; }
     .why h2{ color:var(--dark-blue); font-size:clamp(20px, 5.4vw, 28px); font-weight:800; margin:0 0 10px; }
     .why .sub{ color:#60656B; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px); }
@@ -112,13 +107,9 @@
     .why-ic{ width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:10px; color:#fff; }
     .why-ttl{ font-weight:800; margin:0 0 6px; font-size:16px; color:var(--ink); }
     .why-txt{ margin:0; color:#374151; font-size:14px; line-height:1.6; }
-    .why-badge{ display:inline-block; margin-top:10px; font-size:12px; font-weight:700; padding:4px 8px; border-radius:999px; }
     .why-card.olive  { border-color: rgba(107,142,35,.35);  background:linear-gradient(180deg,#fff,#F6F8EC) }
     .why-card.burnt  { border-color: rgba(204,90,30,.35);   background:linear-gradient(180deg,#fff,#FBF1EA) }
     .why-card.purple { border-color: rgba(75,46,131,.35);   background:linear-gradient(180deg,#fff,#F3EEF9) }
-    .why-card.olive  .why-ic{ background:var(--olive) }
-    .why-card.burnt  .why-ic{ background:var(--burnt) }
-    .why-card.purple .why-ic{ background:var(--purple) }
 
     footer{padding:26px 14px 40px; text-align:center; color:#666; font-size:12px}
     .ver{ font-size:10px; color:#8A92A2; margin-left:.5rem; user-select:text; }
@@ -136,7 +127,6 @@
     </nav>
   </header>
 
-  <!-- Hero -->
   <div class="bleed-tight">
     <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
       <figure class="slide kb-tl on">
@@ -206,10 +196,9 @@
 
   <footer>
     © 2025 Mission Compass
-    <span class="ver" title="build version">build: 2025-10-14-idx-pwaicon-1</span>
+    <span class="ver" title="build version">build: 2025-10-14-idx-pwaicon-2</span>
   </footer>
 
-  <!-- Hero rotation -->
   <script>
     document.addEventListener('DOMContentLoaded', function(){
       const rotator = document.getElementById('heroRotator'); if(!rotator) return;
@@ -226,7 +215,6 @@
     });
   </script>
 
-  <!-- Firebase Auth（Google） -->
   <script type="module">
     import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
