@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>PWA Check — Mission Compass</title>
+
+  <!-- PWA minimal set（iOS優先 / 互換メタも同梱） -->
+  <meta name="theme-color" content="#0B3D60">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MC PWA Check">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <style>
+    :root{ --ink:#0b1220; --muted:#6b7280; --ok:#10b981; --ng:#ef4444; --bg:#f6f7fb }
+    *{ box-sizing:border-box }
+    html,body{ height:100%; margin:0; background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Arial, sans-serif }
+    .wrap{ min-height:100%; display:grid; place-items:center; padding:24px }
+    .card{ width:min(720px, 92vw); background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:16px; padding:20px 18px; box-shadow:0 10px 28px rgba(2,8,20,.06) }
+    h1{ margin:0 0 8px; font-size:20px }
+    .kvs{ display:grid; gap:8px; margin:14px 0 4px; font-size:14px; color:#111 }
+    .kv{ display:flex; gap:8px; align-items:center; justify-content:space-between; border:1px dashed rgba(0,0,0,.1); border-radius:10px; padding:10px 12px; background:#fafafa }
+    .badge{ font-weight:800; padding:4px 8px; border-radius:999px; }
+    .ok { color:#065f46; background:rgba(16,185,129,.15); border:1px solid rgba(16,185,129,.35) }
+    .ng { color:#7f1d1d; background:rgba(239,68,68,.15); border:1px solid rgba(239,68,68,.35) }
+    .muted{ color:var(--muted); font-size:12px; margin-top:10px }
+    .links{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px }
+    a.btn{ text-decoration:none; display:inline-flex; align-items:center; gap:6px; padding:10px 14px; border-radius:12px; border:1px solid rgba(0,0,0,.12); background:#fff; font-weight:800 }
+    footer{ text-align:center; color:#8A92A2; font-size:10px; margin-top:14px; user-select:text }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card" aria-live="polite">
+      <h1>PWA 起動チェック</h1>
+      <div class="kvs">
+        <div class="kv"><span>display-mode</span><span id="dm" class="badge ng">checking…</span></div>
+        <div class="kv"><span>inner (CSS px)</span><span id="inner">-</span></div>
+        <div class="kv"><span>visualViewport</span><span id="vv">-</span></div>
+        <div class="kv"><span>devicePixelRatio</span><span id="dpr">-</span></div>
+      </div>
+      <p class="muted">※ ここは極力軽く（画像/外部フォント/外部JSなし）にしてあります。これでフルスクなら、既存ページの初期負荷が原因です。</p>
+      <div class="links">
+        <a class="btn" href="/">↩︎ トップへ</a>
+        <a class="btn" href="/dialog">💬 ダイアログへ</a>
+      </div>
+      <footer>build: 2025-10-14-pwa-check-1</footer>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id)=>document.getElementById(id);
+    function update() {
+      const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone;
+      const dmEl = $('dm');
+      dmEl.textContent = standalone ? 'standalone' : 'browser';
+      dmEl.className = 'badge ' + (standalone ? 'ok' : 'ng');
+
+      $('inner').textContent = `${window.innerWidth} × ${window.innerHeight}`;
+      if (window.visualViewport) {
+        const vv = window.visualViewport;
+        $('vv').textContent = `${Math.round(vv.width)} × ${Math.round(vv.height)}`;
+      } else {
+        $('vv').textContent = 'n/a';
+      }
+      $('dpr').textContent = window.devicePixelRatio || 1;
+    }
+    update();
+    window.addEventListener('resize', update, { passive:true });
+    window.visualViewport && window.visualViewport.addEventListener('resize', update, { passive:true });
+  </script>
+</body>
+</html>
