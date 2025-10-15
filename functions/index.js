@@ -1,12 +1,21 @@
+// functions/index.js
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
-const ok  = (res, data)        => res.status(200).json(data);
-const bad = (res, msg, code=500, extra={}) =>
+const ok  = (res, data) => res.status(200).json(data);
+const bad = (res, msg, code = 500, extra = {}) =>
   res.status(code).json({ error: msg, ...extra });
+
+// 404 / not supported のとき順に試すモデル（新→旧）
+const MODEL_CANDIDATES = [
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-flash",
+  "gemini-1.0-pro-latest",
+  "gemini-1.0-pro"
+];
 
 export const api2 = onRequest(
   {
@@ -26,34 +35,30 @@ export const api2 = onRequest(
         return bad(res, "Only POST is allowed.", 405);
       }
 
-      // Body defensive parse
+      // Defensive parse
       let body = req.body;
-      if (typeof body === "string") {
-        try { body = JSON.parse(body); } catch { body = {}; }
-      }
+      if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
       const message   = (body?.message ?? "").toString();
       const sessionId = (body?.sessionId ?? "").toString();
       if (!message.trim()) return bad(res, "message is required.", 400);
 
-      // 内部ダイアグ（キー在庫・環境）
       const apiKey = GEMINI_API_KEY.value();
+      if (!apiKey) {
+        return bad(res, "GEMINI_API_KEY is not set.", 500, { hint: "functions:secrets:set 後に再デプロイ" });
+      }
+
+      // ダイアグ（疎通チェック用）
       if (message === "__diag__") {
         return ok(res, {
           ok: true,
-          hasKey: !!apiKey,
+          hasKey: true,
           project: process.env.GOOGLE_CLOUD_PROJECT || null,
-          region: "asia-northeast1",
-          runtime: process.version
+          runtime: process.version,
+          candidates: MODEL_CANDIDATES
         });
       }
 
-      if (!apiKey) {
-        return bad(res, "GEMINI_API_KEY is not set.", 500, { hint: "functions:secrets:set で設定→再デプロイ" });
-      }
-
-      // Gemini 呼び出し
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const sys =
         "役割: 対話コーチ。常に短文で要点のみ。必要なときだけ #chip:候補 を最大3つ。" +
@@ -64,30 +69,41 @@ export const api2 = onRequest(
         `# session\nid=${sessionId || "no-session"}\n` +
         `# user\n${message}`;
 
-      let text = "";
-      try {
-        const result = await model.generateContent({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 300, temperature: 0.7 },
-        });
-        text = result?.response?.text?.() ?? "";
-      } catch (apiErr) {
-        // Google API 由来のエラーを見える化
-        console.error("[gemini error]", apiErr);
-        const msg = apiErr?.message || "Gemini call failed";
-        // ライブラリによっては statusCode や response データを持っている場合あり
-        return bad(res, msg, 500, {
-          kind: "gemini-error",
-          note: "APIキー/クォータ/モデル名/ネットワークを確認",
-        });
+      // ---- モデルを順に試す（404/unsupported でフォールバック） ----
+      const tried = [];
+      let lastErr = null;
+      for (const modelName of MODEL_CANDIDATES) {
+        tried.push(modelName);
+        try {
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 300, temperature: 0.7 },
+          });
+          const text = result?.response?.text?.() ?? "";
+          if (!text.trim()) throw new Error("Empty response from model.");
+          return ok(res, { reply: text, model: modelName });
+        } catch (e) {
+          // 404 / not supported はフォールバック継続、それ以外は即時エラー
+          const msg = String(e?.message || e);
+          if (/404|not found|not\s+supported/i.test(msg)) {
+            lastErr = e;
+            continue; // 次の候補へ
+          }
+          console.error("[gemini error non-404]", e);
+          return bad(res, msg, 500, { kind: "gemini-error", tried });
+        }
       }
 
-      if (!text.trim()) {
-        throw new Error("Empty response from model.");
-      }
-      return ok(res, { reply: text });
+      // 全部ダメだった
+      console.error("[gemini model 404 chain]", lastErr);
+      return bad(
+        res,
+        "No available Gemini model for current API version. (All candidates failed with 404/unsupported)",
+        500,
+        { kind: "model-not-found", tried: tried }
+      );
     } catch (err) {
-      // 最終ガード
       const msg = err?.message || "Server Error";
       console.error("[/api/chat] error:", err);
       return bad(res, msg, 500, { kind: "server-error" });
