@@ -45,10 +45,19 @@
       .email{ order:3; width:100%; max-width:100%; }
     }
 
+    /* Rooms tabs */
+    .rooms{ position:sticky; top:52px; z-index:25; background:rgba(255,255,255,.85); backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid rgba(0,0,0,.06); }
+    .rooms .row{ max-width:var(--max); margin:0 auto; padding:8px 12px; display:flex; gap:8px; }
+    .rooms button{
+      appearance:none; border:1px solid rgba(65,105,225,.25); background:#fff; color:#1b1b1b;
+      padding:8px 12px; border-radius:999px; font-weight:800; cursor:pointer; font-family:var(--font-sans); font-size:13px;
+    }
+    .rooms button.on{ background:#eef3ff; border-color:rgba(65,105,225,.45); }
+
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
     .note{ color:var(--muted); font-size:12px; margin:10px 0; display:flex; align-items:center; gap:6px; }
 
-    .chat-shell{ position:relative; min-height:calc(100dvh - 150px); padding-bottom:120px; }
+    .chat-shell{ position:relative; min-height:calc(100dvh - 180px); padding-bottom:120px; }
     .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
     .bubble{
       max-width:min(85%, 680px);
@@ -129,6 +138,15 @@
     </div>
   </header>
 
+  <!-- Rooms tabs -->
+  <nav class="rooms" role="tablist" aria-label="トーク部屋">
+    <div class="row">
+      <button type="button" data-room="issue"    class="on" aria-selected="true">課題</button>
+      <button type="button" data-room="research" class=""    aria-selected="false">調べ物</button>
+      <button type="button" data-room="daily"    class=""    aria-selected="false">日常</button>
+    </div>
+  </nav>
+
   <main class="wrap chat-shell">
     <!-- 進捗メーター -->
     <div class="prog" aria-label="進捗">
@@ -139,14 +157,11 @@
     </div>
 
     <section class="stream" id="chat">
-      <div class="bubble ai" id="firstAi">
-        <span class="lead">はじめまして。</span> いまの関心や目標を一言で教えてください。<br />
-        そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
-      </div>
+      <!-- 部屋ごとに再構築。初回は後続JSが挨拶バブルを注入 -->
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
     <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択案内</div>
-    <div class="build">build: 2025-10-15-dlg-help-progress-2 (server-step+sid)</div>
+    <div class="build">build: 2025-10-15-dlg-rooms-1</div>
   </main>
 
   <div class="composer" aria-label="メッセージ入力エリア">
@@ -198,9 +213,7 @@
     const chat      = $('#chat');
     const ta        = $('#text');
     const sendBtn   = $('#send');
-    const bottom    = $('#bottomSentinel');
 
-    const sheetWrap = $('#sheet');
     const sheetBackdrop = $('#sheetBackdrop');
     const sheetClose = $('#sheetClose');
     const sheetCancel = $('#sheetCancel');
@@ -213,26 +226,58 @@
     const progText = $('#progText');
     const MAX_STEPS = 10;
 
-    // セッションID（サーバ履歴ひも付け）
-    let sessionId = localStorage.getItem('dlg_sid');
-    if (!sessionId) {
-      sessionId = (crypto?.randomUUID && crypto.randomUUID())
-        || (String(Date.now()) + Math.random().toString(16).slice(2));
-      localStorage.setItem('dlg_sid', sessionId);
+    const ROOMS = [
+      { key:'issue',    name:'課題',    greet:'ここは「課題」部屋。いま困ってることや詰まりを一言で教えて！' },
+      { key:'research', name:'調べ物',  greet:'ここは「調べ物」部屋。今知りたいテーマを短くどうぞ！' },
+      { key:'daily',    name:'日常',    greet:'ここは「日常」部屋。今日の出来事や雑談から始めよう。' },
+    ];
+    let currentRoom = localStorage.getItem('dlg_room') || 'issue';
+
+    // ルーム単位のキー
+    const sidKey  = k => `dlg_sid_${k}`;
+    const stepKey = k => `srv_step_${k}`;
+    const msgsKey = k => `msgs_${k}`;
+    const sumKey  = k => `summary_${k}`;
+
+    // 各部屋に sessionId を用意
+    for (const r of ROOMS) {
+      if (!localStorage.getItem(sidKey(r.key))) {
+        const sid = (crypto?.randomUUID && crypto.randomUUID())
+          || (String(Date.now()) + Math.random().toString(16).slice(2));
+        localStorage.setItem(sidKey(r.key), sid);
+      }
     }
 
-    // 進捗（サーバ値を真とする。初期はローカルの最後値を表示しておく）
-    let step = Number(localStorage.getItem('srv_step') || 0);
+    // ===== 進捗描画（部屋ごと） =====
+    let step = 0;
     function renderProgress(){
       const s = Math.max(0, Math.min(MAX_STEPS, step));
       const pct = Math.round((s / MAX_STEPS) * 100);
       progFill.style.width = pct + '%';
       progText.textContent = `${s} / ${MAX_STEPS}`;
-      localStorage.setItem('srv_step', String(s));
+      localStorage.setItem(stepKey(currentRoom), String(s));
     }
-    renderProgress();
 
-    // Auth UI
+    // ===== サマリー（15字） =====
+    let currentSummary = '—';
+    const trimTo = (s,n)=> s.length>n ? s.slice(0,n-1)+'…' : s;
+    function summarizeQuestion(t){
+      const s = (t||'').replace(/\s+/g,' ').replace(/[「」『』\[\]()（）【】]/g,'').trim();
+      const rules = [
+        [/価値観/, '価値観の話'], [/情熱|ワクワク|熱中/, '情熱の話'], [/才能|得意|強み/, '才能の話'],
+        [/やりたい|したい|目指/, 'やりたい事'], [/興味|関心/, '興味の分野'], [/経験|エピソード|印象/, '過去の経験'],
+        [/周(囲|り)|人から.*言われ/, '周囲の評価'], [/今日.*一歩|最初の一歩/, '今日の一歩'], [/目標|ゴール/, '目標は？'],
+      ];
+      for(const [re,out] of rules){ if(re.test(s)) return trimTo(out,15); }
+      return trimTo(s,15);
+    }
+    function setSummary(text){
+      currentSummary = summarizeQuestion(text||'');
+      qSummaryEl.textContent = currentSummary || '—';
+      localStorage.setItem(sumKey(currentRoom), currentSummary || '—');
+    }
+
+    // ===== Auth UI =====
     loginBtn.addEventListener('click', async ()=>{
       try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
       catch(e){ alert('ログインに失敗しました: ' + e.message); }
@@ -247,40 +292,23 @@
     });
 
     // 送信可否
-    const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
+    const updateSend = ()=> { sendBtn.disabled = !ta.value.trim(); };
     ta.addEventListener('input', updateSend);
     updateSend();
 
-    // ====== 15字サマリー ======
-    let currentSummary = '—';
-    const trimTo = (s,n)=> s.length>n ? s.slice(0,n-1)+'…' : s;
-    function summarizeQuestion(t){
-      const s = (t||'').replace(/\s+/g,' ').replace(/[「」『』\[\]()（）【】]/g,'').trim();
-      const rules = [
-        [/価値観/, '価値観の話'],
-        [/情熱|ワクワク|熱中/, '情熱の話'],
-        [/才能|得意|強み/, '才能の話'],
-        [/やりたい|したい|目指/, 'やりたい事'],
-        [/興味|関心/, '興味の分野'],
-        [/経験|エピソード|印象/, '過去の経験'],
-        [/周(囲|り)|人から.*言われ/, '周囲の評価'],
-        [/今日.*一歩|最初の一歩/, '今日の一歩'],
-        [/目標|ゴール/, '目標は？'],
-      ];
-      for(const [re,out] of rules){ if(re.test(s)) return trimTo(out,15); }
-      return trimTo(s,15);
+    // ===== 助け舟チップ（常設） =====
+    const HELP_CHIPS = ['よく分からない', '別の聞き方で'];
+    function buildSheetChips(){
+      sheetChips.innerHTML = '';
+      HELP_CHIPS.forEach(label=>{
+        const b = document.createElement('button');
+        b.type='button'; b.className='chip'; b.textContent = label;
+        b.addEventListener('click', ()=>{ sheetText.value = label; sheetSend.click(); });
+        sheetChips.appendChild(b);
+      });
     }
-    function setSummary(text){
-      currentSummary = summarizeQuestion(text||'');
-      qSummaryEl.textContent = currentSummary || '—';
-    }
-    // 初期サマリー
-    setSummary($('#firstAi')?.innerText || '');
 
     // ===== 入力シート =====
-    ta.addEventListener('focus', () => openSheet(ta.value));
-    sendBtn.addEventListener('click', () => openSheet(ta.value));
-
     function openSheet(seed=''){
       sheetText.value = seed;
       document.body.classList.add('sheet-open','no-scroll');
@@ -297,6 +325,11 @@
     sheetBackdrop.addEventListener('click', closeSheet);
     sheetClose.addEventListener('click', closeSheet);
     sheetCancel.addEventListener('click', closeSheet);
+    ta.addEventListener('focus', () => openSheet(ta.value));
+    sendBtn.addEventListener('click', () => openSheet(ta.value));
+    ta.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); openSheet(ta.value); }
+    });
 
     function updateSheetOffset(){
       const vv = window.visualViewport;
@@ -306,27 +339,87 @@
     window.addEventListener('resize', updateSheetOffset, {passive:true});
     window.visualViewport && window.visualViewport.addEventListener('resize', updateSheetOffset, {passive:true});
 
-    // 助け舟チップ（常設）
-    const HELP_CHIPS = ['よく分からない', '別の聞き方で'];
-    function buildSheetChips(){
-      sheetChips.innerHTML = '';
-      HELP_CHIPS.forEach(label=>{
-        const b = document.createElement('button');
-        b.type='button'; b.className='chip'; b.textContent = label;
-        b.addEventListener('click', ()=>{ sheetText.value = label; sheetSend.click(); });
-        sheetChips.appendChild(b);
-      });
-      // 将来：.chip.runtime をミラーする場合はここに追加
+    // ===== バブル描画・保存（部屋ごと） =====
+    function appendBubble(content, who, isHTML=false){
+      const div = document.createElement('div');
+      div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
+      if(isHTML){ div.innerHTML = content; } else { div.textContent = content; }
+      const bottom = document.getElementById('bottomSentinel');
+      chat.insertBefore(div, bottom);
+      toBottom();
+      saveMsgs();
     }
 
-    // Enter で開く
-    ta.addEventListener('keydown', e=>{
-      if(e.key === 'Enter' && !e.shiftKey){
-        e.preventDefault(); openSheet(ta.value);
+    function saveMsgs(){
+      const list = [];
+      chat.querySelectorAll('.bubble').forEach(b=>{
+        const who = b.classList.contains('me') ? 'me' : 'ai';
+        // 保存は innerHTML（太字化対応）。ユーザー入力は textContent だが問題なし
+        list.push({ who, html: b.innerHTML });
+      });
+      // 直近50件に制限
+      while(list.length > 50) list.shift();
+      localStorage.setItem(msgsKey(currentRoom), JSON.stringify(list));
+    }
+
+    function loadMsgs(){
+      const raw = localStorage.getItem(msgsKey(currentRoom));
+      if(!raw) return [];
+      try { return JSON.parse(raw) || []; } catch { return []; }
+    }
+
+    function clearStream(){
+      chat.querySelectorAll('.bubble').forEach(b=> b.remove());
+    }
+
+    function greetFor(roomKey){
+      const r = ROOMS.find(x=>x.key===roomKey);
+      return (r && r.greet) || 'こんにちは。いまの関心や目標を一言でどうぞ。';
+    }
+
+    function renderRoom(){
+      // タブの UI 切替
+      document.querySelectorAll('.rooms button').forEach(btn=>{
+        const on = btn.dataset.room === currentRoom;
+        btn.classList.toggle('on', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+
+      // 進捗・サマリー
+      step = Number(localStorage.getItem(stepKey(currentRoom)) || 0);
+      renderProgress();
+      currentSummary = localStorage.getItem(sumKey(currentRoom)) || '—';
+      qSummaryEl.textContent = currentSummary;
+
+      // メッセージ復元
+      clearStream();
+      const items = loadMsgs();
+      if(items.length){
+        items.forEach(it=> appendBubble(it.html, it.who, true));
+      }else{
+        appendBubble(`<span class="lead">はじめまして。</span> ${greetFor(currentRoom)}`, 'ai', true);
+        saveMsgs();
       }
+
+      // 入力欄・送信ボタン
+      ta.value = '';
+      updateSend();
+      toBottom(true);
+    }
+
+    // ルーム切替イベント
+    document.querySelectorAll('.rooms button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const k = btn.dataset.room;
+        if (k && k !== currentRoom) {
+          currentRoom = k;
+          localStorage.setItem('dlg_room', k);
+          renderRoom();
+        }
+      });
     });
 
-    // 送信（シート内）
+    // ===== 送信 =====
     sheetSend.addEventListener('click', async ()=>{
       const text = sheetText.value.trim();
       if(!text) return;
@@ -334,12 +427,12 @@
       await sendMessage(text);
     });
 
-    // メッセージ送信
     async function sendMessage(text){
       appendBubble(text, 'me');
       ta.value = ''; updateSend();
       toBottom(true);
 
+      const sessionId = localStorage.getItem(sidKey(currentRoom));
       try{
         const res = await fetch('/api/chat', {
           method:'POST',
@@ -352,7 +445,7 @@
         appendBubble(embolden(reply), 'ai', true);
         setSummary(reply); // 15字サマリー更新
 
-        // サーバの step を正とする
+        // サーバの step を正とする（部屋ごと）
         if (typeof data.step === 'number') {
           step = data.step;
         } else {
@@ -396,15 +489,6 @@
       return parts.join('<br>');
     }
 
-    // バブル追加
-    function appendBubble(content, who, isHTML=false){
-      const div = document.createElement('div');
-      div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
-      if(isHTML){ div.innerHTML = content; } else { div.textContent = content; }
-      chat.insertBefore(div, bottom);
-      toBottom();
-    }
-
     // 自動スクロール
     let stickToBottom = true;
     function checkStick(){
@@ -415,6 +499,7 @@
     window.addEventListener('scroll', checkStick, {passive:true});
     function toBottom(immediate=false){
       if(!stickToBottom && !immediate) return;
+      const bottom = document.getElementById('bottomSentinel');
       try{
         bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' });
         if(!immediate){
@@ -425,7 +510,8 @@
       }
     }
 
-    window.addEventListener('load', ()=>{ checkStick(); toBottom(true); });
+    // 初回レンダリング
+    window.addEventListener('load', ()=>{ renderRoom(); checkStick(); toBottom(true); });
     window.addEventListener('resize', ()=>{ checkStick(); toBottom(true); });
     ta.addEventListener('focus', ()=>setTimeout(()=>toBottom(true), 80));
   </script>
