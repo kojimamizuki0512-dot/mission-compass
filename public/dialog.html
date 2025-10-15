@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
-  <!-- PWA meta（そのまま） -->
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -20,16 +19,14 @@
       --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
       --radius:16px; --max:860px;
 
-      /* 入力シートのキーボード上余白（JSで更新） */
-      --kb: 0px;
+      --kb: 0px; /* keyboard offset for sheet */
     }
     *{ box-sizing: border-box; }
     html,body{ height:100%; margin:0; scroll-behavior:smooth; }
     html,body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
     body{ font-family:var(--font-sans); line-height:1.65; }
-    body.no-scroll{ overflow: hidden; }
+    body.no-scroll{ overflow:hidden; }
 
-    /* header */
     header{
       position:sticky; top:0; z-index:30;
       background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
@@ -48,7 +45,6 @@
       .email{ order:3; width:100%; max-width:100%; }
     }
 
-    /* main */
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
     .note{ color:var(--muted); font-size:12px; margin:10px 0; display:flex; align-items:center; gap:6px; }
 
@@ -65,7 +61,6 @@
     .ai{ align-self:flex-start; background:#fff; }
     .me{ align-self:flex-end; background:#eef3ff; border-color:rgba(65,105,225,.25); }
 
-    /* composer（下の通常入力バー：フォーカスで入力シートを開く） */
     .composer{
       position:sticky; bottom:0; z-index:20;
       margin:0 calc(50% - min(50%, var(--max)/2));
@@ -84,7 +79,7 @@
     .send[disabled]{ opacity:.5; pointer-events:none; }
     .sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); border:0; }
 
-    /* ===== 入力シート（案A） ===== */
+    /* ===== 入力シート ===== */
     .sheet-backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.2); z-index:50; display:none;
     }
@@ -98,18 +93,21 @@
       background:#fff; border:1px solid rgba(0,0,0,.12); box-shadow:0 18px 48px rgba(0,0,0,.26);
       border-radius:16px 16px 0 0; padding:10px 12px 12px;
     }
-    .sheet .head{ display:flex; align-items:center; justify-content:space-between; padding:4px 2px 8px; }
-    .sheet .head b{ font-weight:900; font-size:14px; color:#111; }
+    .sheet .head{ display:flex; align-items:center; justify-content:space-between; padding:4px 2px 4px; gap:10px; }
+    .sheet .ttl{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+    .sheet .ttl b{ font-weight:900; font-size:14px; color:#111; }
+    .sheet .ttl .sub{
+      font-size:12px; color:#586071; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width:68vw;
+    }
     .sheet .head .close{ appearance:none; border:0; background:transparent; font-size:18px; padding:6px 8px; cursor:pointer; }
     .sheet textarea{ min-height:110px; max-height:40vh; resize:vertical; }
     .sheet .act{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
     .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 0; }
     .chip{ font-size:13px; padding:8px 10px; border-radius:999px; background:#eef2ff; color:#222; border:1px solid rgba(65,105,225,.25); cursor:pointer; }
 
-    /* build 表示 */
     .build{ color:#8A92A2; font-size:11px; user-select:text; margin:14px 0 4px; }
 
-    /* 表示切替 */
     .sheet-open .sheet-backdrop{ display:block; }
     .sheet-open .sheet{ display:block; }
   </style>
@@ -128,15 +126,14 @@
 
   <main class="wrap chat-shell">
     <section class="stream" id="chat">
-      <div class="bubble ai">
+      <div class="bubble ai" id="firstAi">
         <span class="lead">はじめまして。</span> いまの関心や目標を一言で教えてください。<br />
         そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
       </div>
-      <!-- 自動スクロールの終端マーカー -->
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
     <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択案内</div>
-    <div class="build">build: 2025-10-15-dlg-input-sheet-1</div>
+    <div class="build">build: 2025-10-15-dlg-input-sheet-sum-1</div>
   </main>
 
   <div class="composer" aria-label="メッセージ入力エリア">
@@ -147,12 +144,15 @@
     </div>
   </div>
 
-  <!-- 入力シート（案A） -->
+  <!-- 入力シート -->
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
   <div class="sheet" id="sheet">
     <div class="panel">
       <div class="head">
-        <b>メッセージ</b>
+        <div class="ttl">
+          <b>メッセージ</b>
+          <div class="sub">今の質問：<span id="qSummary">—</span></div>
+        </div>
         <button class="close" id="sheetClose" aria-label="閉じる">✕</button>
       </div>
       <textarea id="sheetText" placeholder="ここに入力…"></textarea>
@@ -164,7 +164,6 @@
     </div>
   </div>
 
-  <!-- ===== Firebase + チャット処理（ESM） ===== -->
   <script type="module">
     import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
@@ -173,12 +172,10 @@
       signInWithPopup, signOut, setPersistence, browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
-    // Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence); // ページをまたいでも維持
+    await setPersistence(auth, browserLocalPersistence);
 
-    // UI要素
     const $ = s => document.querySelector(s);
     const loginBtn  = $('#loginBtn');
     const logoutBtn = $('#logoutBtn');
@@ -188,7 +185,6 @@
     const sendBtn   = $('#send');
     const bottom    = $('#bottomSentinel');
 
-    // 入力シート要素
     const sheetWrap = $('#sheet');
     const sheetBackdrop = $('#sheetBackdrop');
     const sheetClose = $('#sheetClose');
@@ -196,14 +192,13 @@
     const sheetSend = $('#sheetSend');
     const sheetText = $('#sheetText');
     const sheetChips = $('#sheetChips');
+    const qSummaryEl = $('#qSummary');
 
-    // ログイン制御
     loginBtn.addEventListener('click', async ()=>{
       try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
       catch(e){ alert('ログインに失敗しました: ' + e.message); }
     });
     logoutBtn.addEventListener('click', ()=> signOut(auth));
-
     onAuthStateChanged(auth, user=>{
       const loggedIn = !!user;
       loginBtn.hidden  = loggedIn;
@@ -212,15 +207,40 @@
       userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
     });
 
-    // 送信ボタン活性化
     const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
     ta.addEventListener('input', updateSend);
     updateSend();
 
-    // ===== 入力シート（案A）ロジック =====
-    // テキストエリアにフォーカスしたらシートへ転送
+    // ====== 質問サマリー（15字） ======
+    let currentSummary = '—';
+    const trimTo = (s,n)=> s.length>n ? s.slice(0,n-1)+'…' : s;
+
+    function summarizeQuestion(t){
+      const s = (t||'').replace(/\s+/g,' ').replace(/[「」『』\[\]()（）【】]/g,'').trim();
+      const rules = [
+        [/価値観/, '価値観の話'],
+        [/情熱|ワクワク|熱中/, '情熱の話'],
+        [/才能|得意|強み/, '才能の話'],
+        [/やりたい|したい|目指/, 'やりたい事'],
+        [/興味|関心/, '興味の分野'],
+        [/経験|エピソード|印象/, '過去の経験'],
+        [/周(囲|り)|人から.*言われ/, '周囲の評価'],
+        [/今日.*一歩|最初の一歩/, '今日の一歩'],
+        [/目標|ゴール/, '目標は？'],
+      ];
+      for(const [re,out] of rules){ if(re.test(s)) return trimTo(out,15); }
+      return trimTo(s,15);
+    }
+    function setSummary(text){
+      currentSummary = summarizeQuestion(text||'');
+      qSummaryEl.textContent = currentSummary || '—';
+    }
+    // 初期サマリー（最初のAI気泡から）
+    setSummary($('#firstAi')?.innerText || '');
+
+    // ===== 入力シート =====
     ta.addEventListener('focus', () => openSheet(ta.value));
-    sendBtn.addEventListener('click', () => openSheet(ta.value)); // 送信押下で大きく入力したい時も
+    sendBtn.addEventListener('click', () => openSheet(ta.value));
 
     function openSheet(seed=''){
       sheetText.value = seed;
@@ -228,9 +248,10 @@
       updateSheetOffset();
       sheetText.focus({ preventScroll:true });
       mirrorChips();
+      // サマリーは最新値を表示（常時15字以内）
+      qSummaryEl.textContent = currentSummary || '—';
     }
     function closeSheet(){
-      // 値を通常欄に戻す（キャンセルでも直前の入力は反映させる）
       ta.value = sheetText.value;
       updateSend();
       document.body.classList.remove('sheet-open','no-scroll');
@@ -239,7 +260,6 @@
     sheetClose.addEventListener('click', closeSheet);
     sheetCancel.addEventListener('click', closeSheet);
 
-    // キーボード上に吸着
     function updateSheetOffset(){
       const vv = window.visualViewport;
       const off = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
@@ -248,10 +268,9 @@
     window.addEventListener('resize', updateSheetOffset, {passive:true});
     window.visualViewport && window.visualViewport.addEventListener('resize', updateSheetOffset, {passive:true});
 
-    // チップ（もし既存UIにあるなら、それをシートにも複製表示する）
     function mirrorChips(){
       sheetChips.innerHTML = '';
-      document.querySelectorAll('.chip').forEach((c, i)=>{
+      document.querySelectorAll('.chip').forEach(c=>{
         const b = document.createElement('button');
         b.type='button'; b.className='chip'; b.textContent = c.textContent;
         b.addEventListener('click', ()=>{
@@ -262,24 +281,19 @@
       });
     }
 
-    // Enter送信（通常欄ではフォーカスでシートを開くので、送信はここでは無効化）
     ta.addEventListener('keydown', e=>{
       if(e.key === 'Enter' && !e.shiftKey){
         e.preventDefault(); openSheet(ta.value);
       }
     });
 
-    // シート側送信
     sheetSend.addEventListener('click', async ()=>{
       const text = sheetText.value.trim();
       if(!text) return;
-      // 画面へ反映して閉じる
       ta.value = text; updateSend(); closeSheet();
-      // 実送信
       await sendMessage(text);
     });
 
-    // ===== チャット送信共通関数 =====
     async function sendMessage(text){
       appendBubble(text, 'me');
       ta.value = ''; updateSend();
@@ -294,7 +308,8 @@
         if(!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
-        appendBubble(embolden(reply), 'ai', /*isHTML*/true);
+        appendBubble(embolden(reply), 'ai', true);
+        setSummary(reply); // ★ AI返答から15字サマリー更新
       }catch(err){
         appendBubble('エラー: ' + err.message, 'ai');
       }finally{
@@ -302,15 +317,12 @@
       }
     }
 
-    // ===== “控えめボールド”整形（全体の約15%の文を太字化） =====
+    // 控えめボールド（約15%）
     function embolden(raw){
-      // escape
       const esc = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      // 行保持
       const parts = [];
       esc.split(/\n+/).forEach(block=>{
         if(!block.trim()){ parts.push(''); return; }
-        // 文分割（句点/疑問/感嘆で）
         const tmp = block.split(/([。．！!？\?])/);
         const sens = [];
         for(let i=0;i<tmp.length;i+=2){
@@ -319,16 +331,14 @@
           if(s) sens.push(s+p);
         }
         if(sens.length===0){ parts.push(block); return; }
-
-        // スコアリング
         const score = s=>{
-          let sc = 0;
-          if(s.length>=8 && s.length<=40) sc+=2;             // 読みやすい長さ
-          if(/[：:・\-→＞＞>|]|ポイント|結論|要するに/.test(s)) sc+=2; // 重要語
-          if(/^\d+[\).．]/.test(s)) sc+=2;                    // 番号付き
+          let sc=0;
+          if(s.length>=8 && s.length<=40) sc+=2;
+          if(/[：:・\-→＞>|]|ポイント|結論|要するに/.test(s)) sc+=2;
+          if(/^\d+[\).．]/.test(s)) sc+=2;
           return sc;
         };
-        const N = Math.max(1, Math.floor(sens.length*0.15)); // 約15%
+        const N = Math.max(1, Math.floor(sens.length*0.15));
         const idx = sens.map((s,i)=>({i,s,sc:score(s)})).sort((a,b)=>b.sc-a.sc||a.i-b.i).slice(0,N).map(o=>o.i);
         const set = new Set(idx);
         const html = sens.map((s,i)=> set.has(i) ? `<b>${s}</b>` : s ).join('');
@@ -337,7 +347,6 @@
       return parts.join('<br>');
     }
 
-    // バブル追加 & 監視で自動スクロール
     function appendBubble(content, who, isHTML=false){
       const div = document.createElement('div');
       div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
@@ -346,7 +355,6 @@
       toBottom();
     }
 
-    // スクロール追従
     let stickToBottom = true;
     function checkStick(){
       const sc = window.scrollY + window.innerHeight;
@@ -366,14 +374,11 @@
       }
     }
 
-    // 初期・リサイズ・フォーカス時の下端追従
     window.addEventListener('load', ()=>{ checkStick(); toBottom(true); });
     window.addEventListener('resize', ()=>{ checkStick(); toBottom(true); });
-    // 通常欄にフォーカスが戻ってきた時も下へ
     ta.addEventListener('focus', ()=>setTimeout(()=>toBottom(true), 80));
   </script>
 
-  <!-- デバッグオーバーレイ（?debug=1 の時だけ読込） -->
   <script>
     if (new URLSearchParams(location.search).get('debug') === '1') {
       const s = document.createElement('script');
