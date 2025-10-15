@@ -7,7 +7,7 @@
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      { "source": "/api/**", "function": { "functionId": "api", "region": "asia-northeast1" } },
+      { "source": "/api/**", "function": { "functionId": "api2", "region": "asia-northeast1" } },
       { "source": "/dialog", "destination": "/dialog.html" },
       { "source": "**", "destination": "/index.html" }
     ]
