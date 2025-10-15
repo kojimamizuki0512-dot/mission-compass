@@ -1,4 +1,4 @@
-// functions/index.js (Gen2 / REST直叩き + ローカルフォールバック内蔵)
+// functions/index.js (Gen2 / REST直叩き + モード別モデル + 強力フォールバック)
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 
@@ -7,15 +7,16 @@ const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 const ok  = (res, data) => res.status(200).json(data);
 const bad = (res, msg, code = 500, extra = {}) => res.status(code).json({ error: msg, ...extra });
 
-// v1 で一般的に使われる候補（順に試す）
-const CANDIDATES = [
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-pro-latest",
-  "gemini-1.0-pro-latest"
-];
+// v1であなたのキーが返した“使える”モデルに限定
+const MODEL_MAP = {
+  chat: ["gemini-2.5-flash", "gemini-2.0-flash"],
+  lite: ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite"],
+  final:["gemini-2.5-pro", "gemini-2.5-flash"]
+};
+const TOKENS = { chat: 240, lite: 160, final: 1200 };
 
 // ---- REST で v1 を叩く ----
-async function callGeminiV1(apiKey, model, prompt) {
+async function callGeminiV1(apiKey, model, prompt, maxOutputTokens) {
   const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 15000);
@@ -26,7 +27,7 @@ async function callGeminiV1(apiKey, model, prompt) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
+        generationConfig: { temperature: 0.7, maxOutputTokens }
       })
     });
     const j = await r.json().catch(() => ({}));
@@ -47,7 +48,6 @@ async function callGeminiV1(apiKey, model, prompt) {
 // ---- ローカル・フォールバック（外部APIが全滅しても返す）----
 function summarize15(m) {
   const s = (m || "").replace(/\s+/g, " ").trim();
-  // ざっくり重要語を抽出
   const picked = (s.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\w]{2,}/gu) || []).slice(0, 3).join(" / ");
   const base = picked || s.slice(0, 15);
   return base.length > 15 ? base.slice(0, 15) : base;
@@ -62,7 +62,6 @@ function chipify(m) {
 function fallbackCoach(message) {
   const head = summarize15(message);
   const chips = chipify(message);
-  // 返答は短文＋太字は1〜2割
   const reply = `**いいね。**「${head}」で掘っていこう。いまの気分に近いのはどれ？\n` +
                 chips.map(c => `#chip:${c}`).join("\n");
   return { reply, model: "local-fallback" };
@@ -79,54 +78,59 @@ export const api2 = onRequest(
       }
       if (req.method !== "POST") return bad(res, "Only POST is allowed.", 405);
 
-      // body defensive
       let body = req.body;
       if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
       const message   = (body?.message ?? "").toString();
       const sessionId = (body?.sessionId ?? "").toString();
+      const modeRaw   = (body?.mode ?? "chat").toString();
+      const mode = (modeRaw === "final" || modeRaw === "lite") ? modeRaw : "chat";
       if (!message.trim()) return bad(res, "message is required.", 400);
 
       // 診断
       if (message === "__diag__") {
-        return ok(res, { ok: true, hasKey: !!GEMINI_API_KEY.value(), runtime: process.version, candidates: CANDIDATES });
+        return ok(res, {
+          ok: true,
+          hasKey: !!GEMINI_API_KEY.value(),
+          runtime: process.version,
+          modelMap: MODEL_MAP,
+          tokens: TOKENS
+        });
       }
 
       const apiKey = GEMINI_API_KEY.value();
 
-      // 1) キーがある場合は REST で本番モデルを順に試す
+      // 1) キーがある場合はRESTで本番モデルを順に試す
       if (apiKey) {
         const sys =
           "役割: 対話コーチ。常に短文で要点のみ。必要なときだけ #chip:候補 を最大3つ。" +
           "太字は全体の1〜2割（**太字**）。絵文字なし。日本語。";
         const prompt =
-          `# system\n${sys}\n# session\nid=${sessionId || "no-session"}\n# user\n${message}`;
+          `# system\n${sys}\n# session\nid=${sessionId || "no-session"}\n# mode\n${mode}\n# user\n${message}`;
 
         const tried = [];
-        for (const m of CANDIDATES) {
+        for (const m of MODEL_MAP[mode]) {
           tried.push(m);
           try {
-            const reply = await callGeminiV1(apiKey, m, prompt);
-            return ok(res, { reply, model: m });
+            const reply = await callGeminiV1(apiKey, m, prompt, TOKENS[mode]);
+            return ok(res, { reply, model: m, mode });
           } catch (e) {
             if (e?.kind === "model-404") { continue; }  // 次の候補へ
-            // 認可/クォータなど他のエラーは即フォールバック
             console.error("[gemini error]", e);
             const fb = fallbackCoach(message);
-            return ok(res, { ...fb, note: "fallback(gemini-error)" });
+            return ok(res, { ...fb, note: "fallback(gemini-error)", mode, tried });
           }
         }
         // すべて404→フォールバック
         const fb = fallbackCoach(message);
-        return ok(res, { ...fb, note: "fallback(model-404-chain)" });
+        return ok(res, { ...fb, note: "fallback(model-404-chain)", mode, tried: MODEL_MAP[mode] });
       }
 
       // 2) キーが無いなら即フォールバック
       const fb = fallbackCoach(message);
-      return ok(res, { ...fb, note: "fallback(no-key)" });
+      return ok(res, { ...fb, note: "fallback(no-key)", mode });
 
     } catch (err) {
       console.error("[/api/chat] error:", err);
-      // サーバ側で想定外例外が起きてもフォールバックで返す
       const fb = fallbackCoach((req.body && (typeof req.body === "string" ? req.body : req.body.message)) || "");
       return ok(res, { ...fb, note: "fallback(server-error)" });
     }
