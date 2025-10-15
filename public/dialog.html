@@ -21,7 +21,7 @@
 
       --kb: 0px; /* keyboard offset for sheet */
     }
-    *{ box-sizing: border-box; }
+    *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; scroll-behavior:smooth; }
     html,body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
     body{ font-family:var(--font-sans); line-height:1.65; }
@@ -67,6 +67,7 @@
     .prog .bar{ position:relative; height:6px; background:#E7ECF6; border-radius:999px; overflow:hidden; flex:1; }
     .prog .bar > i{ position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg, var(--brand), var(--brand-2)); display:block; }
 
+    /* composer */
     .composer{
       position:sticky; bottom:0; z-index:20;
       margin:0 calc(50% - min(50%, var(--max)/2));
@@ -145,7 +146,7 @@
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
     <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択案内</div>
-    <div class="build">build: 2025-10-15-dlg-help-progress-1</div>
+    <div class="build">build: 2025-10-15-dlg-help-progress-2 (server-step+sid)</div>
   </main>
 
   <div class="composer" aria-label="メッセージ入力エリア">
@@ -184,10 +185,12 @@
       signInWithPopup, signOut, setPersistence, browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
+    // Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     await setPersistence(auth, browserLocalPersistence);
 
+    // DOM
     const $ = s => document.querySelector(s);
     const loginBtn  = $('#loginBtn');
     const logoutBtn = $('#logoutBtn');
@@ -209,8 +212,27 @@
     const progFill = $('#progFill');
     const progText = $('#progText');
     const MAX_STEPS = 10;
-    let step = Number(localStorage.getItem('dlg_step') || 0);
 
+    // セッションID（サーバ履歴ひも付け）
+    let sessionId = localStorage.getItem('dlg_sid');
+    if (!sessionId) {
+      sessionId = (crypto?.randomUUID && crypto.randomUUID())
+        || (String(Date.now()) + Math.random().toString(16).slice(2));
+      localStorage.setItem('dlg_sid', sessionId);
+    }
+
+    // 進捗（サーバ値を真とする。初期はローカルの最後値を表示しておく）
+    let step = Number(localStorage.getItem('srv_step') || 0);
+    function renderProgress(){
+      const s = Math.max(0, Math.min(MAX_STEPS, step));
+      const pct = Math.round((s / MAX_STEPS) * 100);
+      progFill.style.width = pct + '%';
+      progText.textContent = `${s} / ${MAX_STEPS}`;
+      localStorage.setItem('srv_step', String(s));
+    }
+    renderProgress();
+
+    // Auth UI
     loginBtn.addEventListener('click', async ()=>{
       try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
       catch(e){ alert('ログインに失敗しました: ' + e.message); }
@@ -224,6 +246,7 @@
       userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
     });
 
+    // 送信可否
     const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
     ta.addEventListener('input', updateSend);
     updateSend();
@@ -251,16 +274,8 @@
       currentSummary = summarizeQuestion(text||'');
       qSummaryEl.textContent = currentSummary || '—';
     }
+    // 初期サマリー
     setSummary($('#firstAi')?.innerText || '');
-
-    // ===== 進捗メーター =====
-    function renderProgress(){
-      const pct = Math.max(0, Math.min(100, Math.round((step/MAX_STEPS)*100)));
-      progFill.style.width = pct + '%';
-      progText.textContent = `${step} / ${MAX_STEPS}`;
-      localStorage.setItem('dlg_step', String(step));
-    }
-    renderProgress();
 
     // ===== 入力シート =====
     ta.addEventListener('focus', () => openSheet(ta.value));
@@ -271,7 +286,7 @@
       document.body.classList.add('sheet-open','no-scroll');
       updateSheetOffset();
       sheetText.focus({ preventScroll:true });
-      buildSheetChips(); // 常設助け舟＋（将来の）可変チップ
+      buildSheetChips();
       qSummaryEl.textContent = currentSummary || '—';
     }
     function closeSheet(){
@@ -295,28 +310,23 @@
     const HELP_CHIPS = ['よく分からない', '別の聞き方で'];
     function buildSheetChips(){
       sheetChips.innerHTML = '';
-      // 常設
       HELP_CHIPS.forEach(label=>{
         const b = document.createElement('button');
         b.type='button'; b.className='chip'; b.textContent = label;
         b.addEventListener('click', ()=>{ sheetText.value = label; sheetSend.click(); });
         sheetChips.appendChild(b);
       });
-      // 将来：.chip（可変）ミラー
-      document.querySelectorAll('.chip.runtime').forEach(c=>{
-        const b = document.createElement('button');
-        b.type='button'; b.className='chip'; b.textContent = c.textContent;
-        b.addEventListener('click', ()=>{ sheetText.value = c.textContent; sheetSend.click(); });
-        sheetChips.appendChild(b);
-      });
+      // 将来：.chip.runtime をミラーする場合はここに追加
     }
 
+    // Enter で開く
     ta.addEventListener('keydown', e=>{
       if(e.key === 'Enter' && !e.shiftKey){
         e.preventDefault(); openSheet(ta.value);
       }
     });
 
+    // 送信（シート内）
     sheetSend.addEventListener('click', async ()=>{
       const text = sheetText.value.trim();
       if(!text) return;
@@ -324,6 +334,7 @@
       await sendMessage(text);
     });
 
+    // メッセージ送信
     async function sendMessage(text){
       appendBubble(text, 'me');
       ta.value = ''; updateSend();
@@ -333,14 +344,20 @@
         const res = await fetch('/api/chat', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ message:text })
+          body: JSON.stringify({ message:text, sessionId })
         });
         if(!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
         appendBubble(embolden(reply), 'ai', true);
-        setSummary(reply);                // 15字サマリー更新
-        step = Math.min(MAX_STEPS, step + 1); // 1ターン前進としてカウント
+        setSummary(reply); // 15字サマリー更新
+
+        // サーバの step を正とする
+        if (typeof data.step === 'number') {
+          step = data.step;
+        } else {
+          step = Math.min(MAX_STEPS, step + 1);
+        }
         renderProgress();
       }catch(err){
         appendBubble('エラー: ' + err.message, 'ai');
@@ -379,6 +396,7 @@
       return parts.join('<br>');
     }
 
+    // バブル追加
     function appendBubble(content, who, isHTML=false){
       const div = document.createElement('div');
       div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
@@ -412,8 +430,8 @@
     ta.addEventListener('focus', ()=>setTimeout(()=>toBottom(true), 80));
   </script>
 
+  <!-- デバッグオーバーレイ（?debug=1） -->
   <script>
-    // デバッグオーバレイ（?debug=1）
     if (new URLSearchParams(location.search).get('debug') === '1') {
       const s = document.createElement('script');
       s.src = '/debug-overlay.js'; s.defer = true;
