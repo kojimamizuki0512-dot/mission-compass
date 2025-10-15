@@ -5,23 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mission Compass — なぜ学ぶのか、を決めよう。</title>
   <meta name="theme-color" content="#0B3D60">
-
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.webmanifest">
-  <!-- iOS PWA meta -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Mission Compass">
-  <meta name="format-detection" content="telephone=no">
-  <!-- iOS ホーム画面アイコン（直下パスに統一） -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-
   <style>
     :root{
       --cream:#F7F1E6; --cream-2:#F4EBDC; --white:#FFFFFF;
       --dark-blue:#0B3D60; --royal:#4169E1;
       --olive:#6B8E23; --burnt:#CC5A1E; --purple:#4B2E83;
       --charcoal:#3B4044; --ink:#1F2937;
+      --max:1000px;
     }
     *{box-sizing:border-box} html,body{height:100%}
     body{
@@ -29,13 +19,14 @@
       font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;
     }
 
+    /* Header */
     header{
       position:sticky; top:0; z-index:1000;
       backdrop-filter:saturate(180%) blur(8px);
       background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.78));
       border-bottom:1px solid rgba(59,64,68,.16);
     }
-    .nav{max-width:1000px; margin:0 auto; padding:12px 14px; display:flex; align-items:center; gap:12px;}
+    .nav{max-width:var(--max); margin:0 auto; padding:12px 14px; display:flex; align-items:center; gap:12px;}
     .brand{display:flex; align-items:center; gap:10px; color:var(--dark-blue); font-weight:900; letter-spacing:.3px}
     .mark{width:28px;height:28px;border-radius:50%;background:var(--dark-blue);display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
     .nav-actions{margin-left:auto; display:flex; gap:10px; align-items:center}
@@ -49,6 +40,7 @@
     }
     .user{font-size:12px; color:#444}
 
+    /* Hero */
     .bleed-tight{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw; }
     .hero-rotator{ position:relative; width:100%; height:clamp(420px, 88vh, 1000px); background:#000; overflow:hidden; }
     @supports (height: 88dvh){ .hero-rotator{ height:clamp(420px, 88dvh, 1000px); } }
@@ -78,7 +70,8 @@
     .dot{ width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.6) }
     .dot.on{ background:#fff }
 
-    main{max-width:1000px; margin:0 auto; padding:0 14px}
+    /* CTA */
+    main{max-width:var(--max); margin:0 auto; padding:0 14px}
     .cta-wrap{ padding:22px 0 8px; }
     .cta-wrap h1{ color:var(--dark-blue); font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
     .cta-wrap .lead{ color:#48505A; margin:0 0 16px; font-size:clamp(15px, 3.8vw, 17px); }
@@ -97,7 +90,9 @@
     .cta-btn:hover{ transform:translateY(-1px) }
     .cta-meta{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
     .badge{ display:inline-flex; align-items:center; gap:6px; padding:8px 10px; background:var(--white); border:1px solid rgba(59,64,68,.22); border-radius:999px; font-size:12px; color:var(--ink); }
+    .badge svg{ width:14px; height:14px; color:var(--dark-blue); }
 
+    /* Why（色分け） */
     .why{ padding:28px 0 8px; }
     .why h2{ color:var(--dark-blue); font-size:clamp(20px, 5.4vw, 28px); font-weight:800; margin:0 0 10px; }
     .why .sub{ color:#60656B; margin:0 0 18px; font-size:clamp(14px, 3.6vw, 16px); }
@@ -107,12 +102,33 @@
     .why-ic{ width:40px; height:40px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:10px; color:#fff; }
     .why-ttl{ font-weight:800; margin:0 0 6px; font-size:16px; color:var(--ink); }
     .why-txt{ margin:0; color:#374151; font-size:14px; line-height:1.6; }
+    .why-badge{ display:inline-block; margin-top:10px; font-size:12px; font-weight:700; padding:4px 8px; border-radius:999px; }
     .why-card.olive  { border-color: rgba(107,142,35,.35);  background:linear-gradient(180deg,#fff,#F6F8EC) }
     .why-card.burnt  { border-color: rgba(204,90,30,.35);   background:linear-gradient(180deg,#fff,#FBF1EA) }
     .why-card.purple { border-color: rgba(75,46,131,.35);   background:linear-gradient(180deg,#fff,#F3EEF9) }
+    .why-card.olive  .why-ic{ background:var(--olive) }
+    .why-card.burnt  .why-ic{ background:var(--burnt) }
+    .why-card.purple .why-ic{ background:var(--purple) }
+    .why-card.olive  .why-badge{ color:var(--olive);  background:rgba(107,142,35,.10);  border:1px solid rgba(107,142,35,.25) }
+    .why-card.burnt  .why-badge{ color:var(--burnt);  background:rgba(204,90,30,.10);   border:1px solid rgba(204,90,30,.25) }
+    .why-card.purple .why-badge{ color:var(--purple); background:rgba(75,46,131,.10);  border:1px solid rgba(75,46,131,.25) }
+
+    /* Mini Try */
+    .mini{ margin:28px 0 10px; padding:16px; border:1px solid rgba(59,64,68,.16); border-radius:16px; background:#fff; box-shadow:0 8px 24px rgba(2,8,20,.04);}
+    .mini h2{ margin:0 0 8px; font-size:18px; color:var(--dark-blue); font-weight:900; }
+    .mini p{ margin:0 0 12px; color:#48505A; font-size:14px; }
+    .steps{ display:grid; gap:10px; }
+    .step{ border:1px dashed rgba(59,64,68,.20); border-radius:12px; padding:12px; }
+    .step h3{ margin:0 0 8px; font-size:14px; color:#222; }
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{ appearance:none; border:1px solid rgba(65,105,225,.28); background:#eef3ff; color:#1b1b1b; border-radius:999px; padding:8px 10px; font-weight:800; cursor:pointer; }
+    .chip[aria-pressed="true"]{ background:#dfe7ff; border-color:rgba(65,105,225,.55); }
+    .mini .actions{ display:flex; gap:10px; margin-top:12px; }
+    .mini .cta{ flex:1; display:inline-flex; align-items:center; justify-content:center; padding:14px 16px; border-radius:12px; font-weight:900; border:1px solid rgba(65,105,225,.55); background:linear-gradient(180deg, var(--royal), #3a5fd0); color:#fff; cursor:pointer; }
+    .mini .note{ font-size:12px; color:#666; margin-top:6px; }
 
     footer{padding:26px 14px 40px; text-align:center; color:#666; font-size:12px}
-    .ver{ font-size:10px; color:#8A92A2; margin-left:.5rem; user-select:text; }
+    .build{ margin-top:6px; color:#8A92A2; font-size:11px; user-select:text; }
   </style>
 </head>
 <body>
@@ -127,6 +143,7 @@
     </nav>
   </header>
 
+  <!-- Hero -->
   <div class="bleed-tight">
     <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
       <figure class="slide kb-tl on">
@@ -168,6 +185,42 @@
       </div>
     </section>
 
+    <!-- 90秒お試しミニ体験 -->
+    <section class="mini" id="miniTry">
+      <h2>まずは90秒でお試し</h2>
+      <p>3つの質問に答えるだけで、会話の続きから<strong>/dialog</strong>に移動できます。</p>
+      <div class="steps">
+        <div class="step" data-step="1">
+          <h3>1) 学ぶ理由は？</h3>
+          <div class="chips" role="group" aria-label="学ぶ理由">
+            <button class="chip" data-v="転職・収入UP">転職・収入UP</button>
+            <button class="chip" data-v="好きな分野を極めたい">好きな分野を極めたい</button>
+            <button class="chip" data-v="自信をつけたい">自信をつけたい</button>
+          </div>
+        </div>
+        <div class="step" data-step="2">
+          <h3>2) 気になる分野は？</h3>
+          <div class="chips" role="group" aria-label="分野">
+            <button class="chip" data-v="AI・プログラミング">AI・プログラミング</button>
+            <button class="chip" data-v="デザイン・動画">デザイン・動画</button>
+            <button class="chip" data-v="マーケ・営業">マーケ・営業</button>
+          </div>
+        </div>
+        <div class="step" data-step="3">
+          <h3>3) 使える時間は？</h3>
+          <div class="chips" role="group" aria-label="時間">
+            <button class="chip" data-v="毎日15分">毎日15分</button>
+            <button class="chip" data-v="平日30〜60分">平日30〜60分</button>
+            <button class="chip" data-v="週末まとまって">週末まとまって</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="miniSubmit" class="cta" type="button">ミッション草案を作る →</button>
+      </div>
+      <div class="note" id="miniNote">送信は3回だけ。返答は短文で返ってきます。</div>
+    </section>
+
     <section class="why">
       <h2>なぜ『Mission Compass』は効く？</h2>
       <p class="sub">仕組みが背中を押す3つの理由</p>
@@ -196,9 +249,10 @@
 
   <footer>
     © 2025 Mission Compass
-    <span class="ver" title="build version">build: 2025-10-14-idx-pwaicon-2</span>
+    <div class="build">build: 2025-10-15-lp-mini-try-1</div>
   </footer>
 
+  <!-- Hero rotation -->
   <script>
     document.addEventListener('DOMContentLoaded', function(){
       const rotator = document.getElementById('heroRotator'); if(!rotator) return;
@@ -215,6 +269,7 @@
     });
   </script>
 
+  <!-- Firebase Auth（Google） -->
   <script type="module">
     import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
@@ -253,6 +308,83 @@
         userEl.textContent = '';
       }
     });
+
+    // ===== 90秒お試しロジック =====
+    const qs = [
+      {key:'why',   text:(v)=>`ミニ体験: 学ぶ理由は「${v}」。1文で受け止めて、次の質問を出して。`},
+      {key:'area',  text:(v)=>`ミニ体験: 気になる分野は「${v}」。1文で受け止めて、次の質問を出して。`},
+      {key:'time',  text:(v)=>`ミニ体験: 使える時間は「${v}」。1文で受け止めて、次の質問を出して。`},
+    ];
+
+    const answers = { why:null, area:null, time:null };
+    document.querySelectorAll('.chip').forEach(ch=>{
+      ch.addEventListener('click', ()=>{
+        const v = ch.dataset.v; const stepEl = ch.closest('.step'); if(!v || !stepEl) return;
+        stepEl.querySelectorAll('.chip').forEach(b=> b.setAttribute('aria-pressed','false'));
+        ch.setAttribute('aria-pressed','true');
+        const stepIdx = +stepEl.dataset.step;
+        if(stepIdx===1) answers.why = v;
+        if(stepIdx===2) answers.area = v;
+        if(stepIdx===3) answers.time = v;
+      });
+    });
+
+    document.getElementById('miniSubmit')?.addEventListener('click', async ()=>{
+      const note = document.getElementById('miniNote');
+      if(!answers.why || !answers.area || !answers.time){
+        note.textContent = '未選択があります。3つすべて選んでください。';
+        return;
+      }
+      try{
+        note.textContent = '送信中…（数秒）';
+
+        // 部屋「課題」用の sessionId を生成し、localStorage にセット
+        const sidKey = 'dlg_sid_issue';
+        const stepKey = 'srv_step_issue';
+        const msgsKey = 'msgs_issue';
+        const roomKey = 'dlg_room';
+
+        const sid = 'lp-' + (crypto?.randomUUID ? crypto.randomUUID() : (Date.now() + Math.random().toString(16).slice(2)));
+        localStorage.setItem(sidKey, sid);
+        localStorage.setItem(roomKey, 'issue');
+
+        // 3ターンだけ /api/chat に投げる（軽い文脈づくり）
+        const msgs = [];
+        const post = async (text)=>{
+          msgs.push({ who:'me', html: escapeHtml(text) });
+          const res = await fetch('/api/chat', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ message:text, sessionId: sid })
+          });
+          const data = await res.json();
+          const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
+          msgs.push({ who:'ai', html: escapeHtml(reply) });
+          if(typeof data.step==='number') localStorage.setItem(stepKey, String(data.step));
+        };
+
+        await post(qs[0].text(answers.why));
+        await post(qs[1].text(answers.area));
+        await post(qs[2].text(answers.time));
+
+        // ミニ体験開始の案内を先頭に1つだけ足す
+        msgs.unshift({ who:'ai', html:'<b>ミニ体験の続きから始めよう。</b> ここまでの回答を拾って、次の一手を一緒に詰めるよ。' });
+
+        // 表示履歴（最大50件に制限）
+        while(msgs.length>50) msgs.shift();
+        localStorage.setItem(msgsKey, JSON.stringify(msgs));
+
+        // /dialog へ遷移（部屋は「課題」が選ばれた状態になる）
+        location.href = '/dialog';
+      }catch(e){
+        console.error(e);
+        note.textContent = 'サーバ通信でエラーが発生しました。時間をおいて再度お試しください。';
+      }
+    });
+
+    function escapeHtml(s){
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
   </script>
 </body>
 </html>
