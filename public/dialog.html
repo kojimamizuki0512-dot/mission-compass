@@ -5,49 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
-
-  <!-- PWA -->
+  <!-- PWA meta（そのまま） -->
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Mission Compass">
-  <meta name="format-detection" content="telephone=no">
-  <!-- 追加：iOS ホーム画面アイコン -->
- <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-
-  <!-- Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
 
   <style>
     :root{
-      --font-sans: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Arial, sans-serif;
-      --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600;
-      --fs-xs: .75rem; --fs-sm: .875rem; --fs-md: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.5rem;
-      --lh-body: 1.65; --lh-heading: 1.3; --ls-tight: .01em;
+      --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Arial, sans-serif;
+      --font-serif: ui-serif, "Times New Roman", "Hiragino Mincho ProN", serif;
 
-      /* palette */
       --bg:#F6EEDC; --panel:#FFF7EA; --ink:#1F2937; --muted:#6B7280;
       --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
       --radius:16px; --max:860px;
 
-      /* iOS keyboard / viewport */
-      --kb: 0px;     /* キーボード高さ（JS更新） */
-      --vvh: 100svh; /* visualViewport.height の初期値（JS更新） */
+      /* 入力シートのキーボード上余白（JSで更新） */
+      --kb: 0px;
     }
-    *{ box-sizing:border-box; }
+    *{ box-sizing: border-box; }
     html,body{ height:100%; margin:0; scroll-behavior:smooth; }
-    html,body{
-      color:var(--ink); background:var(--bg);
-      -webkit-text-size-adjust:100%; overflow-x:hidden;
-      overscroll-behavior:contain;
-    }
-    body{
-      font-family:var(--font-sans); font-weight:var(--fw-regular);
-      font-size:var(--fs-md); line-height:var(--lh-body); letter-spacing:var(--ls-tight);
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility;
-    }
+    html,body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
+    body{ font-family:var(--font-sans); line-height:1.65; }
+    body.no-scroll{ overflow: hidden; }
 
     /* header */
     header{
@@ -55,91 +35,85 @@
       background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
       backdrop-filter:saturate(160%) blur(8px);
       border-bottom:1px solid rgba(0,0,0,.06);
-      transition: transform .18s ease; /* 退避アニメ */
     }
-    header.hide{ transform:translateY(-100%); }
     .bar{ max-width:var(--max); margin:0 auto; padding:10px 12px; display:flex; align-items:center; gap:10px; }
-    .brand{ font-family:var(--font-sans); font-weight:var(--fw-semibold); letter-spacing:.02em; white-space:nowrap; font-size:22px; line-height:var(--lh-heading); }
+    .brand{ font-family:var(--font-serif); font-weight:700; letter-spacing:.02em; white-space:nowrap; font-size:22px; }
     .spacer{ flex:1; }
     .email{ padding:8px 10px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; font-size:13px; color:#374151; max-width:50vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .btn{ appearance:none; border:1px solid rgba(0,0,0,.12); background:#fff; border-radius:12px; padding:9px 14px; cursor:pointer; font-family:var(--font-sans); font-weight:var(--fw-semibold); font-size:var(--fs-sm); }
+    .btn{ appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer; background:#fff; border:1px solid rgba(0,0,0,.12); font-family:var(--font-sans); }
     .btn.primary{ background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#fff; border-color:rgba(65,105,225,.55); }
     .btn.ghost{ background:#fff; }
-    @media (max-width:600px){ .bar{ flex-wrap:wrap; row-gap:8px; } .email{ order:3; width:100%; max-width:100%; } }
+    @media (max-width:600px){
+      .bar{ flex-wrap:wrap; row-gap:8px; }
+      .email{ order:3; width:100%; max-width:100%; }
+    }
 
     /* main */
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
-    .note{ color:var(--muted); font-size:var(--fs-xs); margin:10px 0; display:flex; align-items:center; gap:6px; }
+    .note{ color:var(--muted); font-size:12px; margin:10px 0; display:flex; align-items:center; gap:6px; }
 
-    .chat-shell{ position:relative; min-height:calc(100svh - 150px); padding-bottom:160px; }
+    .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:120px; }
     .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
     .bubble{
       max-width:min(85%, 680px);
       padding:14px 16px; border-radius:14px; box-shadow:var(--shadow);
       word-break:break-word; overflow-wrap:anywhere; border:1px solid rgba(0,0,0,.06);
-      background:#fff; font-size:var(--fs-md);
+      background:#fff; font-size:16px;
     }
-    .bubble b{ font-family:var(--font-sans); font-weight:var(--fw-semibold); font-size:var(--fs-lg); letter-spacing:var(--ls-tight); }
-    .ai{ align-self:flex-start; } .me{ align-self:flex-end; background:#eef3ff; border-color:rgba(65,105,225,.25); }
+    .bubble b{ font-weight:800; }
+    .bubble .lead{ font-family:var(--font-serif); font-size:18px; font-weight:700; }
+    .ai{ align-self:flex-start; background:#fff; }
+    .me{ align-self:flex-end; background:#eef3ff; border-color:rgba(65,105,225,.25); }
 
-    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:-6px; margin-bottom:6px; }
-    .chip{ appearance:none; border:1px solid rgba(0,0,0,.12); background:#fff; border-radius:999px; padding:6px 10px; font-size:var(--fs-sm); font-weight:var(--fw-medium); cursor:pointer; }
-    .chip:hover{ box-shadow:0 2px 8px rgba(2,8,20,.08); }
-    .chip:focus-visible{ outline:3px solid rgba(65,105,225,.35); outline-offset:2px; }
-
-    /* composer */
+    /* composer（下の通常入力バー：フォーカスで入力シートを開く） */
     .composer{
       position:sticky; bottom:0; z-index:20;
       margin:0 calc(50% - min(50%, var(--max)/2));
       background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.86) 30%, rgba(255,255,255,.98));
       backdrop-filter:saturate(150%) blur(6px);
       border-top:1px solid rgba(0,0,0,.06);
-      padding:14px 12px calc(14px + env(safe-area-inset-bottom) + var(--kb));
-      transition: box-shadow .15s ease, transform .15s ease;
+      padding:14px 12px calc(14px + env(safe-area-inset-bottom));
     }
-    .composer .row{ display:flex; gap:10px; align-items:flex-end; max-width:var(--max); margin:0 auto; flex-wrap:wrap; }
+    .composer .row{ display:flex; gap:10px; align-items:flex-end; max-width:var(--max); margin:0 auto; }
     textarea{
-      flex:1 1 420px; min-height:44px; max-height:180px; resize:vertical;
+      flex:1; min-height:44px; max-height:180px; resize:vertical;
       background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px;
-      padding:12px; font-size:var(--fs-md); line-height:1.45; font-family:var(--font-sans);
+      padding:12px; font-size:16px; line-height:1.45; font-family:var(--font-sans);
     }
-    .send{ height:44px; padding:0 18px; border-radius:12px; font-weight:var(--fw-semibold); }
+    .send{ height:44px; padding:0 18px; border-radius:12px; font-weight:900; }
     .send[disabled]{ opacity:.5; pointer-events:none; }
     .sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); border:0; }
-    .status{ max-width:var(--max); margin:6px auto 0; font-size:var(--fs-xs); color:var(--muted); padding-left:6px; }
 
-    /* 入力シート（フォーカス時） */
-    .composer.sheet{
-      position:fixed; left:0; right:0; bottom:0; z-index:100;
-      margin:0; background:#fff;
-      box-shadow:0 -12px 30px rgba(0,0,0,.18);
-      padding:12px 12px calc(12px + env(safe-area-inset-bottom) + var(--kb));
+    /* ===== 入力シート（案A） ===== */
+    .sheet-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.2); z-index:50; display:none;
     }
-    .composer.sheet .row{ max-width:var(--max); }
-    .composer.sheet textarea{ min-height:56px; max-height:min(44svh, var(--vvh)); }
+    .sheet{
+      position:fixed; left:0; right:0;
+      bottom:calc(env(safe-area-inset-bottom) + var(--kb));
+      z-index:60; display:none;
+    }
+    .sheet .panel{
+      margin:0 auto; max-width:var(--max);
+      background:#fff; border:1px solid rgba(0,0,0,.12); box-shadow:0 18px 48px rgba(0,0,0,.26);
+      border-radius:16px 16px 0 0; padding:10px 12px 12px;
+    }
+    .sheet .head{ display:flex; align-items:center; justify-content:space-between; padding:4px 2px 8px; }
+    .sheet .head b{ font-weight:900; font-size:14px; color:#111; }
+    .sheet .head .close{ appearance:none; border:0; background:transparent; font-size:18px; padding:6px 8px; cursor:pointer; }
+    .sheet textarea{ min-height:110px; max-height:40vh; resize:vertical; }
+    .sheet .act{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+    .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 0; }
+    .chip{ font-size:13px; padding:8px 10px; border-radius:999px; background:#eef2ff; color:#222; border:1px solid rgba(65,105,225,.25); cursor:pointer; }
 
-    /* シート用マスク */
-    .mask{ position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.25); -webkit-tap-highlight-color: transparent; }
-    .mask[hidden]{ display:none; }
+    /* build 表示 */
+    .build{ color:#8A92A2; font-size:11px; user-select:text; margin:14px 0 4px; }
 
-    /* mission draft card */
-    .mission-card{ background:var(--panel); border:1px solid rgba(0,0,0,.06); border-left:4px solid var(--brand); border-radius:14px; box-shadow:var(--shadow); padding:14px 16px; max-width:min(85%, 680px); }
-    .mission-title{ font-weight:var(--fw-semibold); font-size:var(--fs-md); margin:0 0 6px; color:#0B3D60; }
-    .mission-text{ margin:0 0 10px; white-space:pre-wrap; }
-    .mission-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .mission-actions .btn{ font-size:var(--fs-xs); padding:6px 10px; }
-
-    /* ビルド表記（更新） */
-    .build{ max-width:var(--max); margin:6px auto 16px; padding:0 12px; color:#8A92A2; font-size:10px; user-select:text; }
+    /* 表示切替 */
+    .sheet-open .sheet-backdrop{ display:block; }
+    .sheet-open .sheet{ display:block; }
   </style>
 </head>
-<script>
-  if (new URLSearchParams(location.search).get('debug') === '1') {
-    const s = document.createElement('script');
-    s.src = '/debug-overlay.js'; s.defer = true;
-    document.head.appendChild(s);
-  }
-</script>
 <body>
   <header>
     <div class="bar" role="navigation" aria-label="上部メニュー">
@@ -153,35 +127,44 @@
   </header>
 
   <main class="wrap chat-shell">
-    <section class="stream" id="chat" role="log" aria-live="polite" aria-relevant="additions">
-      <div class="bubble ai" id="welcome">
-        <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br />
+    <section class="stream" id="chat">
+      <div class="bubble ai">
+        <span class="lead">はじめまして。</span> いまの関心や目標を一言で教えてください。<br />
         そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
       </div>
-      <div class="chips" id="initChips" role="group" aria-label="初期の選択肢">
-        <button class="chip" data-choice="価値観から始めたい">価値観から始めたい</button>
-        <button class="chip" data-choice="情熱から始めたい">情熱から始めたい</button>
-        <button class="chip" data-choice="得意・才能から始めたい">得意・才能から始めたい</button>
-      </div>
-      <div id="missionAnchor"></div>
+      <!-- 自動スクロールの終端マーカー -->
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
-    <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択（チップ表示）</div>
+    <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択案内</div>
+    <div class="build">build: 2025-10-15-dlg-input-sheet-1</div>
   </main>
-
-  <!-- ビルド表記（更新済み） -->
- <div class="build">build: 2025-10-14-dlg-debug-overlay-1</div>
 
   <div class="composer" aria-label="メッセージ入力エリア">
     <div class="row">
       <label class="sr" for="text">メッセージ入力</label>
       <textarea id="text" placeholder="3択チップを押すか、短く入力（Enter で送信 / Shift+Enter で改行）" rows="1"></textarea>
-      <button id="draft" class="btn" type="button" aria-label="ミッション草案を作る">草案を作る</button>
       <button id="send" class="btn primary send" type="button" disabled>送信</button>
     </div>
-    <div id="status" class="status" role="status" aria-live="polite" hidden>送信中…</div>
   </div>
 
+  <!-- 入力シート（案A） -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="sheet" id="sheet">
+    <div class="panel">
+      <div class="head">
+        <b>メッセージ</b>
+        <button class="close" id="sheetClose" aria-label="閉じる">✕</button>
+      </div>
+      <textarea id="sheetText" placeholder="ここに入力…"></textarea>
+      <div class="chip-row" id="sheetChips" aria-label="候補"></div>
+      <div class="act">
+        <button class="btn" id="sheetCancel" type="button">キャンセル</button>
+        <button class="btn primary" id="sheetSend" type="button">送信</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Firebase + チャット処理（ESM） ===== -->
   <script type="module">
     import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
@@ -190,254 +173,213 @@
       signInWithPopup, signOut, setPersistence, browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
+    // Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence);
+    await setPersistence(auth, browserLocalPersistence); // ページをまたいでも維持
 
+    // UI要素
     const $ = s => document.querySelector(s);
-    const headerEl = document.querySelector('header');
     const loginBtn  = $('#loginBtn');
     const logoutBtn = $('#logoutBtn');
     const userMail  = $('#userMail');
     const chat      = $('#chat');
     const ta        = $('#text');
     const sendBtn   = $('#send');
-    const draftBtn  = $('#draft');
     const bottom    = $('#bottomSentinel');
-    const statusEl  = $('#status');
-    const initChips = $('#initChips');
-    const missionAnchor = $('#missionAnchor');
-    const composer  = document.querySelector('.composer');
 
-    loginBtn.addEventListener('click', async ()=>{ try{ await signInWithPopup(auth, new GoogleAuthProvider()); }catch(e){ alert('ログインに失敗しました: ' + e.message); }});
+    // 入力シート要素
+    const sheetWrap = $('#sheet');
+    const sheetBackdrop = $('#sheetBackdrop');
+    const sheetClose = $('#sheetClose');
+    const sheetCancel = $('#sheetCancel');
+    const sheetSend = $('#sheetSend');
+    const sheetText = $('#sheetText');
+    const sheetChips = $('#sheetChips');
+
+    // ログイン制御
+    loginBtn.addEventListener('click', async ()=>{
+      try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
+      catch(e){ alert('ログインに失敗しました: ' + e.message); }
+    });
     logoutBtn.addEventListener('click', ()=> signOut(auth));
+
     onAuthStateChanged(auth, user=>{
       const loggedIn = !!user;
-      loginBtn.hidden  = loggedIn; logoutBtn.hidden = !loggedIn; userMail.hidden  = !loggedIn;
+      loginBtn.hidden  = loggedIn;
+      logoutBtn.hidden = !loggedIn;
+      userMail.hidden  = !loggedIn;
       userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
     });
 
-    const userTurns = [];
-    let pending = false, pendingDraft = false;
-
-    const updateSend = ()=> sendBtn.disabled = pending || !ta.value.trim();
+    // 送信ボタン活性化
+    const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
     ta.addEventListener('input', updateSend);
-    ta.addEventListener('keydown', e=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); if(!pending) sendBtn.click(); }});
     updateSend();
 
-    // 初期チップ → 入力欄に挿入（自動送信なし）
-    function onChipClick(label){
-      ta.value = label; updateSend();
-      ta.focus({ preventScroll:true });
-      setTimeout(()=> ta.scrollIntoView({ block:'center', behavior:'smooth' }), 60);
+    // ===== 入力シート（案A）ロジック =====
+    // テキストエリアにフォーカスしたらシートへ転送
+    ta.addEventListener('focus', () => openSheet(ta.value));
+    sendBtn.addEventListener('click', () => openSheet(ta.value)); // 送信押下で大きく入力したい時も
+
+    function openSheet(seed=''){
+      sheetText.value = seed;
+      document.body.classList.add('sheet-open','no-scroll');
+      updateSheetOffset();
+      sheetText.focus({ preventScroll:true });
+      mirrorChips();
     }
-    initChips?.addEventListener('click', (e)=>{
-      const btn = e.target.closest('.chip'); if(!btn) return;
-      onChipClick(btn.dataset.choice || btn.textContent.trim());
-    });
-
-    // ===== iPhone対策：visualViewport + 入力シート =====
-    const vv = window.visualViewport;
-
-    // マスク（背面タップで閉じる）
-    const mask = document.createElement('div');
-    mask.className = 'mask'; mask.hidden = true; document.body.appendChild(mask);
-    mask.addEventListener('click', ()=> ta.blur());
-
-    const applyKB = ()=>{
-      if(!vv) return;
-      const hidden = Math.max(0, (window.innerHeight - (vv.height + vv.offsetTop)));
-      document.documentElement.style.setProperty('--kb', Math.ceil(hidden) + 'px');
-    };
-    const applyVVH = ()=>{
-      if(!vv) return;
-      document.documentElement.style.setProperty('--vvh', Math.round(vv.height) + 'px');
-    };
-
-    if(vv){
-      vv.addEventListener('resize', ()=>{ applyKB(); applyVVH(); });
-      vv.addEventListener('scroll', ()=>{ applyKB(); applyVVH(); });
-      window.addEventListener('orientationchange', ()=>{ applyKB(); applyVVH(); });
-      applyKB(); applyVVH();
+    function closeSheet(){
+      // 値を通常欄に戻す（キャンセルでも直前の入力は反映させる）
+      ta.value = sheetText.value;
+      updateSend();
+      document.body.classList.remove('sheet-open','no-scroll');
     }
+    sheetBackdrop.addEventListener('click', closeSheet);
+    sheetClose.addEventListener('click', closeSheet);
+    sheetCancel.addEventListener('click', closeSheet);
 
-    const afterReflow = (cb)=> requestAnimationFrame(()=> requestAnimationFrame(cb));
+    // キーボード上に吸着
+    function updateSheetOffset(){
+      const vv = window.visualViewport;
+      const off = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
+      document.documentElement.style.setProperty('--kb', off + 'px');
+    }
+    window.addEventListener('resize', updateSheetOffset, {passive:true});
+    window.visualViewport && window.visualViewport.addEventListener('resize', updateSheetOffset, {passive:true});
 
-    function enterSheet(){
-      composer.classList.add('sheet');
-      document.body.style.overflow = 'hidden';
-      headerEl.classList.add('hide');
-      mask.hidden = false;
-      afterReflow(()=>{
-        applyKB(); applyVVH();
-        bottom.scrollIntoView({ block:'end', behavior:'smooth' });
+    // チップ（もし既存UIにあるなら、それをシートにも複製表示する）
+    function mirrorChips(){
+      sheetChips.innerHTML = '';
+      document.querySelectorAll('.chip').forEach((c, i)=>{
+        const b = document.createElement('button');
+        b.type='button'; b.className='chip'; b.textContent = c.textContent;
+        b.addEventListener('click', ()=>{
+          sheetText.value = c.textContent;
+          sheetSend.click();
+        });
+        sheetChips.appendChild(b);
       });
     }
-    function leaveSheet(){
-      composer.classList.remove('sheet');
-      document.body.style.overflow = '';
-      headerEl.classList.remove('hide');
-      mask.hidden = true;
-      setTimeout(()=>{ applyKB(); applyVVH(); }, 60);
+
+    // Enter送信（通常欄ではフォーカスでシートを開くので、送信はここでは無効化）
+    ta.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault(); openSheet(ta.value);
+      }
+    });
+
+    // シート側送信
+    sheetSend.addEventListener('click', async ()=>{
+      const text = sheetText.value.trim();
+      if(!text) return;
+      // 画面へ反映して閉じる
+      ta.value = text; updateSend(); closeSheet();
+      // 実送信
+      await sendMessage(text);
+    });
+
+    // ===== チャット送信共通関数 =====
+    async function sendMessage(text){
+      appendBubble(text, 'me');
+      ta.value = ''; updateSend();
+      toBottom(true);
+
+      try{
+        const res = await fetch('/api/chat', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ message:text })
+        });
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
+        appendBubble(embolden(reply), 'ai', /*isHTML*/true);
+      }catch(err){
+        appendBubble('エラー: ' + err.message, 'ai');
+      }finally{
+        toBottom();
+      }
     }
 
-    ta.addEventListener('focus', enterSheet);
-    ta.addEventListener('blur',  leaveSheet);
+    // ===== “控えめボールド”整形（全体の約15%の文を太字化） =====
+    function embolden(raw){
+      // escape
+      const esc = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // 行保持
+      const parts = [];
+      esc.split(/\n+/).forEach(block=>{
+        if(!block.trim()){ parts.push(''); return; }
+        // 文分割（句点/疑問/感嘆で）
+        const tmp = block.split(/([。．！!？\?])/);
+        const sens = [];
+        for(let i=0;i<tmp.length;i+=2){
+          const s = (tmp[i]||'').trim();
+          const p = tmp[i+1]||'';
+          if(s) sens.push(s+p);
+        }
+        if(sens.length===0){ parts.push(block); return; }
 
-    // ===== スクロール制御 =====
+        // スコアリング
+        const score = s=>{
+          let sc = 0;
+          if(s.length>=8 && s.length<=40) sc+=2;             // 読みやすい長さ
+          if(/[：:・\-→＞＞>|]|ポイント|結論|要するに/.test(s)) sc+=2; // 重要語
+          if(/^\d+[\).．]/.test(s)) sc+=2;                    // 番号付き
+          return sc;
+        };
+        const N = Math.max(1, Math.floor(sens.length*0.15)); // 約15%
+        const idx = sens.map((s,i)=>({i,s,sc:score(s)})).sort((a,b)=>b.sc-a.sc||a.i-b.i).slice(0,N).map(o=>o.i);
+        const set = new Set(idx);
+        const html = sens.map((s,i)=> set.has(i) ? `<b>${s}</b>` : s ).join('');
+        parts.push(html);
+      });
+      return parts.join('<br>');
+    }
+
+    // バブル追加 & 監視で自動スクロール
+    function appendBubble(content, who, isHTML=false){
+      const div = document.createElement('div');
+      div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
+      if(isHTML){ div.innerHTML = content; } else { div.textContent = content; }
+      chat.insertBefore(div, bottom);
+      toBottom();
+    }
+
+    // スクロール追従
     let stickToBottom = true;
-    function checkStick(){ const sc = window.scrollY + window.innerHeight; const bottomY = document.body.scrollHeight; stickToBottom = (bottomY - sc) < 140; }
+    function checkStick(){
+      const sc = window.scrollY + window.innerHeight;
+      const bottomY = document.body.scrollHeight;
+      stickToBottom = (bottomY - sc) < 140;
+    }
     window.addEventListener('scroll', checkStick, {passive:true});
     function toBottom(immediate=false){
       if(!stickToBottom && !immediate) return;
       try{
         bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' });
-        if(!immediate){ setTimeout(()=>window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }), 60); }
+        if(!immediate){
+          setTimeout(()=>window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }), 60);
+        }
       }catch{
         window.scrollTo({ top: document.body.scrollHeight, behavior: immediate?'auto':'smooth' });
       }
     }
 
-    // 3択抽出・表示（サーバ返り優先）
-    function extractChoices(text){
-      const lines = text.split(/\r?\n/); const out = [];
-      for(const ln of lines){
-        const m = ln.match(/^\s*([123１２３])[.)．、)]\s*(.+?)\s*$/);
-        if(m && m[2]) out.push(m[2].trim());
-        if(out.length === 3) break;
-      }
-      return out;
-    }
-    function clearChips(){ chat.querySelectorAll('.chips.dynamic').forEach(n=> n.remove()); }
-    function renderChips(choices){
-      clearChips(); if(!choices || !choices.length) return;
-      const box = document.createElement('div'); box.className = 'chips dynamic'; box.setAttribute('role','group'); box.setAttribute('aria-label','次の選択肢');
-      choices.forEach(label=>{
-        const b = document.createElement('button'); b.className = 'chip'; b.type='button'; b.textContent = label;
-        b.addEventListener('click', ()=> onChipClick(label));
-        box.appendChild(b);
-      });
-      chat.insertBefore(box, bottom); toBottom();
-    }
-
-    // AI本文のみ表示
-    function stripChoices(text){
-      return text.split(/\r?\n/).filter(ln=>!(/^\s*([123１２３])[.)．、)]\s*/.test(ln))).join('\n').trim();
-    }
-
-    // 送信
-    sendBtn.addEventListener('click', async ()=>{
-      const text = ta.value.trim(); if(!text || pending) return;
-
-      appendBubble(text, 'me'); userTurns.push(text);
-      ta.value = ''; updateSend(); toBottom(true);
-
-      pending = true; ta.disabled = true; sendBtn.textContent = '送信中…'; statusEl.hidden = false;
-
-      const conciseDirective = '【AIへの指示: 返答は最大3文、口調はフレンドリー。必要なときだけ1)2)3)で選択肢を提案。】';
-      try{
-        const res = await fetch('/api/chat', {
-          method:'POST', headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ message: `${text}\n\n${conciseDirective}` })
-        });
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const raw = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
-
-        appendBubble(stripChoices(raw), 'ai');
-
-        const serverChoices = Array.isArray(data.choices) ? data.choices.filter(Boolean) : [];
-        renderChips(serverChoices.length ? serverChoices.slice(0,3) : extractChoices(raw));
-      }catch(err){
-        appendBubble('エラー: ' + err.message, 'ai');
-      }finally{
-        pending = false; ta.disabled = false; sendBtn.textContent = '送信'; statusEl.hidden = true; updateSend(); toBottom();
-      }
-    });
-
-    // ===== ミッション草案カード =====
-    draftBtn.addEventListener('click', ()=> makeDraft(false));
-    async function makeDraft(refine){
-      if(pendingDraft) return;
-      const recent = userTurns.slice(-12);
-      if(recent.length === 0){ renderMissionCard('まずは1〜2回やり取りしてから草案を作成します。'); return; }
-
-      pendingDraft = true; draftBtn.disabled = true;
-      renderMissionCard(refine ? '草案を磨いています…' : '草案を作成しています…');
-
-      const list = recent.map(t=>`- ${t}`).join('\n');
-      const prompt =
-`【AIへの指示】
-次のユーザー発言の要点から、日本語で「ミッション・ステートメント」の草案を作成してください。
-- 文体：一人称の宣言文（です・ます調）。最大2文。
-- 形式：文頭に「私のミッションは、」を含めても良い。
-- 内容：価値観／情熱／才能／貢献対象が自然に含まれるように。
-- その後に、必要なときだけ 1) 2) 3) の次アクション案を提示（各行10〜16文字）。
-
-【ユーザー発言（新しい順）】
-${list}
-${refine ? '\n※直前の草案をより端的に、重複を削り、主語を明確にしてください。' : ''}`;
-
-      try{
-        const res = await fetch('/api/chat', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ message: prompt }) });
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json(); const raw = (data.reply || '').toString();
-        const main = raw.split(/\n\s*[（(]?\s*[1１][\).．、)]/)[0].replace(/^[-•\s]+/gm,'').trim() || '（草案を取得できませんでした）';
-        renderMissionCard(main, { showActions:true });
-
-        const serverChoices = Array.isArray(data.choices) ? data.choices.filter(Boolean) : [];
-        if(serverChoices.length) renderChips(serverChoices.slice(0,3)); else renderChips(extractChoices(raw));
-      }catch(err){
-        renderMissionCard('エラー: ' + err.message);
-      }finally{
-        pendingDraft = false; draftBtn.disabled = false; toBottom();
-      }
-    }
-
-    function renderMissionCard(text, opts={}){
-      let card = document.getElementById('missionCard');
-      if(!card){
-        card = document.createElement('section'); card.id='missionCard'; card.className='mission-card';
-        const title = document.createElement('h3'); title.className='mission-title'; title.textContent='ミッション草案';
-        const body = document.createElement('p'); body.id='missionText'; body.className='mission-text';
-        const actions = document.createElement('div'); actions.id='missionActions'; actions.className='mission-actions'; actions.hidden=true;
-
-        const copyBtn = document.createElement('button'); copyBtn.className='btn'; copyBtn.type='button'; copyBtn.textContent='コピー';
-        copyBtn.addEventListener('click', async ()=>{
-          try{
-            await navigator.clipboard.writeText($('#missionText').textContent || '');
-            copyBtn.textContent='コピー済み'; setTimeout(()=>copyBtn.textContent='コピー',1200);
-          }catch{}
-        });
-
-        const refineBtn = document.createElement('button'); refineBtn.className='btn'; refineBtn.type='button'; refineBtn.textContent='磨く';
-        refineBtn.addEventListener('click', ()=> makeDraft(true));
-
-        const regenBtn = document.createElement('button'); regenBtn.className='btn'; regenBtn.type='button'; regenBtn.textContent='別案を作る';
-        regenBtn.addEventListener('click', ()=> makeDraft(false));
-
-        actions.append(copyBtn, refineBtn, regenBtn);
-        card.append(title, body, actions);
-        chat.insertBefore(card, missionAnchor.nextSibling);
-      }
-      document.getElementById('missionText').textContent = text;
-      const actions = document.getElementById('missionActions');
-      if(actions) actions.hidden = !opts.showActions;
-      toBottom();
-    }
-
-    function appendBubble(text, who){
-      const div = document.createElement('div');
-      div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
-      div.textContent = text;
-      chat.insertBefore(div, bottom);
-      toBottom();
-      return div;
-    }
-
-    // 初期・リサイズ
+    // 初期・リサイズ・フォーカス時の下端追従
     window.addEventListener('load', ()=>{ checkStick(); toBottom(true); });
     window.addEventListener('resize', ()=>{ checkStick(); toBottom(true); });
+    // 通常欄にフォーカスが戻ってきた時も下へ
+    ta.addEventListener('focus', ()=>setTimeout(()=>toBottom(true), 80));
+  </script>
+
+  <!-- デバッグオーバーレイ（?debug=1 の時だけ読込） -->
+  <script>
+    if (new URLSearchParams(location.search).get('debug') === '1') {
+      const s = document.createElement('script');
+      s.src = '/debug-overlay.js'; s.defer = true;
+      document.head.appendChild(s);
+    }
   </script>
 </body>
 </html>
