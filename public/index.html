@@ -7,64 +7,65 @@
   <meta name="theme-color" content="#0B3D60">
   <style>
     :root{
-      --cream:#F7F1E6; --cream-2:#F4EBDC; --white:#FFFFFF;
-      --dark-blue:#0B3D60; --royal:#4169E1;
-      --olive:#6B8E23; --burnt:#CC5A1E; --purple:#4B2E83;
-      --charcoal:#3B4044; --ink:#1F2937; --max:1000px;
+      --cream:#F7F1E6; --white:#FFFFFF; --dark-blue:#0B3D60; --royal:#4169E1;
+      --olive:#6B8E23; --burnt:#CC5A1E; --purple:#4B2E83; --ink:#1F2937; --max:1000px;
     }
     *{box-sizing:border-box} html,body{height:100%}
-    body{ margin:0; background:var(--cream); color:#222;
-      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;}
+    body{margin:0;background:var(--cream);color:#222;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif}
 
-    header{ position:sticky; top:0; z-index:1000;
-      backdrop-filter:saturate(180%) blur(8px);
+    header{position:sticky;top:0;z-index:1000;backdrop-filter:saturate(180%) blur(8px);
       background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.78));
-      border-bottom:1px solid rgba(59,64,68,.16);}
-    .nav{max-width:var(--max); margin:0 auto; padding:12px 14px; display:flex; align-items:center; gap:12px;}
-    .brand{display:flex; align-items:center; gap:10px; color:var(--dark-blue); font-weight:900}
+      border-bottom:1px solid rgba(59,64,68,.16)}
+    .nav{max-width:var(--max);margin:0 auto;padding:12px 14px;display:flex;align-items:center;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--dark-blue);font-weight:900}
     .mark{width:28px;height:28px;border-radius:50%;background:var(--dark-blue);display:grid;place-items:center;color:#fff;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-    .nav-actions{margin-left:auto; display:flex; gap:10px; align-items:center}
-    .btn{appearance:none; border:0; border-radius:12px; padding:10px 16px; font-weight:800; cursor:pointer}
-    .btn-outline{background:#fff; color:var(--dark-blue); border:1px solid rgba(59,64,68,.22)}
-    .btn-primary{background:linear-gradient(180deg, var(--royal), #3a5fd0); color:#fff; border:1px solid rgba(65,105,225,.55)}
+    .nav-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .btn{appearance:none;border:0;border-radius:12px;padding:10px 16px;font-weight:800;cursor:pointer}
+    .btn-outline{background:#fff;color:var(--dark-blue);border:1px solid rgba(59,64,68,.22)}
+    .btn-primary{background:linear-gradient(180deg,var(--royal),#3a5fd0);color:#fff;border:1px solid rgba(65,105,225,.55)}
 
-    .bleed-tight{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); width:100vw; }
-    .hero-rotator{ position:relative; width:100%; height:clamp(420px, 88vh, 1000px); background:#000; overflow:hidden;}
-    @supports (height: 88dvh){ .hero-rotator{ height:clamp(420px, 88dvh, 1000px);} }
-    .hero-rotator .slide{ position:absolute; inset:0; opacity:0; transition:opacity .6s ease;}
-    .hero-rotator .slide.on{ opacity:1;}
-    .hero-rotator .slide img{ width:100%; height:100%; object-fit:cover;}
-    .cap{ position:absolute; color:#fff; font-weight:800; font-size:clamp(18px, 3.6vw, 26px); text-shadow:0 2px 10px rgba(0,0,0,.45)}
-    .cap.tl{ top:7%; left:5% } .cap.tr{ top:7%; right:5%; text-align:right }
-    .cap.bl{ bottom:7%; left:5% } .cap.br{ bottom:7%; right:5%; text-align:right }
-    .dots{ position:absolute; left:0; right:0; bottom:12px; display:flex; justify-content:center; gap:6px}
-    .dot{ width:6px; height:6px; border-radius:999px; background:rgba(255,255,255,.6)} .dot.on{ background:#fff }
+    .bleed-tight{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);width:100vw}
+    .hero-rotator{position:relative;width:100%;height:clamp(420px,88vh,900px);background:#000;overflow:hidden}
+    @supports (height:88dvh){.hero-rotator{height:clamp(420px,88dvh,900px)}}
+    .hero-rotator .slide{position:absolute;inset:0;opacity:0;transition:opacity .6s ease}
+    .hero-rotator .slide.on{opacity:1}
+    .hero-rotator .slide img{width:100%;height:100%;object-fit:cover}
+    .cap{position:absolute;color:#fff;font-weight:800;font-size:clamp(18px,3.6vw,26px);text-shadow:0 2px 10px rgba(0,0,0,.45)}
+    .cap.tl{top:7%;left:5%}.dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:6px}
+    .dot{width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,.6)}.dot.on{background:#fff}
 
-    main{max-width:var(--max); margin:0 auto; padding:0 14px}
-    .cta-wrap{ padding:22px 0 8px; }
-    .cta-wrap h1{ color:var(--dark-blue); font-size:clamp(22px, 6.2vw, 34px); line-height:1.25; margin:0 0 10px; font-weight:900; }
-    .cta-wrap .lead{ color:#48505A; margin:0 0 16px; font-size:clamp(15px, 3.8vw, 17px); }
-    .cta-btn{ display:inline-flex; align-items:center; justify-content:center; width:100%; max-width:520px;
-      padding:20px 24px; font-size:18px; font-weight:900; background:linear-gradient(180deg, var(--royal), #3a5fd0);
-      color:#fff; border:1px solid rgba(65,105,225,.55); border-radius:18px; cursor:pointer; text-decoration:none; }
+    main{max-width:var(--max);margin:0 auto;padding:0 14px}
+    .cta-wrap{padding:22px 0 8px}
+    .cta-wrap h1{color:var(--dark-blue);font-size:clamp(22px,6.2vw,34px);line-height:1.25;margin:0 0 10px;font-weight:900}
+    .cta-wrap .lead{color:#48505A;margin:0 0 16px;font-size:clamp(15px,3.8vw,17px)}
+    .cta-btn{display:inline-flex;align-items:center;justify-content:center;width:100%;max-width:520px;padding:20px 24px;font-size:18px;font-weight:900;background:linear-gradient(180deg,var(--royal),#3a5fd0);color:#fff;border:1px solid rgba(65,105,225,.55);border-radius:18px;text-decoration:none}
 
-    .mini{ margin:28px 0 10px; padding:16px; border:1px solid rgba(59,64,68,.16); border-radius:16px; background:#fff; box-shadow:0 8px 24px rgba(2,8,20,.04);}
-    .mini h2{ margin:0 0 8px; font-size:18px; color:#0B3D60; font-weight:900; }
-    .mini p{ margin:0 0 12px; color:#48505A; font-size:14px; }
-    .steps{ display:grid; gap:10px; }
-    .step{ border:1px dashed rgba(59,64,68,.20); border-radius:12px; padding:12px; }
-    .step h3{ margin:0 0 8px; font-size:14px; color:#222; }
-    .chips{ display:flex; flex-wrap:wrap; gap:8px; }
-    .chip{ appearance:none; border:1px solid rgba(65,105,225,.28); background:#eef3ff; color:#1b1b1b; border-radius:999px; padding:8px 10px; font-weight:800; cursor:pointer; }
-    .chip[aria-pressed="true"]{ background:#dfe7ff; border-color:rgba(65,105,225,.55); }
-    .actions{ display:flex; gap:10px; margin-top:12px; }
-    .cta-mini{ flex:1; display:inline-flex; align-items:center; justify-content:center; padding:14px 16px;
-      border-radius:12px; font-weight:900; border:1px solid rgba(65,105,225,.55);
-      background:linear-gradient(180deg, var(--royal), #3a5fd0); color:#fff; cursor:pointer;}
-    .note{ font-size:12px; color:#666; margin-top:6px; }
+    /* ミニ体験 */
+    .mini{margin:28px 0 10px;padding:16px;border:1px solid rgba(59,64,68,.16);border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(2,8,20,.04)}
+    .mini h2{margin:0 0 8px;font-size:18px;color:#0B3D60;font-weight:900}
+    .mini p{margin:0 0 12px;color:#48505A;font-size:14px}
+    .steps{display:grid;gap:10px}.step{border:1px dashed rgba(59,64,68,.20);border-radius:12px;padding:12px}
+    .step h3{margin:0 0 8px;font-size:14px;color:#222}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{appearance:none;border:1px solid rgba(65,105,225,.28);background:#eef3ff;color:#1b1b1b;border-radius:999px;padding:8px 10px;font-weight:800;cursor:pointer}
+    .chip[aria-pressed="true"]{background:#dfe7ff;border-color:rgba(65,105,225,.55)}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .cta-mini{flex:1;display:inline-flex;align-items:center;justify-content:center;padding:14px 16px;border-radius:12px;font-weight:900;border:1px solid rgba(65,105,225,.55);background:linear-gradient(180deg,var(--royal),#3a5fd0);color:#fff;cursor:pointer}
+    .note{font-size:12px;color:#666;margin-top:6px}
 
-    footer{padding:26px 14px 40px; text-align:center; color:#666; font-size:12px}
-    .build{ margin-top:6px; color:#8A92A2; font-size:11px; user-select:text; }
+    /* Why */
+    .why{padding:28px 0 8px}
+    .why h2{color:var(--dark-blue);font-size:clamp(20px,5.4vw,28px);font-weight:800;margin:0 0 10px}
+    .why .sub{color:#60656B;margin:0 0 18px;font-size:clamp(14px,3.6vw,16px)}
+    .why-grid{display:grid;gap:12px;grid-template-columns:1fr}
+    @media(min-width:720px){.why-grid{grid-template-columns:repeat(3,1fr);gap:14px}}
+    .why-card{padding:16px;border-radius:16px;background:#fff;border:1px solid rgba(59,64,68,.16);box-shadow:0 8px 24px rgba(2,8,20,.04)}
+    .why-ttl{font-weight:800;margin:0 0 6px;font-size:16px;color:var(--ink)}
+    .why-txt{margin:0;color:#374151;font-size:14px;line-height:1.6}
+
+    footer{padding:26px 14px 40px;text-align:center;color:#666;font-size:12px}
+    .build{margin-top:6px;color:#8A92A2;font-size:11px}
   </style>
 </head>
 <body>
@@ -79,9 +80,9 @@
   </header>
 
   <div class="bleed-tight">
-    <div class="hero-rotator" id="heroRotator" aria-label="インスピレーション写真">
+    <div class="hero-rotator" id="heroRotator" aria-label="Hero">
       <figure class="slide on"><img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1600&q=80" alt=""><figcaption class="cap tl">スポットライトは、あなたへ。</figcaption></figure>
-      <figure class="slide"><img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80" alt=""><figcaption class="cap tr">努力は、必ず祝われる。</figcaption></figure>
+      <figure class="slide"><img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80" alt=""><figcaption class="cap tl">努力は、必ず祝われる。</figcaption></figure>
       <div class="dots"><div class="dot on"></div><div class="dot"></div></div>
     </div>
   </div>
@@ -93,30 +94,27 @@
       <a href="/dialog" class="cta-btn">はじめる</a>
     </section>
 
-    <!-- 90秒お試し -->
+    <!-- 90秒お試し（保存のみ。APIは呼ばない） -->
     <section class="mini" id="miniTry">
       <h2>まずは90秒でお試し</h2>
-      <p>3つの質問に答えるだけ。<b>/dialog</b>で続きから始まります。</p>
+      <p>3つ答えるだけ。/dialog で続きからスタートします。</p>
       <div class="steps">
-        <div class="step" data-step="1">
-          <h3>1) 学ぶ理由は？</h3>
-          <div class="chips" role="group">
+        <div class="step" data-step="1"><h3>1) 学ぶ理由は？</h3>
+          <div class="chips">
             <button class="chip" data-v="転職・収入UP">転職・収入UP</button>
             <button class="chip" data-v="好きな分野を極めたい">好きな分野を極めたい</button>
             <button class="chip" data-v="自信をつけたい">自信をつけたい</button>
           </div>
         </div>
-        <div class="step" data-step="2">
-          <h3>2) 気になる分野は？</h3>
-          <div class="chips" role="group">
+        <div class="step" data-step="2"><h3>2) 気になる分野は？</h3>
+          <div class="chips">
             <button class="chip" data-v="AI・プログラミング">AI・プログラミング</button>
             <button class="chip" data-v="デザイン・動画">デザイン・動画</button>
             <button class="chip" data-v="マーケ・営業">マーケ・営業</button>
           </div>
         </div>
-        <div class="step" data-step="3">
-          <h3>3) 使える時間は？</h3>
-          <div class="chips" role="group">
+        <div class="step" data-step="3"><h3>3) 使える時間は？</h3>
+          <div class="chips">
             <button class="chip" data-v="毎日15分">毎日15分</button>
             <button class="chip" data-v="平日30〜60分">平日30〜60分</button>
             <button class="chip" data-v="週末まとまって">週末まとまって</button>
@@ -126,12 +124,23 @@
       <div class="actions"><button id="miniSubmit" class="cta-mini" type="button">ミニ体験の続きへ →</button></div>
       <div class="note" id="miniNote">3つ選んでください。</div>
     </section>
+
+    <!-- なぜ効く？ -->
+    <section class="why">
+      <h2>なぜ『Mission Compass』は効く？</h2>
+      <p class="sub">仕組みが背中を押す3つの理由</p>
+      <div class="why-grid">
+        <article class="why-card"><h3 class="why-ttl">“WHY”を先に固める</h3><p class="why-txt">目的が明確だと、迷いが減り行動が続く。</p></article>
+        <article class="why-card"><h3 class="why-ttl">AIメンターが毎日伴走</h3><p class="why-txt">小さな詰まりをその場で解消。次の一手がすぐ決まる。</p></article>
+        <article class="why-card"><h3 class="why-ttl">最小行動へ落とす</h3><p class="why-txt">目標を“最初の一歩”に分解。習慣化を後押し。</p></article>
+      </div>
+    </section>
   </main>
 
-  <footer>© 2025 Mission Compass <div class="build">build: 2025-10-15-lp-bridge-2</div></footer>
+  <footer>© 2025 Mission Compass <span class="build">build: 2025-10-15-lp-bridge-3</span></footer>
 
   <script>
-    // ヒーロー仮回転
+    // ヒーロー簡易ローテーション
     setInterval(()=>{
       const slides=[...document.querySelectorAll('.hero-rotator .slide')];
       const dots=[...document.querySelectorAll('.dots .dot')];
@@ -140,7 +149,7 @@
       const n=(i+1)%slides.length; slides[n].classList.add('on'); dots[n].classList.add('on');
     },4500);
 
-    // ミニ体験：回答を保存して /dialog へ（APIはここでは呼ばない）
+    // ミニ体験：回答だけ保存 → /dialog へ
     const answers={why:null,area:null,time:null};
     document.querySelectorAll('.chip').forEach(b=>{
       b.addEventListener('click',()=>{
@@ -155,16 +164,13 @@
     document.getElementById('miniSubmit').addEventListener('click', ()=>{
       const note=document.getElementById('miniNote');
       if(!answers.why||!answers.area||!answers.time){ note.textContent='未選択があります。'; return; }
-      // 部屋=課題 用のセッションID（なければ発番）
       const sidKey='dlg_sid_issue';
       let sid=localStorage.getItem(sidKey);
       if(!sid){ sid='dlg-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random().toString(16).slice(2)); localStorage.setItem(sidKey,sid); }
-      // 回答を保存（/dialog で要約→初回1回だけ送信）
       localStorage.setItem('dlg_room','issue');
       localStorage.setItem('mini_issue', JSON.stringify(answers));
-      // 表示用の導入1発だけ（AI文ではなく固定テキスト）
-      const msgs=[{who:'ai', html:'<b>ミニ体験の続きから始めよう。</b> さっきの回答を拾って、ここから深掘りしていくね。'}];
-      localStorage.setItem('msgs_issue', JSON.stringify(msgs));
+      const seed=[{who:'ai', html:'<b>ミニ体験の続きから始めよう。</b> さっきの回答を拾って、ここから深掘りしていくね。'}];
+      localStorage.setItem('msgs_issue', JSON.stringify(seed));
       location.href='/dialog';
     });
   </script>

@@ -10,61 +10,38 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --font-sans: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Arial, sans-serif;
-      --bg:#F6EEDC; --panel:#FFF7EA; --ink:#1F2937; --muted:#6B7280;
-      --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
-      --radius:16px; --max:1000px;
+      --font-sans:"Noto Sans JP",system-ui,-apple-system,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN",Arial,sans-serif;
+      --bg:#F6EEDC; --ink:#1F2937; --muted:#6B7280; --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04); --max:1000px;
     }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; scroll-behavior:smooth; }
-    body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; font-family:var(--font-sans); line-height:1.65; }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{background:var(--bg);color:var(--ink);font-family:var(--font-sans);line-height:1.65;-webkit-text-size-adjust:100%;overflow-x:hidden}
 
-    header{ position:sticky; top:0; z-index:30;
-      background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
-      backdrop-filter:saturate(160%) blur(8px);
-      border-bottom:1px solid rgba(0,0,0,.06); }
-    .bar{ max-width:var(--max); margin:0 auto; padding:10px 12px; display:flex; align-items:center; gap:10px; }
-    .brand{ font-weight:900; letter-spacing:.02em; white-space:nowrap; font-size:22px; }
-    .tabs{ display:flex; gap:8px; }
-    .tab{ padding:6px 10px; border-radius:999px; border:1px solid rgba(0,0,0,.15); background:#fff; cursor:pointer; font-weight:800; }
-    .tab[aria-pressed="true"]{ background:#eef3ff; border-color:rgba(65,105,225,.45); }
-    .spacer{ flex:1; }
-    .email{ padding:8px 10px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; font-size:13px; color:#374151; max-width:38vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .btn{ appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer; background:#fff; border:1px solid rgba(0,0,0,.12)}
-    .btn.primary{ background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#fff; border-color:rgba(65,105,225,.55); }
+    header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.70));backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid rgba(0,0,0,.06)}
+    .bar{max-width:var(--max);margin:0 auto;padding:10px 12px;display:flex;align-items:center;gap:10px}
+    .brand{font-weight:900;font-size:22px}
+    .tabs{display:flex;gap:8px}
+    .tab{padding:6px 10px;border-radius:999px;border:1px solid rgba(0,0,0,.15);background:#fff;cursor:pointer;font-weight:800}
+    .tab[aria-pressed="true"]{background:#eef3ff;border-color:rgba(65,105,225,.45)}
+    .spacer{flex:1}
+    .email{padding:8px 10px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;font-size:13px;color:#374151;max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .btn{appearance:none;border:1px solid rgba(0,0,0,.12);border-radius:12px;padding:9px 14px;font-weight:800;cursor:pointer;background:#fff}
+    .btn.primary{background:linear-gradient(180deg,var(--brand),var(--brand-2));color:#fff;border-color:rgba(65,105,225,.55)}
 
-    .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
-    .note{ color:var(--muted); font-size:12px; margin:10px 0; display:flex; align-items:center; gap:6px; }
-    .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:120px; }
-    .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
-    .bubble{
-      max-width:min(85%, 760px);
-      padding:14px 16px; border-radius:14px; box-shadow:var(--shadow);
-      word-break:break-word; overflow-wrap:anywhere; border:1px solid rgba(0,0,0,.06);
-      background:#fff; font-size:16px;
-    }
-    .bubble b{ font-weight:900; }
-    .ai{ align-self:flex-start; background:#fff; }
-    .me{ align-self:flex-end; background:#eef3ff; border-color:rgba(65,105,225,.25); }
-
-    .composer{
-      position:sticky; bottom:0; z-index:20;
-      margin:0 calc(50% - min(50%, var(--max)/2));
-      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.86) 30%, rgba(255,255,255,.98));
-      backdrop-filter:saturate(150%) blur(6px);
-      border-top:1px solid rgba(0,0,0,.06);
-      padding:14px 12px calc(14px + env(safe-area-inset-bottom));
-    }
-    .composer .row{ display:flex; gap:10px; align-items:flex-end; max-width:var(--max); margin:0 auto; }
-    textarea{
-      flex:1; min-height:44px; max-height:180px; resize:vertical;
-      background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px;
-      padding:12px; font-size:16px; line-height:1.45;
-    }
-    .send{ height:44px; padding:0 18px; border-radius:12px; font-weight:900; }
-    .send[disabled]{ opacity:.5; pointer-events:none; }
-
-    .small{ font-size:12px; color:#8A92A2; margin:8px 0 0; text-align:left; }
+    .wrap{max-width:var(--max);margin:0 auto;padding:0 12px}
+    .note{color:var(--muted);font-size:12px;margin:10px 0;display:flex;align-items:center;gap:6px}
+    .chat-shell{position:relative;min-height:calc(100dvh - 130px);padding-bottom:120px}
+    .stream{display:flex;flex-direction:column;gap:14px;padding:16px 0 24px}
+    .bubble{max-width:min(85%,760px);padding:14px 16px;border-radius:14px;box-shadow:var(--shadow);word-break:break-word;overflow-wrap:anywhere;border:1px solid rgba(0,0,0,.06);background:#fff;font-size:16px}
+    .bubble b{font-weight:900}
+    .ai{align-self:flex-start}
+    .me{align-self:flex-end;background:#eef3ff;border-color:rgba(65,105,225,.25)}
+    .composer{position:sticky;bottom:0;z-index:20;margin:0 calc(50% - min(50%, var(--max)/2));background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.86) 30%,rgba(255,255,255,.98));backdrop-filter:saturate(150%) blur(6px);border-top:1px solid rgba(0,0,0,.06);padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
+    .composer .row{display:flex;gap:10px;align-items:flex-end;max-width:var(--max);margin:0 auto}
+    textarea{flex:1;min-height:44px;max-height:180px;resize:vertical;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:12px;padding:12px;font-size:16px;line-height:1.45}
+    .send{height:44px;padding:0 18px;border-radius:12px;font-weight:900}
+    .send[disabled]{opacity:.5;pointer-events:none}
+    .small{font-size:12px;color:#8A92A2;margin:8px 0 0;text-align:left}
   </style>
 </head>
 <body>
@@ -72,7 +49,7 @@
     <div class="bar" role="navigation" aria-label="上部メニュー">
       <div class="brand">Mission Compass</div>
       <div class="tabs" id="rooms" role="tablist" aria-label="トーク部屋">
-        <button class="tab" data-room="issue"  aria-pressed="true">課題</button>
+        <button class="tab" data-room="issue" aria-pressed="true">課題</button>
         <button class="tab" data-room="research">調べ物</button>
         <button class="tab" data-room="daily">日常</button>
       </div>
@@ -85,12 +62,12 @@
 
   <main class="wrap chat-shell">
     <section class="stream" id="chat">
-      <div class="bubble ai">
+      <div class="bubble ai seed">
         <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br/>そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
       </div>
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
-    <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択（チップ表示）<div class="small">build: 2025-10-15-dlg-bridge-2</div></div>
+    <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択（チップ表示）<div class="small">build: 2025-10-15-dlg-bridge-3</div></div>
   </main>
 
   <div class="composer" aria-label="メッセージ入力エリア">
@@ -101,160 +78,25 @@
     </div>
   </div>
 
-  <!-- ===== Firebase + 会話処理 ===== -->
   <script type="module">
     import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
-    import {
-      getAuth, GoogleAuthProvider, onAuthStateChanged,
-      signInWithPopup, signOut, setPersistence, browserLocalPersistence
-    } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
-    // Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence);
-
-    // UI
-    const $ = s => document.querySelector(s);
-    const chat      = $('#chat');
-    const ta        = $('#text');
-    const sendBtn   = $('#send');
-    const bottom    = $('#bottomSentinel');
-    const loginBtn  = $('#loginBtn');
-    const logoutBtn = $('#logoutBtn');
-    const userMail  = $('#userMail');
-
-    // ログイン制御
-    loginBtn.addEventListener('click', async ()=>{ try{ await signInWithPopup(auth, new GoogleAuthProvider()); }catch(e){ alert('ログイン失敗: '+e.message); }});
-    logoutBtn.addEventListener('click', ()=> signOut(auth));
-    onAuthStateChanged(auth, user=>{
-      const loggedIn = !!user;
-      loginBtn.hidden  = loggedIn;
-      logoutBtn.hidden = !loggedIn;
-      userMail.hidden  = !loggedIn;
-      userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
-    });
-
-    // 部屋管理
-    const ROOM_KEY='dlg_room';
-    let room = localStorage.getItem(ROOM_KEY) || 'issue';
-    setRoom(room);
-    document.querySelectorAll('#rooms .tab').forEach(b=>{
-      b.addEventListener('click', ()=> setRoom(b.dataset.room));
-    });
-    function setRoom(next){
-      room = next;
-      localStorage.setItem(ROOM_KEY, room);
-      document.querySelectorAll('#rooms .tab').forEach(b=> b.setAttribute('aria-pressed', b.dataset.room===room?'true':'false'));
-      loadMessages();
-    }
-
-    // 入力活性化 & Enter送信
-    const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
-    ta.addEventListener('input', updateSend);
-    ta.addEventListener('keydown', e=>{
-      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); }
-    });
-    updateSend();
-
-    // スクロール追従
-    function toBottom(immediate=false){
-      try{ bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' }); }
-      catch{ window.scrollTo({ top: document.body.scrollHeight, behavior: immediate?'auto':'smooth' }); }
-    }
-
-    // バブル
-    function appendBubble(text, who){
-      const div = document.createElement('div');
-      div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
-      div.innerHTML = text;
-      chat.insertBefore(div, bottom);
-      toBottom();
-    }
-
-    // 保存・読込
-    const keyMsgs = ()=> `msgs_${room}`;
-    const keySid  = ()=> `dlg_sid_${room}`;
-    const keyMini = ()=> `mini_${room}`;
-
-    function loadMessages(){
-      chat.querySelectorAll('.bubble:not(.seed)').forEach(b=> b.remove());
-      const raw = localStorage.getItem(keyMsgs());
-      if(raw){
-        try{
-          const arr = JSON.parse(raw);
-          for(const m of arr){ appendBubble(m.html, m.who); }
-        }catch{}
-      }
-      toBottom(true);
-      // ミニ体験の橋渡し：mini_* があれば初回1回だけ要約を送る
-      const miniRaw = localStorage.getItem(keyMini());
-      if(miniRaw){ try{
-        const m = JSON.parse(miniRaw);
-        bridgeFromMini(m);
-        localStorage.removeItem(keyMini()); // 1回だけ
-      }catch{} }
-    }
-
-    // ここが今回の肝：LPの回答を /dialog 初回で1回だけ送る
-    async function bridgeFromMini(m){
-      const sid = ensureSid();
-      const prompt =
-        `ミニ体験の回答です。学ぶ理由「${m.why}」、分野「${m.area}」、使える時間「${m.time}」。` +
-        `まずは1文で温かく受け止め、次に短い質問を1つだけ返してください。` +
-        `必要なら3択チップ用に「5〜8字×最大3個」の候補も提示（行頭に「#chip:」を付ける形）で。` +
-        `以後は短文中心で。太字は重要箇所のみ全体の1〜2割に抑えてください。`;
-
-      appendBubble('（ミニ体験の回答をAIに送信中…）', 'ai');
-      try{
-        const reply = await callApi(prompt, sid);
-        replaceLastAi(reply);
-        persist({who:'ai', html: escapeHtml(reply)});
-      }catch(e){
-        replaceLastAi('送信に失敗しました。電波の良い場所でもう一度お試しください。<button class="btn" id="retryMini">再送</button>');
-        document.getElementById('retryMini')?.addEventListener('click', ()=> bridgeFromMini(m));
-      }
-    }
-
-    function replaceLastAi(html){
-      const nodes=[...chat.querySelectorAll('.bubble.ai')];
-      if(nodes.length){ nodes[nodes.length-1].innerHTML = html; }
-    }
-
-    function persist(msg){
-      const arr = safeGetArray(localStorage.getItem(keyMsgs()));
-      arr.push(msg);
-      while(arr.length>200) arr.shift();
-      localStorage.setItem(keyMsgs(), JSON.stringify(arr));
-    }
-    function safeGetArray(raw){ try{ const a=JSON.parse(raw); return Array.isArray(a)?a:[]; }catch{return []} }
-    function ensureSid(){
-      let sid = localStorage.getItem(keySid());
-      if(!sid){ sid = 'dlg-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random().toString(16).slice(2)); localStorage.setItem(keySid(), sid); }
-      return sid;
-    }
+    // ========= ヘルパ（先頭に関数宣言：参照順バグ対策） =========
     function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    // 送信（通常の入力）
-    sendBtn.addEventListener('click', async ()=>{
-      const text = ta.value.trim(); if(!text) return;
-      appendBubble(escapeHtml(text), 'me'); persist({who:'me', html:escapeHtml(text)});
-      ta.value=''; updateSend(); toBottom(true);
-      try{
-        const reply = await callApi(text, ensureSid());
-        appendBubble(escapeHtml(reply), 'ai'); persist({who:'ai', html:escapeHtml(reply)});
-      }catch(err){
-        appendBubble('エラー: ' + err.message, 'ai');
-      }
-    });
+    function toBottom(immediate=false){ try{ bottom.scrollIntoView({block:'end',behavior:immediate?'auto':'smooth'});}catch{ window.scrollTo({top:document.body.scrollHeight,behavior:immediate?'auto':'smooth'});} }
+    function appendBubble(text, who){ const div=document.createElement('div'); div.className='bubble ' + (who==='me'?'me':'ai'); div.innerHTML=text; chat.insertBefore(div,bottom); toBottom(); }
+    function replaceLastAi(html){ const nodes=[...chat.querySelectorAll('.bubble.ai')]; if(nodes.length){ nodes[nodes.length-1].innerHTML=html; } }
+    function safeGetArray(raw){ try{ const a=JSON.parse(raw); return Array.isArray(a)?a:[]; }catch{return []} }
+    function keyMsgs(){ return `msgs_${room}`; }
+    function keySid(){ return `dlg_sid_${room}`; }
+    function keyMini(){ return `mini_${room}`; }
+    function ensureSid(){ let sid=localStorage.getItem(keySid()); if(!sid){ sid='dlg-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random().toString(16).slice(2)); localStorage.setItem(keySid(),sid);} return sid; }
+    function persist(msg){ const arr=safeGetArray(localStorage.getItem(keyMsgs())); arr.push(msg); while(arr.length>200) arr.shift(); localStorage.setItem(keyMsgs(), JSON.stringify(arr)); }
 
     async function callApi(message, sessionId){
-      const res = await fetch('/api/chat', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ message, sessionId })
-      });
+      const res = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ message, sessionId }) });
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const txt = (data.reply || '').toString().trim();
@@ -262,8 +104,93 @@
       return txt;
     }
 
+    // ========= Firebase =========
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    await setPersistence(auth, browserLocalPersistence);
+
+    // ========= UI要素 =========
+    const $=s=>document.querySelector(s);
+    const chat=$('#chat'), ta=$('#text'), sendBtn=$('#send'), bottom=$('#bottomSentinel');
+    const loginBtn=$('#loginBtn'), logoutBtn=$('#logoutBtn'), userMail=$('#userMail');
+
+    loginBtn.addEventListener('click', async ()=>{ try{ await signInWithPopup(auth,new GoogleAuthProvider()); }catch(e){ alert('ログイン失敗: '+e.message);} });
+    logoutBtn.addEventListener('click', ()=> signOut(auth));
+    onAuthStateChanged(auth, user=>{
+      const logged=!!user; loginBtn.hidden=logged; logoutBtn.hidden=!logged; userMail.hidden=!logged;
+      userMail.textContent = logged ? (user.email || user.displayName || 'ログイン中') : '';
+    });
+
+    // ========= 部屋管理 =========
+    const ROOM_KEY='dlg_room';
+    let room = localStorage.getItem(ROOM_KEY) || 'issue';
+    document.querySelectorAll('#rooms .tab').forEach(b=>{
+      b.addEventListener('click', ()=>{ setRoom(b.dataset.room); });
+    });
+    setRoom(room);
+
+    function setRoom(next){
+      room=next; localStorage.setItem(ROOM_KEY,room);
+      document.querySelectorAll('#rooms .tab').forEach(b=> b.setAttribute('aria-pressed', b.dataset.room===room?'true':'false'));
+      loadMessages();
+    }
+
+    function loadMessages(){
+      chat.querySelectorAll('.bubble:not(.seed)').forEach(b=> b.remove());
+      const raw=localStorage.getItem(keyMsgs());
+      if(raw){ try{ JSON.parse(raw).forEach(m=> appendBubble(m.html,m.who)); }catch{} }
+      toBottom(true);
+
+      // LP→dialog 橋渡し：mini_* があれば初回1回だけ送る
+      const miniRaw = localStorage.getItem(keyMini());
+      if(miniRaw){
+        try{
+          const m=JSON.parse(miniRaw);
+          bridgeFromMini(m);
+        }catch{}
+        localStorage.removeItem(keyMini()); // 1回だけ
+      }
+    }
+
+    async function bridgeFromMini(m){
+      const sid=ensureSid();
+      const prompt=
+        `ミニ体験の回答です。理由「${m.why}」、分野「${m.area}」、使える時間「${m.time}」。`+
+        `まずは1文で温かく受け止め、次に短い質問を1つだけ返してください。`+
+        `必要なら3択チップ候補（5〜8字×最大3個）を「#chip:ラベル」形式で。`+
+        `返答は短文中心。太字は重要箇所のみ全体の1〜2割に。`;
+
+      appendBubble('（ミニ体験の回答をAIに送信中…）','ai');
+      try{
+        const reply=await callApi(prompt,sid);
+        replaceLastAi(escapeHtml(reply));
+        persist({who:'ai', html:escapeHtml(reply)});
+      }catch(e){
+        replaceLastAi('送信に失敗しました。電波の良い場所でもう一度お試しください。<button class="btn" id="retryMini">再送</button>');
+        document.getElementById('retryMini')?.addEventListener('click', ()=> bridgeFromMini(m));
+      }
+    }
+
+    // ========= 入力送信 =========
+    const updateSend=()=> sendBtn.disabled=!ta.value.trim();
+    ta.addEventListener('input',updateSend);
+    ta.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendBtn.click(); }});
+    updateSend();
+
+    sendBtn.addEventListener('click', async ()=>{
+      const text=ta.value.trim(); if(!text) return;
+      appendBubble(escapeHtml(text),'me'); persist({who:'me', html:escapeHtml(text)});
+      ta.value=''; updateSend(); toBottom(true);
+      try{
+        const reply=await callApi(text, ensureSid());
+        appendBubble(escapeHtml(reply),'ai'); persist({who:'ai', html:escapeHtml(reply)});
+      }catch(err){
+        appendBubble('エラー: '+err.message,'ai');
+      }
+    });
+
     // 初期ロード
-    window.addEventListener('load', ()=>{ loadMessages(); toBottom(true); });
+    window.addEventListener('load', ()=>{ toBottom(true); });
   </script>
 </body>
 </html>
