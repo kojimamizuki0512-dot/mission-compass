@@ -5,78 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>作戦会議 — Mission Compass</title>
   <meta name="theme-color" content="#0B3D60" />
-  <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", Arial, sans-serif;
-      --font-serif: ui-serif, "Times New Roman", "Hiragino Mincho ProN", serif;
-
+      --font-sans: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Arial, sans-serif;
       --bg:#F6EEDC; --panel:#FFF7EA; --ink:#1F2937; --muted:#6B7280;
       --brand:#4169E1; --brand-2:#3a5fd0; --shadow:0 8px 24px rgba(2,8,20,.04);
-      --radius:16px; --max:860px;
-
-      --kb: 0px; /* keyboard offset for sheet */
+      --radius:16px; --max:1000px;
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; scroll-behavior:smooth; }
-    html,body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; }
-    body{ font-family:var(--font-sans); line-height:1.65; }
-    body.no-scroll{ overflow:hidden; }
+    body{ color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; overflow-x:hidden; font-family:var(--font-sans); line-height:1.65; }
 
-    header{
-      position:sticky; top:0; z-index:30;
+    header{ position:sticky; top:0; z-index:30;
       background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
       backdrop-filter:saturate(160%) blur(8px);
-      border-bottom:1px solid rgba(0,0,0,.06);
-    }
+      border-bottom:1px solid rgba(0,0,0,.06); }
     .bar{ max-width:var(--max); margin:0 auto; padding:10px 12px; display:flex; align-items:center; gap:10px; }
-    .brand{ font-family:var(--font-serif); font-weight:700; letter-spacing:.02em; white-space:nowrap; font-size:22px; }
+    .brand{ font-weight:900; letter-spacing:.02em; white-space:nowrap; font-size:22px; }
+    .tabs{ display:flex; gap:8px; }
+    .tab{ padding:6px 10px; border-radius:999px; border:1px solid rgba(0,0,0,.15); background:#fff; cursor:pointer; font-weight:800; }
+    .tab[aria-pressed="true"]{ background:#eef3ff; border-color:rgba(65,105,225,.45); }
     .spacer{ flex:1; }
-    .email{ padding:8px 10px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; font-size:13px; color:#374151; max-width:50vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .btn{ appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer; background:#fff; border:1px solid rgba(0,0,0,.12); font-family:var(--font-sans); }
+    .email{ padding:8px 10px; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:10px; font-size:13px; color:#374151; max-width:38vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .btn{ appearance:none; border:0; border-radius:12px; padding:9px 14px; font-weight:800; cursor:pointer; background:#fff; border:1px solid rgba(0,0,0,.12)}
     .btn.primary{ background:linear-gradient(180deg, var(--brand), var(--brand-2)); color:#fff; border-color:rgba(65,105,225,.55); }
-    .btn.ghost{ background:#fff; }
-    @media (max-width:600px){
-      .bar{ flex-wrap:wrap; row-gap:8px; }
-      .email{ order:3; width:100%; max-width:100%; }
-    }
-
-    /* Rooms tabs */
-    .rooms{ position:sticky; top:52px; z-index:25; background:rgba(255,255,255,.85); backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid rgba(0,0,0,.06); }
-    .rooms .row{ max-width:var(--max); margin:0 auto; padding:8px 12px; display:flex; gap:8px; }
-    .rooms button{
-      appearance:none; border:1px solid rgba(65,105,225,.25); background:#fff; color:#1b1b1b;
-      padding:8px 12px; border-radius:999px; font-weight:800; cursor:pointer; font-family:var(--font-sans); font-size:13px;
-    }
-    .rooms button.on{ background:#eef3ff; border-color:rgba(65,105,225,.45); }
 
     .wrap{ max-width:var(--max); margin:0 auto; padding:0 12px; }
     .note{ color:var(--muted); font-size:12px; margin:10px 0; display:flex; align-items:center; gap:6px; }
-
-    .chat-shell{ position:relative; min-height:calc(100dvh - 180px); padding-bottom:120px; }
+    .chat-shell{ position:relative; min-height:calc(100dvh - 130px); padding-bottom:120px; }
     .stream{ display:flex; flex-direction:column; gap:14px; padding:16px 0 24px; }
     .bubble{
-      max-width:min(85%, 680px);
+      max-width:min(85%, 760px);
       padding:14px 16px; border-radius:14px; box-shadow:var(--shadow);
       word-break:break-word; overflow-wrap:anywhere; border:1px solid rgba(0,0,0,.06);
       background:#fff; font-size:16px;
     }
-    .bubble b{ font-weight:800; }
-    .bubble .lead{ font-family:var(--font-serif); font-size:18px; font-weight:700; }
+    .bubble b{ font-weight:900; }
     .ai{ align-self:flex-start; background:#fff; }
     .me{ align-self:flex-end; background:#eef3ff; border-color:rgba(65,105,225,.25); }
 
-    /* 進捗メーター */
-    .prog{ margin:8px 0 0; padding:0 2px; }
-    .prog .row{ display:flex; align-items:center; gap:8px; font-size:12px; color:#48505A; }
-    .prog .bar{ position:relative; height:6px; background:#E7ECF6; border-radius:999px; overflow:hidden; flex:1; }
-    .prog .bar > i{ position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg, var(--brand), var(--brand-2)); display:block; }
-
-    /* composer */
     .composer{
       position:sticky; bottom:0; z-index:20;
       margin:0 calc(50% - min(50%, var(--max)/2));
@@ -89,109 +59,49 @@
     textarea{
       flex:1; min-height:44px; max-height:180px; resize:vertical;
       background:#fff; border:1px solid rgba(0,0,0,.12); border-radius:12px;
-      padding:12px; font-size:16px; line-height:1.45; font-family:var(--font-sans);
+      padding:12px; font-size:16px; line-height:1.45;
     }
     .send{ height:44px; padding:0 18px; border-radius:12px; font-weight:900; }
     .send[disabled]{ opacity:.5; pointer-events:none; }
-    .sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); border:0; }
 
-    /* ===== 入力シート ===== */
-    .sheet-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.2); z-index:50; display:none; }
-    .sheet{
-      position:fixed; left:0; right:0;
-      bottom:calc(env(safe-area-inset-bottom) + var(--kb));
-      z-index:60; display:none;
-    }
-    .sheet .panel{
-      margin:0 auto; max-width:var(--max);
-      background:#fff; border:1px solid rgba(0,0,0,.12); box-shadow:0 18px 48px rgba(0,0,0,.26);
-      border-radius:16px 16px 0 0; padding:10px 12px 12px;
-    }
-    .sheet .head{ display:flex; align-items:center; justify-content:space-between; padding:4px 2px 4px; gap:10px; }
-    .sheet .ttl{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-    .sheet .ttl b{ font-weight:900; font-size:14px; color:#111; }
-    .sheet .ttl .sub{
-      font-size:12px; color:#586071; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      max-width:68vw;
-    }
-    .sheet .head .close{ appearance:none; border:0; background:transparent; font-size:18px; padding:6px 8px; cursor:pointer; }
-    .sheet textarea{ min-height:110px; max-height:40vh; resize:vertical; }
-    .sheet .act{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
-    .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 0; }
-    .chip{ font-size:13px; padding:8px 10px; border-radius:999px; background:#eef2ff; color:#222; border:1px solid rgba(65,105,225,.25); cursor:pointer; }
-
-    .build{ color:#8A92A2; font-size:11px; user-select:text; margin:14px 0 4px; }
-
-    .sheet-open .sheet-backdrop{ display:block; }
-    .sheet-open .sheet{ display:block; }
+    .small{ font-size:12px; color:#8A92A2; margin:8px 0 0; text-align:left; }
   </style>
 </head>
 <body>
   <header>
     <div class="bar" role="navigation" aria-label="上部メニュー">
       <div class="brand">Mission Compass</div>
+      <div class="tabs" id="rooms" role="tablist" aria-label="トーク部屋">
+        <button class="tab" data-room="issue"  aria-pressed="true">課題</button>
+        <button class="tab" data-room="research">調べ物</button>
+        <button class="tab" data-room="daily">日常</button>
+      </div>
       <div class="spacer"></div>
-      <a class="btn ghost" href="/" aria-label="トップへ">トップへ</a>
-      <div id="userMail" class="email" title="ログイン中のメール" hidden></div>
+      <div id="userMail" class="email" hidden></div>
       <button id="loginBtn" class="btn" type="button">Googleでログイン</button>
       <button id="logoutBtn" class="btn primary" type="button" hidden>ログアウト</button>
     </div>
   </header>
 
-  <!-- Rooms tabs -->
-  <nav class="rooms" role="tablist" aria-label="トーク部屋">
-    <div class="row">
-      <button type="button" data-room="issue"    class="on" aria-selected="true">課題</button>
-      <button type="button" data-room="research" class=""    aria-selected="false">調べ物</button>
-      <button type="button" data-room="daily"    class=""    aria-selected="false">日常</button>
-    </div>
-  </nav>
-
   <main class="wrap chat-shell">
-    <!-- 進捗メーター -->
-    <div class="prog" aria-label="進捗">
-      <div class="row">
-        <div class="bar"><i id="progFill" style="width:0%"></i></div>
-        <div id="progText">0 / 10</div>
-      </div>
-    </div>
-
     <section class="stream" id="chat">
-      <!-- 部屋ごとに再構築。初回は後続JSが挨拶バブルを注入 -->
+      <div class="bubble ai">
+        <b>はじめまして。</b> いまの関心や目標を一言で教えてください。<br/>そこから「最終目標 → 今日の一歩」まで一緒に決めましょう。
+      </div>
       <div id="bottomSentinel" aria-hidden="true"></div>
     </section>
-    <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択案内</div>
-    <div class="build">build: 2025-10-15-dlg-rooms-1</div>
+    <div class="note">⚡ 簡潔モード：AIの返答は短文＋必要時のみ3択（チップ表示）<div class="small">build: 2025-10-15-dlg-bridge-2</div></div>
   </main>
 
   <div class="composer" aria-label="メッセージ入力エリア">
     <div class="row">
-      <label class="sr" for="text">メッセージ入力</label>
+      <label class="sr" for="text" style="position:absolute;left:-9999px">メッセージ入力</label>
       <textarea id="text" placeholder="3択チップを押すか、短く入力（Enter で送信 / Shift+Enter で改行）" rows="1"></textarea>
       <button id="send" class="btn primary send" type="button" disabled>送信</button>
     </div>
   </div>
 
-  <!-- 入力シート -->
-  <div class="sheet-backdrop" id="sheetBackdrop"></div>
-  <div class="sheet" id="sheet">
-    <div class="panel">
-      <div class="head">
-        <div class="ttl">
-          <b>メッセージ</b>
-          <div class="sub">今の質問：<span id="qSummary">—</span></div>
-        </div>
-        <button class="close" id="sheetClose" aria-label="閉じる">✕</button>
-      </div>
-      <textarea id="sheetText" placeholder="ここに入力…"></textarea>
-      <div class="chip-row" id="sheetChips" aria-label="候補"></div>
-      <div class="act">
-        <button class="btn" id="sheetCancel" type="button">キャンセル</button>
-        <button class="btn primary" id="sheetSend" type="button">送信</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- ===== Firebase + 会話処理 ===== -->
   <script type="module">
     import { firebaseConfig } from '/firebase-config.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
@@ -205,83 +115,18 @@
     const auth = getAuth(app);
     await setPersistence(auth, browserLocalPersistence);
 
-    // DOM
+    // UI
     const $ = s => document.querySelector(s);
-    const loginBtn  = $('#loginBtn');
-    const logoutBtn = $('#logoutBtn');
-    const userMail  = $('#userMail');
     const chat      = $('#chat');
     const ta        = $('#text');
     const sendBtn   = $('#send');
+    const bottom    = $('#bottomSentinel');
+    const loginBtn  = $('#loginBtn');
+    const logoutBtn = $('#logoutBtn');
+    const userMail  = $('#userMail');
 
-    const sheetBackdrop = $('#sheetBackdrop');
-    const sheetClose = $('#sheetClose');
-    const sheetCancel = $('#sheetCancel');
-    const sheetSend = $('#sheetSend');
-    const sheetText = $('#sheetText');
-    const sheetChips = $('#sheetChips');
-    const qSummaryEl = $('#qSummary');
-
-    const progFill = $('#progFill');
-    const progText = $('#progText');
-    const MAX_STEPS = 10;
-
-    const ROOMS = [
-      { key:'issue',    name:'課題',    greet:'ここは「課題」部屋。いま困ってることや詰まりを一言で教えて！' },
-      { key:'research', name:'調べ物',  greet:'ここは「調べ物」部屋。今知りたいテーマを短くどうぞ！' },
-      { key:'daily',    name:'日常',    greet:'ここは「日常」部屋。今日の出来事や雑談から始めよう。' },
-    ];
-    let currentRoom = localStorage.getItem('dlg_room') || 'issue';
-
-    // ルーム単位のキー
-    const sidKey  = k => `dlg_sid_${k}`;
-    const stepKey = k => `srv_step_${k}`;
-    const msgsKey = k => `msgs_${k}`;
-    const sumKey  = k => `summary_${k}`;
-
-    // 各部屋に sessionId を用意
-    for (const r of ROOMS) {
-      if (!localStorage.getItem(sidKey(r.key))) {
-        const sid = (crypto?.randomUUID && crypto.randomUUID())
-          || (String(Date.now()) + Math.random().toString(16).slice(2));
-        localStorage.setItem(sidKey(r.key), sid);
-      }
-    }
-
-    // ===== 進捗描画（部屋ごと） =====
-    let step = 0;
-    function renderProgress(){
-      const s = Math.max(0, Math.min(MAX_STEPS, step));
-      const pct = Math.round((s / MAX_STEPS) * 100);
-      progFill.style.width = pct + '%';
-      progText.textContent = `${s} / ${MAX_STEPS}`;
-      localStorage.setItem(stepKey(currentRoom), String(s));
-    }
-
-    // ===== サマリー（15字） =====
-    let currentSummary = '—';
-    const trimTo = (s,n)=> s.length>n ? s.slice(0,n-1)+'…' : s;
-    function summarizeQuestion(t){
-      const s = (t||'').replace(/\s+/g,' ').replace(/[「」『』\[\]()（）【】]/g,'').trim();
-      const rules = [
-        [/価値観/, '価値観の話'], [/情熱|ワクワク|熱中/, '情熱の話'], [/才能|得意|強み/, '才能の話'],
-        [/やりたい|したい|目指/, 'やりたい事'], [/興味|関心/, '興味の分野'], [/経験|エピソード|印象/, '過去の経験'],
-        [/周(囲|り)|人から.*言われ/, '周囲の評価'], [/今日.*一歩|最初の一歩/, '今日の一歩'], [/目標|ゴール/, '目標は？'],
-      ];
-      for(const [re,out] of rules){ if(re.test(s)) return trimTo(out,15); }
-      return trimTo(s,15);
-    }
-    function setSummary(text){
-      currentSummary = summarizeQuestion(text||'');
-      qSummaryEl.textContent = currentSummary || '—';
-      localStorage.setItem(sumKey(currentRoom), currentSummary || '—');
-    }
-
-    // ===== Auth UI =====
-    loginBtn.addEventListener('click', async ()=>{
-      try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
-      catch(e){ alert('ログインに失敗しました: ' + e.message); }
-    });
+    // ログイン制御
+    loginBtn.addEventListener('click', async ()=>{ try{ await signInWithPopup(auth, new GoogleAuthProvider()); }catch(e){ alert('ログイン失敗: '+e.message); }});
     logoutBtn.addEventListener('click', ()=> signOut(auth));
     onAuthStateChanged(auth, user=>{
       const loggedIn = !!user;
@@ -291,238 +136,134 @@
       userMail.textContent = loggedIn ? (user.email || user.displayName || 'ログイン中') : '';
     });
 
-    // 送信可否
-    const updateSend = ()=> { sendBtn.disabled = !ta.value.trim(); };
+    // 部屋管理
+    const ROOM_KEY='dlg_room';
+    let room = localStorage.getItem(ROOM_KEY) || 'issue';
+    setRoom(room);
+    document.querySelectorAll('#rooms .tab').forEach(b=>{
+      b.addEventListener('click', ()=> setRoom(b.dataset.room));
+    });
+    function setRoom(next){
+      room = next;
+      localStorage.setItem(ROOM_KEY, room);
+      document.querySelectorAll('#rooms .tab').forEach(b=> b.setAttribute('aria-pressed', b.dataset.room===room?'true':'false'));
+      loadMessages();
+    }
+
+    // 入力活性化 & Enter送信
+    const updateSend = ()=> sendBtn.disabled = !ta.value.trim();
     ta.addEventListener('input', updateSend);
+    ta.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); }
+    });
     updateSend();
 
-    // ===== 助け舟チップ（常設） =====
-    const HELP_CHIPS = ['よく分からない', '別の聞き方で'];
-    function buildSheetChips(){
-      sheetChips.innerHTML = '';
-      HELP_CHIPS.forEach(label=>{
-        const b = document.createElement('button');
-        b.type='button'; b.className='chip'; b.textContent = label;
-        b.addEventListener('click', ()=>{ sheetText.value = label; sheetSend.click(); });
-        sheetChips.appendChild(b);
-      });
+    // スクロール追従
+    function toBottom(immediate=false){
+      try{ bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' }); }
+      catch{ window.scrollTo({ top: document.body.scrollHeight, behavior: immediate?'auto':'smooth' }); }
     }
 
-    // ===== 入力シート =====
-    function openSheet(seed=''){
-      sheetText.value = seed;
-      document.body.classList.add('sheet-open','no-scroll');
-      updateSheetOffset();
-      sheetText.focus({ preventScroll:true });
-      buildSheetChips();
-      qSummaryEl.textContent = currentSummary || '—';
-    }
-    function closeSheet(){
-      ta.value = sheetText.value;
-      updateSend();
-      document.body.classList.remove('sheet-open','no-scroll');
-    }
-    sheetBackdrop.addEventListener('click', closeSheet);
-    sheetClose.addEventListener('click', closeSheet);
-    sheetCancel.addEventListener('click', closeSheet);
-    ta.addEventListener('focus', () => openSheet(ta.value));
-    sendBtn.addEventListener('click', () => openSheet(ta.value));
-    ta.addEventListener('keydown', e=>{
-      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); openSheet(ta.value); }
-    });
-
-    function updateSheetOffset(){
-      const vv = window.visualViewport;
-      const off = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
-      document.documentElement.style.setProperty('--kb', off + 'px');
-    }
-    window.addEventListener('resize', updateSheetOffset, {passive:true});
-    window.visualViewport && window.visualViewport.addEventListener('resize', updateSheetOffset, {passive:true});
-
-    // ===== バブル描画・保存（部屋ごと） =====
-    function appendBubble(content, who, isHTML=false){
+    // バブル
+    function appendBubble(text, who){
       const div = document.createElement('div');
       div.className = 'bubble ' + (who === 'me' ? 'me' : 'ai');
-      if(isHTML){ div.innerHTML = content; } else { div.textContent = content; }
-      const bottom = document.getElementById('bottomSentinel');
+      div.innerHTML = text;
       chat.insertBefore(div, bottom);
       toBottom();
-      saveMsgs();
     }
 
-    function saveMsgs(){
-      const list = [];
-      chat.querySelectorAll('.bubble').forEach(b=>{
-        const who = b.classList.contains('me') ? 'me' : 'ai';
-        // 保存は innerHTML（太字化対応）。ユーザー入力は textContent だが問題なし
-        list.push({ who, html: b.innerHTML });
-      });
-      // 直近50件に制限
-      while(list.length > 50) list.shift();
-      localStorage.setItem(msgsKey(currentRoom), JSON.stringify(list));
-    }
+    // 保存・読込
+    const keyMsgs = ()=> `msgs_${room}`;
+    const keySid  = ()=> `dlg_sid_${room}`;
+    const keyMini = ()=> `mini_${room}`;
 
-    function loadMsgs(){
-      const raw = localStorage.getItem(msgsKey(currentRoom));
-      if(!raw) return [];
-      try { return JSON.parse(raw) || []; } catch { return []; }
-    }
-
-    function clearStream(){
-      chat.querySelectorAll('.bubble').forEach(b=> b.remove());
-    }
-
-    function greetFor(roomKey){
-      const r = ROOMS.find(x=>x.key===roomKey);
-      return (r && r.greet) || 'こんにちは。いまの関心や目標を一言でどうぞ。';
-    }
-
-    function renderRoom(){
-      // タブの UI 切替
-      document.querySelectorAll('.rooms button').forEach(btn=>{
-        const on = btn.dataset.room === currentRoom;
-        btn.classList.toggle('on', on);
-        btn.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
-
-      // 進捗・サマリー
-      step = Number(localStorage.getItem(stepKey(currentRoom)) || 0);
-      renderProgress();
-      currentSummary = localStorage.getItem(sumKey(currentRoom)) || '—';
-      qSummaryEl.textContent = currentSummary;
-
-      // メッセージ復元
-      clearStream();
-      const items = loadMsgs();
-      if(items.length){
-        items.forEach(it=> appendBubble(it.html, it.who, true));
-      }else{
-        appendBubble(`<span class="lead">はじめまして。</span> ${greetFor(currentRoom)}`, 'ai', true);
-        saveMsgs();
+    function loadMessages(){
+      chat.querySelectorAll('.bubble:not(.seed)').forEach(b=> b.remove());
+      const raw = localStorage.getItem(keyMsgs());
+      if(raw){
+        try{
+          const arr = JSON.parse(raw);
+          for(const m of arr){ appendBubble(m.html, m.who); }
+        }catch{}
       }
-
-      // 入力欄・送信ボタン
-      ta.value = '';
-      updateSend();
       toBottom(true);
+      // ミニ体験の橋渡し：mini_* があれば初回1回だけ要約を送る
+      const miniRaw = localStorage.getItem(keyMini());
+      if(miniRaw){ try{
+        const m = JSON.parse(miniRaw);
+        bridgeFromMini(m);
+        localStorage.removeItem(keyMini()); // 1回だけ
+      }catch{} }
     }
 
-    // ルーム切替イベント
-    document.querySelectorAll('.rooms button').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const k = btn.dataset.room;
-        if (k && k !== currentRoom) {
-          currentRoom = k;
-          localStorage.setItem('dlg_room', k);
-          renderRoom();
-        }
-      });
-    });
+    // ここが今回の肝：LPの回答を /dialog 初回で1回だけ送る
+    async function bridgeFromMini(m){
+      const sid = ensureSid();
+      const prompt =
+        `ミニ体験の回答です。学ぶ理由「${m.why}」、分野「${m.area}」、使える時間「${m.time}」。` +
+        `まずは1文で温かく受け止め、次に短い質問を1つだけ返してください。` +
+        `必要なら3択チップ用に「5〜8字×最大3個」の候補も提示（行頭に「#chip:」を付ける形）で。` +
+        `以後は短文中心で。太字は重要箇所のみ全体の1〜2割に抑えてください。`;
 
-    // ===== 送信 =====
-    sheetSend.addEventListener('click', async ()=>{
-      const text = sheetText.value.trim();
-      if(!text) return;
-      ta.value = text; updateSend(); closeSheet();
-      await sendMessage(text);
-    });
-
-    async function sendMessage(text){
-      appendBubble(text, 'me');
-      ta.value = ''; updateSend();
-      toBottom(true);
-
-      const sessionId = localStorage.getItem(sidKey(currentRoom));
+      appendBubble('（ミニ体験の回答をAIに送信中…）', 'ai');
       try{
-        const res = await fetch('/api/chat', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ message:text, sessionId })
-        });
-        if(!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const reply = (data.reply || '').toString().trim() || '（返信を取得できませんでした）';
-        appendBubble(embolden(reply), 'ai', true);
-        setSummary(reply); // 15字サマリー更新
+        const reply = await callApi(prompt, sid);
+        replaceLastAi(reply);
+        persist({who:'ai', html: escapeHtml(reply)});
+      }catch(e){
+        replaceLastAi('送信に失敗しました。電波の良い場所でもう一度お試しください。<button class="btn" id="retryMini">再送</button>');
+        document.getElementById('retryMini')?.addEventListener('click', ()=> bridgeFromMini(m));
+      }
+    }
 
-        // サーバの step を正とする（部屋ごと）
-        if (typeof data.step === 'number') {
-          step = data.step;
-        } else {
-          step = Math.min(MAX_STEPS, step + 1);
-        }
-        renderProgress();
+    function replaceLastAi(html){
+      const nodes=[...chat.querySelectorAll('.bubble.ai')];
+      if(nodes.length){ nodes[nodes.length-1].innerHTML = html; }
+    }
+
+    function persist(msg){
+      const arr = safeGetArray(localStorage.getItem(keyMsgs()));
+      arr.push(msg);
+      while(arr.length>200) arr.shift();
+      localStorage.setItem(keyMsgs(), JSON.stringify(arr));
+    }
+    function safeGetArray(raw){ try{ const a=JSON.parse(raw); return Array.isArray(a)?a:[]; }catch{return []} }
+    function ensureSid(){
+      let sid = localStorage.getItem(keySid());
+      if(!sid){ sid = 'dlg-'+(crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random().toString(16).slice(2)); localStorage.setItem(keySid(), sid); }
+      return sid;
+    }
+    function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // 送信（通常の入力）
+    sendBtn.addEventListener('click', async ()=>{
+      const text = ta.value.trim(); if(!text) return;
+      appendBubble(escapeHtml(text), 'me'); persist({who:'me', html:escapeHtml(text)});
+      ta.value=''; updateSend(); toBottom(true);
+      try{
+        const reply = await callApi(text, ensureSid());
+        appendBubble(escapeHtml(reply), 'ai'); persist({who:'ai', html:escapeHtml(reply)});
       }catch(err){
         appendBubble('エラー: ' + err.message, 'ai');
-      }finally{
-        toBottom();
       }
-    }
+    });
 
-    // 控えめボールド（約15%）
-    function embolden(raw){
-      const esc = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const parts = [];
-      esc.split(/\n+/).forEach(block=>{
-        if(!block.trim()){ parts.push(''); return; }
-        const tmp = block.split(/([。．！!？\?])/);
-        const sens = [];
-        for(let i=0;i<tmp.length;i+=2){
-          const s = (tmp[i]||'').trim();
-          const p = tmp[i+1]||'';
-          if(s) sens.push(s+p);
-        }
-        if(sens.length===0){ parts.push(block); return; }
-        const score = s=>{
-          let sc=0;
-          if(s.length>=8 && s.length<=40) sc+=2;
-          if(/[：:・\-→＞>|]|ポイント|結論|要するに/.test(s)) sc+=2;
-          if(/^\d+[\).．]/.test(s)) sc+=2;
-          return sc;
-        };
-        const N = Math.max(1, Math.floor(sens.length*0.15));
-        const idx = sens.map((s,i)=>({i,s,sc:score(s)})).sort((a,b)=>b.sc-a.sc||a.i-b.i).slice(0,N).map(o=>o.i);
-        const set = new Set(idx);
-        const html = sens.map((s,i)=> set.has(i) ? `<b>${s}</b>` : s ).join('');
-        parts.push(html);
+    async function callApi(message, sessionId){
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ message, sessionId })
       });
-      return parts.join('<br>');
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const txt = (data.reply || '').toString().trim();
+      if(!txt) throw new Error('空の返信（サーバ側で失敗）');
+      return txt;
     }
 
-    // 自動スクロール
-    let stickToBottom = true;
-    function checkStick(){
-      const sc = window.scrollY + window.innerHeight;
-      const bottomY = document.body.scrollHeight;
-      stickToBottom = (bottomY - sc) < 140;
-    }
-    window.addEventListener('scroll', checkStick, {passive:true});
-    function toBottom(immediate=false){
-      if(!stickToBottom && !immediate) return;
-      const bottom = document.getElementById('bottomSentinel');
-      try{
-        bottom.scrollIntoView({ block:'end', behavior: immediate?'auto':'smooth' });
-        if(!immediate){
-          setTimeout(()=>window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' }), 60);
-        }
-      }catch{
-        window.scrollTo({ top: document.body.scrollHeight, behavior: immediate?'auto':'smooth' });
-      }
-    }
-
-    // 初回レンダリング
-    window.addEventListener('load', ()=>{ renderRoom(); checkStick(); toBottom(true); });
-    window.addEventListener('resize', ()=>{ checkStick(); toBottom(true); });
-    ta.addEventListener('focus', ()=>setTimeout(()=>toBottom(true), 80));
-  </script>
-
-  <!-- デバッグオーバーレイ（?debug=1） -->
-  <script>
-    if (new URLSearchParams(location.search).get('debug') === '1') {
-      const s = document.createElement('script');
-      s.src = '/debug-overlay.js'; s.defer = true;
-      document.head.appendChild(s);
-    }
+    // 初期ロード
+    window.addEventListener('load', ()=>{ loadMessages(); toBottom(true); });
   </script>
 </body>
 </html>
