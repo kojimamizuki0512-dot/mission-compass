@@ -1,15 +1,42 @@
 {
   "functions": {
-    "source": "functions",
-    "runtime": "nodejs20"
+    "source": "functions"
   },
   "hosting": {
+    "site": "missioncompass-3b58e",
     "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=3600" }
+        ]
+      }
+    ],
     "rewrites": [
-      { "source": "/api/**", "function": { "functionId": "api2", "region": "asia-northeast1" } },
-      { "source": "/dialog", "destination": "/dialog.html" },
-      { "source": "**", "destination": "/index.html" }
+      {
+        "source": "/api2/**",
+        "function": {
+          "functionId": "api2",
+          "region": "asia-northeast1"
+        }
+      },
+      {
+        "source": "/api/**",
+        "function": {
+          "functionId": "api2",
+          "region": "asia-northeast1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   }
 }
