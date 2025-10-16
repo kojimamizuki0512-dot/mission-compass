@@ -1,5 +1,5 @@
 /**
- * Mission Compass — Functions (api2)
+ * Mission Compass — Functions (api2) — ESM版
  * Gemini v1 列挙 → 優先順フェイルオーバー（generateContent対応のみ）
  * - GET  /api2/__diag__  : モデル診断（選定結果・対応モデル一覧）
  * - POST /api2/chat      : 通常質問（q または prompt を受付）
@@ -7,13 +7,16 @@
  * エラーフォーマット:
  *   { error: string, kind: "config"|"input"|"no_model"|"api_error"|"diag"|"exception", tried: string[] }
  *
- * 依存: Firebase Functions Gen2, Node.js 20（fetch標準）
+ * 前提:
+ * - Node.js 20（fetchはグローバル）
+ * - Firebase Functions Gen2
+ * - package.json に "type": "module"
  */
 
-const { onRequest } = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
-const express = require("express");
-const cors = require("cors");
+import { onRequest } from "firebase-functions/v2/https";
+import * as logger from "firebase-functions/logger";
+import express from "express";
+import cors from "cors";
 
 // ---------------------------------------------------------------------------
 // 基本設定
@@ -60,7 +63,7 @@ function filterGenerateContent(listJson) {
   for (const m of listJson.models || []) {
     const methods = m.supportedGenerationMethods || [];
     if (Array.isArray(methods) && methods.includes("generateContent")) {
-      arr.push(m.name); // 例 "models/gemini-2.0-flash"
+      arr.push(m.name); // e.g. "models/gemini-2.0-flash"
     }
   }
   return arr;
@@ -74,7 +77,7 @@ function pickPreferred(availableNames /* "models/<id>" の配列 */) {
   return null;
 }
 
-// 軽いメモリキャッシュ（コールドスタートを想定して 10分）
+// 軽いメモリキャッシュ（コールドスタート対策 10分）
 let cachedModel = null;
 let cachedAt = 0;
 const CACHE_MS = 10 * 60 * 1000;
@@ -131,7 +134,9 @@ async function callGenerate(apiKey, modelFullName, body) {
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    const err = new Error(`generateContent(${modelFullName}) HTTP ${res.status} ${text}`.trim());
+    const err = new Error(
+      `generateContent(${modelFullName}) HTTP ${res.status} ${text}`.trim()
+    );
     err.status = res.status;
     throw err;
   }
@@ -191,7 +196,7 @@ app.post("/chat", async (req, res) => {
   const q = (req.body?.q ?? req.body?.prompt ?? "").toString();
   if (!q.trim()) {
     return res.status(400).json({
-      error: "Missing prompt: provide { q: \"...\" } or { prompt: \"...\" }",
+      error: 'Missing prompt: provide { q: "..."} or { prompt: "..." }',
       kind: "input",
       tried: MODEL_CANDIDATES,
     });
@@ -202,7 +207,7 @@ app.post("/chat", async (req, res) => {
   try {
     chosen = await getPreferredModel(apiKey);
   } catch (e) {
-    // 列挙自体が失敗 → 下で逐次フェイルオーバーを試みる
+    // 列挙が失敗 → 下で逐次フェイルオーバー
     logger.warn("model listing failed; will brute-try candidates", e);
   }
 
@@ -213,11 +218,9 @@ app.post("/chat", async (req, res) => {
     const triedNames = [];
     const tryQueue = [];
 
-    if (chosen) {
-      tryQueue.push(chosen);
-    }
+    if (chosen) tryQueue.push(chosen);
 
-    // 列挙が失敗していた or chosen が無い場合でも順序通りにフルパス化して試す
+    // 列挙が失敗 or 未選定でも優先順で総当たり
     for (const pref of MODEL_CANDIDATES) {
       const full = `models/${pref}`;
       if (!tryQueue.includes(full)) tryQueue.push(full);
@@ -230,14 +233,13 @@ app.post("/chat", async (req, res) => {
       try {
         const data = await callGenerate(apiKey, name, body);
         const text = extractText(data);
-        // 成功したらキャッシュも更新
+        // 成功したらキャッシュ更新
         cachedModel = name;
         cachedAt = Date.now();
         return res.json({ model: name, text, raw: data });
       } catch (err) {
         lastErr = err;
         logger.warn(`model failed: ${name}`, err);
-        // 次の候補へ
       }
     }
 
@@ -257,5 +259,5 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// Cloud Functions (Gen2)
-exports.api2 = onRequest({ region: REGION, cors: true }, app);
+// Cloud Functions (Gen2) — ESMは名前付きエクスポート
+export const api2 = onRequest({ region: REGION, cors: true }, app);
