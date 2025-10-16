@@ -1,7 +1,7 @@
 /**
  * Mission Compass — Functions (api2) — ESM版
- * ルート互換対応：/__diag__, /api/__diag__, /api2/__diag__（/chat も同様）
- * Gemini v1 列挙 → 優先順フェイルオーバー（generateContent対応のみ）
+ * ルート互換：/__diag__, /api/__diag__, /api2/__diag__（/chat も同様）
+ * 入力互換：{ q | prompt | message | text } を受理
  */
 
 import { onRequest } from "firebase-functions/v2/https";
@@ -120,7 +120,7 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-// ルート互換ヘルパ：/foo, /api/foo, /api2/foo をまとめて受ける
+// ルート互換：/foo, /api/foo, /api2/foo
 const routes = (p) => [p, `/api${p}`, `/api2${p}`];
 
 // __diag__
@@ -165,8 +165,17 @@ app.post(routes("/chat"), async (req, res) => {
       tried: MODEL_CANDIDATES,
     });
   }
-  const q = (req.body?.q ?? req.body?.prompt ?? "").toString();
-  if (!q.trim()) {
+
+  // ★ 入力互換：q / prompt / message / text を吸収
+  const raw =
+    req.body?.q ??
+    req.body?.prompt ??
+    req.body?.message ??
+    req.body?.text ??
+    "";
+  const q = String(raw ?? "").trim();
+
+  if (!q) {
     return res.status(400).json({
       error: 'Missing prompt: provide { q: "..."} or { prompt: "..." }',
       kind: "input",
