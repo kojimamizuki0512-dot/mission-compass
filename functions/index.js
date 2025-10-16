@@ -1,7 +1,9 @@
 /**
  * Mission Compass — Functions (api2) — ESM版
- * ルート互換：/__diag__, /api/__diag__, /api2/__diag__（/chat も同様）
- * 入力互換：{ q | prompt | message | text } を受理
+ * 互換対応：
+ *  - ルート:   /__diag__, /api/__diag__, /api2/__diag__（/chat も同様）
+ *  - 入力:     { q | prompt | message | text } を受理
+ *  - 出力:     { text } に加え { reply: text } を同梱（UI後方互換）
  */
 
 import { onRequest } from "firebase-functions/v2/https";
@@ -30,7 +32,7 @@ function resolveApiKey(req) {
   );
 }
 
-// ---- model listing / pick ---------------------------------------------------
+// ---------- model listing / pick ----------
 async function listModels(apiKey) {
   const url = `${API_HOST}/v1/models?key=${encodeURIComponent(apiKey)}`;
   const res = await fetch(url);
@@ -60,7 +62,7 @@ function pickPreferred(availableNames) {
   return null;
 }
 
-// ---- tiny cache -------------------------------------------------------------
+// ---------- tiny cache ----------
 let cachedModel = null;
 let cachedAt = 0;
 const CACHE_MS = 10 * 60 * 1000;
@@ -78,7 +80,7 @@ async function getPreferredModel(apiKey) {
   return chosen;
 }
 
-// ---- generation -------------------------------------------------------------
+// ---------- generation ----------
 function buildGenerateBody(promptText) {
   return {
     contents: [{ role: "user", parts: [{ text: String(promptText || "") }] }],
@@ -115,12 +117,12 @@ async function callGenerate(apiKey, modelFullName, body) {
   return await res.json();
 }
 
-// ---- express ---------------------------------------------------------------
+// ---------- express ----------
 const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-// ルート互換：/foo, /api/foo, /api2/foo
+// /foo, /api/foo, /api2/foo を同一ハンドラに
 const routes = (p) => [p, `/api${p}`, `/api2${p}`];
 
 // __diag__
@@ -166,7 +168,7 @@ app.post(routes("/chat"), async (req, res) => {
     });
   }
 
-  // ★ 入力互換：q / prompt / message / text を吸収
+  // 入力互換：q / prompt / message / text
   const raw =
     req.body?.q ??
     req.body?.prompt ??
@@ -208,7 +210,15 @@ app.post(routes("/chat"), async (req, res) => {
         const text = extractText(data);
         cachedModel = name;
         cachedAt = Date.now();
-        return res.json({ model: name, text, raw: data, pathSeen: req.path });
+
+        // ★ 互換フィールド reply を同梱（UI が data.reply を読むケースを吸収）
+        return res.json({
+          model: name,
+          text,
+          reply: text,
+          raw: data,
+          pathSeen: req.path,
+        });
       } catch (err) {
         lastErr = err;
         logger.warn(`model failed: ${name}`, err);
