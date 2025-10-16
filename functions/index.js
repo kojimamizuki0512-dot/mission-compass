@@ -1,138 +1,261 @@
-// functions/index.js (Gen2 / REST直叩き + モード別モデル + 強力フォールバック)
-import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
+/**
+ * Mission Compass — Functions (api2)
+ * Gemini v1 列挙 → 優先順フェイルオーバー（generateContent対応のみ）
+ * - GET  /api2/__diag__  : モデル診断（選定結果・対応モデル一覧）
+ * - POST /api2/chat      : 通常質問（q または prompt を受付）
+ *
+ * エラーフォーマット:
+ *   { error: string, kind: "config"|"input"|"no_model"|"api_error"|"diag"|"exception", tried: string[] }
+ *
+ * 依存: Firebase Functions Gen2, Node.js 20（fetch標準）
+ */
 
-const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
+const { onRequest } = require("firebase-functions/v2/https");
+const logger = require("firebase-functions/logger");
+const express = require("express");
+const cors = require("cors");
 
-const ok  = (res, data) => res.status(200).json(data);
-const bad = (res, msg, code = 500, extra = {}) => res.status(code).json({ error: msg, ...extra });
+// ---------------------------------------------------------------------------
+// 基本設定
+// ---------------------------------------------------------------------------
+const REGION = "asia-northeast1";
+const API_HOST = "https://generativelanguage.googleapis.com";
 
-// v1であなたのキーが返した“使える”モデルに限定
-const MODEL_MAP = {
-  chat: ["gemini-2.5-flash", "gemini-2.0-flash"],
-  lite: ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite"],
-  final:["gemini-2.5-pro", "gemini-2.5-flash"]
-};
-const TOKENS = { chat: 240, lite: 160, final: 1200 };
+// 優先順（与件そのまま）
+const MODEL_CANDIDATES = [
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-001",
+  "gemini-2.0-flash-lite",
+  "gemini-2.5-flash-lite",
+];
 
-// ---- REST で v1 を叩く ----
-async function callGeminiV1(apiKey, model, prompt, maxOutputTokens) {
-  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 15000);
-  try {
-    const r = await fetch(url, {
-      method: "POST",
-      signal: ctrl.signal,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens }
-      })
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      const msg = (j?.error?.message || j?.error || r.statusText || "Request failed").toString();
-      const is404 = r.status === 404 || /not\s*found|unsupported/i.test(msg);
-      const err = new Error(msg);
-      err.kind = is404 ? "model-404" : "gemini-error";
-      err.status = r.status;
-      throw err;
-    }
-    const text = j?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("").trim() || "";
-    if (!text) throw new Error("Empty response from model");
-    return text;
-  } finally { clearTimeout(to); }
+// 環境変数（Secret Manager 推奨：GEMINI_API_KEY）
+function resolveApiKey(req) {
+  // 1) 環境変数（推奨） 2) クエリ key（診断で使える） 3) ヘッダ x-api-key（任意）
+  return (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    req.query.key ||
+    req.headers["x-api-key"]
+  );
 }
 
-// ---- ローカル・フォールバック（外部APIが全滅しても返す）----
-function summarize15(m) {
-  const s = (m || "").replace(/\s+/g, " ").trim();
-  const picked = (s.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\w]{2,}/gu) || []).slice(0, 3).join(" / ");
-  const base = picked || s.slice(0, 15);
-  return base.length > 15 ? base.slice(0, 15) : base;
-}
-function chipify(m) {
-  const t = (m || "").toLowerCase();
-  if (/[a-z]*ai|機械学習|プログラム|コード/.test(t)) return ["方向決め", "学ぶ時間", "作る題材"];
-  if (/マーケ|営業|集客|sns|宣伝|売上/.test(t))   return ["誰に売る", "予算感", "目標幅"];
-  if (/デザイン|動画|写真|編集|音楽/.test(t))     return ["作風", "道具", "納期感"];
-  return ["OK", "もう少し", "別の話題"];
-}
-function fallbackCoach(message) {
-  const head = summarize15(message);
-  const chips = chipify(message);
-  const reply = `**いいね。**「${head}」で掘っていこう。いまの気分に近いのはどれ？\n` +
-                chips.map(c => `#chip:${c}`).join("\n");
-  return { reply, model: "local-fallback" };
+// ---------------------------------------------------------------------------
+// モデル列挙＆選定
+// ---------------------------------------------------------------------------
+async function listModels(apiKey) {
+  const url = `${API_HOST}/v1/models?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`listModels HTTP ${res.status} ${text}`.trim());
+  }
+  return await res.json();
 }
 
-export const api2 = onRequest(
-  { region: "asia-northeast1", cors: true, secrets: [GEMINI_API_KEY], maxInstances: 10 },
-  async (req, res) => {
-    try {
-      if (req.method === "OPTIONS") {
-        res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.set("Access-Control-Allow-Headers", "Content-Type");
-        return ok(res, { ok: true });
-      }
-      if (req.method !== "POST") return bad(res, "Only POST is allowed.", 405);
-
-      let body = req.body;
-      if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
-      const message   = (body?.message ?? "").toString();
-      const sessionId = (body?.sessionId ?? "").toString();
-      const modeRaw   = (body?.mode ?? "chat").toString();
-      const mode = (modeRaw === "final" || modeRaw === "lite") ? modeRaw : "chat";
-      if (!message.trim()) return bad(res, "message is required.", 400);
-
-      // 診断
-      if (message === "__diag__") {
-        return ok(res, {
-          ok: true,
-          hasKey: !!GEMINI_API_KEY.value(),
-          runtime: process.version,
-          modelMap: MODEL_MAP,
-          tokens: TOKENS
-        });
-      }
-
-      const apiKey = GEMINI_API_KEY.value();
-
-      // 1) キーがある場合はRESTで本番モデルを順に試す
-      if (apiKey) {
-        const sys =
-          "役割: 対話コーチ。常に短文で要点のみ。必要なときだけ #chip:候補 を最大3つ。" +
-          "太字は全体の1〜2割（**太字**）。絵文字なし。日本語。";
-        const prompt =
-          `# system\n${sys}\n# session\nid=${sessionId || "no-session"}\n# mode\n${mode}\n# user\n${message}`;
-
-        const tried = [];
-        for (const m of MODEL_MAP[mode]) {
-          tried.push(m);
-          try {
-            const reply = await callGeminiV1(apiKey, m, prompt, TOKENS[mode]);
-            return ok(res, { reply, model: m, mode });
-          } catch (e) {
-            if (e?.kind === "model-404") { continue; }  // 次の候補へ
-            console.error("[gemini error]", e);
-            const fb = fallbackCoach(message);
-            return ok(res, { ...fb, note: "fallback(gemini-error)", mode, tried });
-          }
-        }
-        // すべて404→フォールバック
-        const fb = fallbackCoach(message);
-        return ok(res, { ...fb, note: "fallback(model-404-chain)", mode, tried: MODEL_MAP[mode] });
-      }
-
-      // 2) キーが無いなら即フォールバック
-      const fb = fallbackCoach(message);
-      return ok(res, { ...fb, note: "fallback(no-key)", mode });
-
-    } catch (err) {
-      console.error("[/api/chat] error:", err);
-      const fb = fallbackCoach((req.body && (typeof req.body === "string" ? req.body : req.body.message)) || "");
-      return ok(res, { ...fb, note: "fallback(server-error)" });
+function filterGenerateContent(listJson) {
+  const arr = [];
+  for (const m of listJson.models || []) {
+    const methods = m.supportedGenerationMethods || [];
+    if (Array.isArray(methods) && methods.includes("generateContent")) {
+      arr.push(m.name); // 例 "models/gemini-2.0-flash"
     }
   }
-);
+  return arr;
+}
+
+function pickPreferred(availableNames /* "models/<id>" の配列 */) {
+  for (const pref of MODEL_CANDIDATES) {
+    const full = `models/${pref}`;
+    if (availableNames.includes(full)) return full;
+  }
+  return null;
+}
+
+// 軽いメモリキャッシュ（コールドスタートを想定して 10分）
+let cachedModel = null;
+let cachedAt = 0;
+const CACHE_MS = 10 * 60 * 1000;
+
+async function getPreferredModel(apiKey) {
+  const now = Date.now();
+  if (cachedModel && now - cachedAt < CACHE_MS) {
+    return cachedModel;
+  }
+  const listed = await listModels(apiKey);
+  const available = filterGenerateContent(listed);
+  const chosen = pickPreferred(available);
+  if (chosen) {
+    cachedModel = chosen;
+    cachedAt = now;
+  }
+  return chosen;
+}
+
+// ---------------------------------------------------------------------------
+// 推論呼び出し（v1beta :generateContent）
+// ---------------------------------------------------------------------------
+function buildGenerateBody(promptText) {
+  return {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: String(promptText || "") }],
+      },
+    ],
+  };
+}
+
+function extractText(genResp) {
+  try {
+    const cand = genResp?.candidates?.[0];
+    const parts = cand?.content?.parts || [];
+    const t = parts.map((p) => p.text).filter(Boolean).join("\n");
+    return t || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+async function callGenerate(apiKey, modelFullName, body) {
+  // modelFullName は "models/gemini-2.0-flash" 形式
+  const url = `${API_HOST}/v1beta/${modelFullName}:generateContent?key=${encodeURIComponent(
+    apiKey
+  )}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    const err = new Error(`generateContent(${modelFullName}) HTTP ${res.status} ${text}`.trim());
+    err.status = res.status;
+    throw err;
+  }
+  return await res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Express 構築
+// ---------------------------------------------------------------------------
+const app = express();
+app.use(cors({ origin: true }));
+app.use(express.json());
+
+// 健康＆診断
+app.get("/__diag__", async (req, res) => {
+  const apiKey = resolveApiKey(req);
+  if (!apiKey) {
+    return res.status(400).json({
+      error: "Missing API key (set GEMINI_API_KEY or pass ?key=)",
+      kind: "config",
+      tried: MODEL_CANDIDATES,
+    });
+  }
+  try {
+    const listed = await listModels(apiKey);
+    const available = filterGenerateContent(listed); // "models/<id>" の配列
+    const chosen = pickPreferred(available);
+
+    return res.json({
+      chosen,
+      preferredOrder: MODEL_CANDIDATES,
+      availableGenerateContent: available,
+      tried: MODEL_CANDIDATES,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (e) {
+    logger.error("diag error", e);
+    return res.status(500).json({
+      error: String(e?.message || e),
+      kind: "diag",
+      tried: MODEL_CANDIDATES,
+    });
+  }
+});
+
+// 通常質問
+app.post("/chat", async (req, res) => {
+  const apiKey = resolveApiKey(req);
+  if (!apiKey) {
+    return res.status(400).json({
+      error: "Missing API key (set GEMINI_API_KEY or pass ?key= or x-api-key)",
+      kind: "config",
+      tried: MODEL_CANDIDATES,
+    });
+  }
+
+  const q = (req.body?.q ?? req.body?.prompt ?? "").toString();
+  if (!q.trim()) {
+    return res.status(400).json({
+      error: "Missing prompt: provide { q: \"...\" } or { prompt: \"...\" }",
+      kind: "input",
+      tried: MODEL_CANDIDATES,
+    });
+  }
+
+  // 1) まずキャッシュまたは最新列挙から最有力を取得
+  let chosen = null;
+  try {
+    chosen = await getPreferredModel(apiKey);
+  } catch (e) {
+    // 列挙自体が失敗 → 下で逐次フェイルオーバーを試みる
+    logger.warn("model listing failed; will brute-try candidates", e);
+  }
+
+  try {
+    const body = buildGenerateBody(q);
+
+    // 2) 選ばれたモデルで試す → 失敗したら候補を順にフェイルオーバー
+    const triedNames = [];
+    const tryQueue = [];
+
+    if (chosen) {
+      tryQueue.push(chosen);
+    }
+
+    // 列挙が失敗していた or chosen が無い場合でも順序通りにフルパス化して試す
+    for (const pref of MODEL_CANDIDATES) {
+      const full = `models/${pref}`;
+      if (!tryQueue.includes(full)) tryQueue.push(full);
+    }
+
+    // 実行ループ
+    let lastErr = null;
+    for (const name of tryQueue) {
+      triedNames.push(name.replace(/^models\//, "")); // レポートを見やすく
+      try {
+        const data = await callGenerate(apiKey, name, body);
+        const text = extractText(data);
+        // 成功したらキャッシュも更新
+        cachedModel = name;
+        cachedAt = Date.now();
+        return res.json({ model: name, text, raw: data });
+      } catch (err) {
+        lastErr = err;
+        logger.warn(`model failed: ${name}`, err);
+        // 次の候補へ
+      }
+    }
+
+    // 全滅
+    return res.status(502).json({
+      error: `All candidates failed. Last: ${String(lastErr?.message || lastErr)}`,
+      kind: "api_error",
+      tried: triedNames,
+    });
+  } catch (e) {
+    logger.error("chat exception", e);
+    return res.status(500).json({
+      error: String(e?.message || e),
+      kind: "exception",
+      tried: MODEL_CANDIDATES,
+    });
+  }
+});
+
+// Cloud Functions (Gen2)
+exports.api2 = onRequest({ region: REGION, cors: true }, app);
