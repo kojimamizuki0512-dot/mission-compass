@@ -33,9 +33,9 @@
           "region": "asia-northeast1"
         }
       },
-      { "source": "/dialog", "destination": "/dialog/index.html" },
-      { "source": "/dialog/**", "destination": "/dialog/index.html" },
-      { "source": "**", "destination": "/index.html" }
+      { "source": "/dialog",   "destination": "/dialog.html" },
+      { "source": "/dialog/**","destination": "/dialog.html" },
+      { "source": "**",        "destination": "/index.html" }
     ]
   }
 }
